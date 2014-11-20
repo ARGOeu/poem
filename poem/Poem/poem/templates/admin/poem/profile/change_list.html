@@ -1,0 +1,11 @@
+{% extends "admin/change_list.html" %}
+{% load adminmedia admin_list i18n %}
+{% load url from future %}
+
+{% block extrastyle %}
+ {{ block.super }}
+   <link rel="stylesheet" type="text/css" href="/poem_media/css/poem_profile.custom.css" />
+{% endblock %}
+
+{% block content_title %}{% if title %}<h1>{{ title }} in namespace {{ POEM_NAMESPACE|upper }}</h1>{% endif %}{% endblock %}
+

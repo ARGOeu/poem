@@ -1,0 +1,13 @@
+exclude poem/Poem/settings_dev.py
+exclude poem/Poem/settings_local.py
+
+include README
+include LICENSE
+include CHANGES
+include setup.py
+
+include etc/*
+include poem/apache/*
+
+recursive-include poem/media *.css *.js *.jpg *.png *.gif
+recursive-include poem/Poem/poem/templates *.html
