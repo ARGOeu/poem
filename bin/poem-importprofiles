@@ -1,8 +1,6 @@
 #!/bin/sh
 
 RUNASUSER="apache"
-SITEPACK=$(python -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")
-DBPATH=$(python -c "from Poem import settings; print settings.DATABASES['default']['NAME']")
 URLDEF="http://mon.egi.eu/poem/api/0.2/json/profiles/"
 
 if [ "$1" = "--url" ]
