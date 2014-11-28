@@ -1,11 +1,11 @@
 {% extends "admin/base_site.html" %}
 {% load i18n %}
-
+{% load staticfiles %}
 {% block extrastyle %}{{ block.super }}
 {% if not user.is_superuser %}
 <meta http-equiv="REFRESH" content="0;url=/poem/admin/poem/profile">
 {% endif %}
-<link rel="stylesheet" type="text/css" href="{% load adminmedia %}{% admin_media_prefix %}css/dashboard.css" />
+<link rel="stylesheet" type="text/css" href="{% static "admin/css/dashboard.css" %}" />
 {% endblock %}
 
 

@@ -17,25 +17,12 @@ class SyncException(Exception):
 
 class PoemSync(object):
 
-    def __init__(self, url="", profile_list=None, mddb=False):
+    def __init__(self, url="", profile_list=None):
         self._base_url = url
         self._has_error = False
         self._raise_exception = True
         self._profile_exist_list = []
-        self._mddb = mddb
         self._profile_list = profile_list
-
-#
-#        SPECIAL NOTE
-#        These Lines are added to make Case insensitive searched on ORACLE DB.
-#        MySQL does case insensitive erach on text fields but Oracle does a Case Sensitive search
-#        To mitigate these two different behaviour these lines are added. Both the DB now behave
-#        in Case insensitive manner
-#
-#        if settings.DATABASE_ENGINE == 'oracle':
-#            cursor = connection.cursor()
-#            cursor.execute('ALTER SESSION set NLS_COMP=ANSI;')
-#            cursor.execute('ALTER SESSION set NLS_SORT=BINARY_CI;')
 
     def _raise_error(self, error_str):
         self._has_error = True
@@ -51,23 +38,9 @@ class PoemSync(object):
             if hasattr(obj, key):
                 setattr(obj, key, val)
 
-#    def sync_metricinstance(self, mins_dict):
-#        """ Syncs a MetricInstance object """
-#        obj, dummy = MetricInstance.objects.get_or_create(metric=mins_dict['metric'],
-#                    atp_service_type_flavour=mins_dict['atp_service_type_flavour'],
-#                    fqan=mins_dict['fqan'])
-#        return obj
-
     def sync_metricinstances(self, list_object, pobj):
         pobj.metric_instances.all().delete()
         for mins_dict in list_object:
-            if self._mddb:
-                MetricInstance.objects.create(profile=pobj, metric=mins_dict['metric'],
-                    service_flavour=mins_dict['service_flavour'],
-                    vo=mins_dict['vo'], fqan=mins_dict['fqan'])
-            else:
-                #import pdb
-                #pdb.set_trace()
                 key='atp_service_type_flavour'
                 try: mins_dict[key]
                 except KeyError: key='service_flavour'
@@ -75,33 +48,6 @@ class PoemSync(object):
                     service_flavour=mins_dict[key],
                     vo=mins_dict['vo'], fqan=mins_dict['fqan'])
 
-
-#    def sync_groups(self, groups):
-#        """ Syncs a ServiceTypeFlavour object """
-#        obj, dummy = GroupReference.objects.get_or_create(atp_grouptype=groups['atp_grouptype'],
-#                    atp_groupname = groups['atp_groupname'])
-#        return obj
-#
-#    def sync_expression(self, expr_dict):
-#        """ Syncs an Expression Object """
-#        try:
-#            if not (expr_dict['expr'].strip() and expr_dict['expr_type'].strip()):
-#                return None
-#            obj, dummy = AvailabilityExpression.objects.get_or_create(name=expr_dict['name'])
-#            del expr_dict['extension_ptr']
-#            self.update_obj(obj, expr_dict)
-#            obj.save()
-#        except Exception, (ex):
-#            return self._raise_error('From sync_expression: %s %s' % (expr_dict, ex))
-#        return obj
-#
-#    def sync_extension(self, name):
-#        """ Syncs an Expression Object """
-#        try:
-#            obj, dummy = Extension.objects.get_or_create(name=name)
-#        except Exception, (ex):
-#            return self._raise_error('From sync_extension: %s %s' % (name, ex))
-#        return obj
 
     def sync_profile(self, p_dict):
         """ Sync A profile Object and all its components """
@@ -121,15 +67,6 @@ class PoemSync(object):
             except Profile.DoesNotExist:
                 pobj = None
 
-            #pobj1.owner = 'None'
-            # pobj1.valid_from = p_dict['valid_from']
-            # pobj1.valid_to = p_dict ['valid_to']
-            # pobj1.isdeleted = 'N'
-            # pobj1.atp_vo = p_dict['atp_vo']
-            # nextensions = self.sync_extension_list(p_dict['extensions'])
-            # nmetricinstances = self.sync_object_list(p_dict['metric_instances'], self.sync_metricinstance)
-            # ngroups = self.sync_object_list(p_dict['groups'], self.sync_groups)
-
             if self._has_error:
                 raise SyncException('Unable to Sync')
         except ValueError, (ve):
@@ -140,13 +77,8 @@ class PoemSync(object):
             return self._raise_error('From sync_profile: (%s): %s' % (p_dict['name'], ex))
 
         try:
-            #import pdb
-            #pdb.set_trace()
             pobj = Profile.objects.get(name=p_dict['name'], version=p_dict['version'])
             pobj.owner = pobj1.owner
-            #pobj.valid_from = pobj1.valid_from
-            # pobj.valid_to = pobj1.valid_to
-            # pobj.isdeleted = pobj1.isdeleted
             pobj.description = pobj.description
             pobj.vo = pobj1.vo
         except Profile.DoesNotExist:
@@ -157,34 +89,7 @@ class PoemSync(object):
         except Exception, (ex):
             return self._raise_error('Saving Profile: %s %s' % (pobj, ex))
 
-#        extensions = pobj.extensions.all()
-#        extensions = nextensions + list(extensions)
-#        for extension in extensions:
-#            if extension in nextensions:
-#                extension.save()
-#                pobj.extensions.add(extension)
-#            else:
-#                pobj.extensions.remove(extension)
-#
-#        groups = pobj.groups.all()
-#        groups = ngroups + list(groups)
-#        for group in groups:
-#            if group in ngroups:
-#                group.save()
-#                pobj.groups.add(group)
-#            else:
-#                pobj.groups.remove(group)
-#
-#        metricinstances = pobj.metric_instances.all()
-#        metricinstances = nmetricinstances + list(metricinstances)
-#        for metricinstance in metricinstances:
-#            if metricinstance in nmetricinstances:
-#                metricinstance.save()
-#                pobj.metric_instances.add(metricinstance)
-#            else:
-#                pobj.metric_instances.remove(metricinstance)
         self.sync_metricinstances(p_dict['metric_instances'], pobj)
-
 
         pobj.save()
         LOG_INSTANCE.info('Synchronized profile %s' % (pobj))
@@ -195,25 +100,12 @@ class PoemSync(object):
         res = self._raise_exception
         self._raise_exception = False
         for ob in object_list:
-            # from mddb import all profiles
-            if self._mddb or (self._profile_list and '*' in self._profile_list):
-                obj = function_name(ob)
-                ob_list.append(obj)
             # from poem instance import selectively
             if self._profile_list and ob['name'] in self._profile_list:
                 obj = function_name(ob)
                 ob_list.append(obj)
         self._raise_exception = res
         return ob_list
-
-#    def sync_extension_list(self, ex_list):
-#        e_list = []
-#        for ex in ex_list:
-#            try:
-#                e_list.append(self.sync_extension(ex['name']))
-#            except:
-#                pass
-#        return e_list
 
     def get_data_url(self, url, append):
         if not url:
@@ -228,15 +120,6 @@ class PoemSync(object):
         except Exception, (er):
             self._raise_error("Error Occurred while JSON decode: %s" % (er))
         return dcstr
-
-#    def sync_metricinstance_list_from_url(self, url=None):
-#        return self.sync_object_list(self.get_data_url(url, 'metricinstances'), self.sync_metricinstance)
-
-#    def sync_expression_list_from_url(self, url=None):
-#        return self.sync_object_list(self.get_data_url(url, ''), self.sync_expression)
-#
-#    def sync_groups_list_from_url(self, url=None):
-#        return self.sync_object_list(self.get_data_url(url, 'groups'), self.sync_groups)
 
     def sync_profile_list_from_url(self, url=None):
         return self.sync_object_list(self.get_data_url(url, ''), self.sync_profile)

@@ -1,4 +1,4 @@
-# Django settings for mddb_web project.
+# Django settings
 from os import path as os_path
 from ConfigParser import RawConfigParser, NoSectionError
 
@@ -21,8 +21,18 @@ try:
     # 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
     DATABASES = {
         'default': {
-            'NAME': config.get('database', 'DATABASE_PATH'),
+           # 'NAME':  config.get('database', 'DATABASE_PATH'),
+            'NAME':  '/var/lib/poem/poemserv.db',
             'ENGINE': 'django.db.backends.sqlite3',
+        }
+    }
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+			'TIMEOUT': 3600,
+			'OPTIONS': {
+				'MAX_ENTRIES': 400
+			}
         }
     }
     # Others
@@ -35,7 +45,6 @@ try:
     CIC_VO_URL = config.get('others', 'CIC_VO_URL')
     HOST_CERT = config.get('others', 'HOST_CERT')
     HOST_KEY = config.get('others', 'HOST_KEY')
-    ATP_URL = config.get('others', 'ATP_URL')
     POEM_URL_PREFIX = config.get('others', 'POEM_URL_PREFIX')
     TIME_ZONE = config.get('others', 'TIME_ZONE')
 
@@ -93,16 +102,15 @@ else:
 # Examples: "http://media.lawrence.com", "http://example.com/media/"
 # MEDIA_URL = '/poem_media/'
 STATIC_URL = '/poem_media/'
+# STATIC_ROOT = '/usr/share/poem/'
 
 # URL prefix for admin media -- CSS, JavaScript and images. Make sure to use a
 # trailing slash.
 # Examples: "http://foo.com/media/", "/media/".
-ADMIN_MEDIA_PREFIX = '/poem_media/admin/'
+# ADMIN_MEDIA_PREFIX = '/poem_media/admin/'
 
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = 'gjrm%pqd!)3l^)x%5)nb1r%x6_2c1lo@j#)1*sh9hwwzfji8dw'
-
-CACHE_BACKEND = 'locmem://?timeout=3600&max_entries=400'
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
@@ -147,15 +155,14 @@ AUTH_PROFILE_MODULE = 'poem.UserProfile'
 ROOT_URLCONF = 'Poem.urls'
 
 TEMPLATE_DIRS = (
-    #os_path.join(os_path.dirname(__file__), 'templates').replace('\\','/'),
     os_path.join(APP_PATH, 'poem/templates')
 )
 
 INSTALLED_APPS = (
     'django.contrib.auth',
     'django.contrib.contenttypes',
+    'django.contrib.staticfiles',
     'django.contrib.sessions',
     'django.contrib.admin',
-	'sslserver',
     'Poem.poem',
 )

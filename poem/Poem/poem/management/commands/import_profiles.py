@@ -19,11 +19,6 @@ class Command(BaseCommand):
                              help='URL containing JSON encoded list of profiles',
                              dest='url',
                              default=None),
-                 make_option('--mddb',
-                             action='store_true',
-                             help='Imports all profiles from MDDB',
-                             dest='is_mddb',
-                             default=False),
                  make_option('--initial',
                              action='store_true',
                              help='Only import profiles if poem database is empty',
@@ -44,11 +39,8 @@ class Command(BaseCommand):
             sys.exit(0)
 
         try:
-            if options.get('is_mddb'):
-                sync_ob = PoemSync(mddb=True)
-                sync_ob.sync_profile_list_from_url(url=options.get('url'))
             if args:
-                sync_ob = PoemSync(profile_list=args, mddb=False)
+                sync_ob = PoemSync(profile_list=args)
                 sync_ob.sync_profile_list_from_url(url=options.get('url'))
         except Exception, e:
             logger.error('Exception occured while trying to import profiles (%s)' % str(e))

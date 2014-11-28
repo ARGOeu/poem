@@ -37,6 +37,17 @@ from piston.handler import typemapper
 
 from Poem.poem import models
 
+def RemoveDoubleUnderscore(dic):
+    """
+    Fields referenced in related model with the help of foreign key are named
+    with double underscore frgkey__field. We don't want that.
+    """
+    for key in dic:
+        if "__" in key:
+            s = key.split("__")
+            dic[s[0]+"_"+s[1]] = dic.pop(key)
+    return dic
+
 
 class NamespaceHandler(handler.BaseHandler):
     """
@@ -78,25 +89,65 @@ class MetricsInProfile(handler.BaseHandler):
         },
     ]
     * *Supported formats*: xml, json
-    * *URL*: ``/api/0.1/<format>/metrics_in_profile/?vo_name=ops[&profile_name=ROC]``
+    * *URL*: ``/api/0.1/<format>/metrics_in_profiles/?vo_name=ops[&profile_name=ROC]``
     * *Supported methods*: GET
     """
-
-    allowed_methods = ('GET',)
-    model = models.MetricInstance
-    fields = ('profile_name', 'service_flavour', 'metric', 'vo', 'fqan')
 
     def read(self, request, attribute):
         lookup = request.GET.get("vo_name")
         if lookup:
             result = models.MetricInstance.objects.filter(vo__exact=lookup)
-            result = result.values('profile__name', 'service_flavour', 'vo', 'fqan', 'metric')
+            result = list(result.values('profile__name', 'service_flavour', 'vo', 'fqan', 'metric'))
+            result = map(lambda d: RemoveDoubleUnderscore(d), result)
             profile = request.GET.get("profile_name")
             if profile:
                 result = result.filter(profile__name__exact=profile)
             return result
         else:
-            return HttpResponseServerError("Need the name of VO")
+            # Piston bug:
+            # return HttpResponseServerError("Need the name of VO")
+            return "Need the name of VO"
+
+class CompProfileHandler(handler.BaseHandler):
+    """
+    Dumps the list of profiles available in this namespace. This API call is used by the
+    poem-sync synchronizer to get list of profiles and their attributes. Sample output:
+    ::
+        [ {
+        "name": "ALICE",
+        "atp_vo": "alice",
+        "metric_instances": [
+            {
+                "atp_service_type_flavour": "CE",
+                "fqan": "",
+                "metric": "org.sam.CE-JobSubmit",
+                "vo": "alice"
+            }, ....
+        ] ]
+
+    * *Supported formats*: json
+    * *URL*: ``/api/0.1/<format>/profiles``
+    * *Supported methods*: GET
+    """
+
+    def read(self, request):
+        lp = []
+        compatmi = {}
+        for profile in models.Profile.objects.all():
+            compatmi = profile.metric_instances.all().\
+                    values('metric', 'fqan', 'vo', 'service_flavour')
+            for mi in compatmi:
+                for key in mi:
+                    if key == "service_flavour":
+                        mi["atp_service_type_flavour"] = mi.pop(key)
+            lp.append({"name" : profile.name, "atp_vo" : profile.vo,
+                       "valid_from" : "2011-11-11 11:59:25", "valid_to" : None,
+                       "version" : profile.version, "owner" : profile.owner,
+                       "description" : profile.description, "extensions" : [],
+                       "groups" : [], "metric_instances" : compatmi
+                       })
+
+        return lp
 
 
 class ProfileHandler(handler.BaseHandler):
@@ -120,12 +171,19 @@ class ProfileHandler(handler.BaseHandler):
     * *URL*: ``/api/0.1/<format>/profiles``
     * *Supported methods*: GET
     """
-    model = models.Profile
-    allowed_methods = ('GET')
-    fields = ('id', 'name', 'version', 'vo',
-              'owner', 'description',
-              ('metric_instances', ('metric', 'fqan', 'vo', 'service_flavour')),
-             )
+
+    def read(self, request):
+        lp = []
+        for profile in models.Profile.objects.all():
+            lp.append({"name" : profile.name, "vo" : profile.vo,
+                       "version" : profile.version, "owner" : profile.owner,
+                       "description" : profile.description,
+                       "metric_instances" : profile.metric_instances.all().\
+                                      values('metric', 'fqan', 'vo', 'service_flavour')
+                       })
+
+        return lp
+
 
 class MetricInstanceHandler(handler.BaseHandler):
     """
@@ -146,12 +204,11 @@ class MetricInstanceHandler(handler.BaseHandler):
     * *Supported methods*: GET
     """
 
-    allowed_methods=('GET', )
-    model = models.Profile
-    fields = ('metric', 'service_flavour', 'vo', 'fqan')
-
     def read(self, request):
-        return models.MetricInstance.objects.distinct()
+        result = models.MetricInstance.objects.\
+            values('metric', 'profile__name', 'vo', 'service_flavour', 'fqan').\
+            distinct()
+        return map(lambda d: RemoveDoubleUnderscore(d), result)
 
 
 class MetricHandler(handler.BaseHandler):
@@ -171,10 +228,6 @@ class MetricHandler(handler.BaseHandler):
     * *Supported methods*: GET
     """
 
-    allowed_methods=('GET',)
-    fields= ('metric')
-    model = models.MetricInstance
-
     def read(self, request):
         if 'term' in request.GET:
             term = request.GET.get('term')
@@ -185,6 +238,7 @@ class MetricHandler(handler.BaseHandler):
             qs = models.MetricInstance.objects.all().values_list('metric').\
                 distinct()
             return set(map(lambda x: x[0], qs))
+
 
 class SuggestionHandler(handler.BaseHandler):
     """
@@ -200,9 +254,6 @@ class SuggestionHandler(handler.BaseHandler):
     * *Supported formats*: json
     * *Supported methods*: GET
     """
-
-    allowed_methods=('GET',)
-    fields = ('name',)
 
     def read(self, request, attribute):
         cache_key = request.path.split('?')[0]
