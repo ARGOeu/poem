@@ -97,11 +97,11 @@ class MetricsInProfile(handler.BaseHandler):
         lookup = request.GET.get("vo_name")
         if lookup:
             result = models.MetricInstance.objects.filter(vo__exact=lookup)
-            result = list(result.values('profile__name', 'service_flavour', 'vo', 'fqan', 'metric'))
-            result = map(lambda d: RemoveDoubleUnderscore(d), result)
             profile = request.GET.get("profile_name")
             if profile:
                 result = result.filter(profile__name__exact=profile)
+            result = list(result.values('profile__name', 'service_flavour', 'vo', 'fqan', 'metric'))
+            result = map(lambda d: RemoveDoubleUnderscore(d), result)
             return result
         else:
             # Piston bug:
