@@ -27,7 +27,8 @@ setup(name='poem',
     long_description='''The Profile Management (POEM) system couples metrics
                         and services and enables profile-based configuration of SAM/Nagios.''',
     url='https://tomtools.cern.ch/confluence/display/SAM/POEM',
-    scripts = ['bin/poem-syncvo', 'bin/poem-syncservtype', 'bin/poem-createdb'],
+    scripts = ['bin/poem-syncvo', 'bin/poem-syncservtype',
+               'bin/poem-createdb', 'bin/poem-importprofiles'],
     data_files = [
         ('/etc/poem', ['etc/poem.ini', 'etc/poem_logging.ini']),
         ('/etc/cron.d/', ['cron/poem-syncvosf']),

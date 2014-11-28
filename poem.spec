@@ -45,6 +45,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/poem-syncservtype
 %{_bindir}/poem-syncvo
 %{_bindir}/poem-createdb
+%{_bindir}/poem-importprofiles
 
 %config(noreplace) %{_sysconfdir}/%{name}/poem.ini
 %config %{_sysconfdir}/%{name}/poem_logging.ini
