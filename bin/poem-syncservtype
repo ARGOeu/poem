@@ -1,0 +1,8 @@
+#!/bin/sh
+
+RUNASUSER="apache"
+SITEPACK=$(python -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")
+
+su -s /bin/sh - $RUNASUSER -c \
+"export DJANGO_SETTINGS_MODULE=Poem.settings && \
+python $SITEPACK/Poem/sync/poem-syncservtype.py"

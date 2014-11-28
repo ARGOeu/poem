@@ -3,6 +3,9 @@ CHANGES
 LICENSE
 README
 setup.py
+bin/poem-createdb
+bin/poem-syncservtype
+bin/poem-syncvo
 etc/poem.ini
 etc/poem_logging.ini
 poem/Poem/__init__.py
@@ -42,6 +45,9 @@ poem/Poem/poem_api/urls.py
 poem/Poem/ssl_auth/__init__.py
 poem/Poem/ssl_auth/backends.py
 poem/Poem/ssl_auth/middleware.py
+poem/Poem/sync/__init__.py
+poem/Poem/sync/poem-syncservtype.py
+poem/Poem/sync/poem-syncvo.py
 poem/apache/poem.conf
 poem/apache/poem.wsgi
 poem/media/admin/css/base.css
@@ -144,5 +150,3 @@ poem/media/img/ui-anim_basic_16x16.gif
 poem/media/js/jquery-1.4.2.min.js
 poem/media/js/jquery-ui-1.8.6.custom.min.js
 poem/media/js/poem-custom.js
-sync/sync-servtype
-sync/sync-vo

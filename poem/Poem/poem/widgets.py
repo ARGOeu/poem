@@ -51,9 +51,9 @@ class JQueryAutoComplete(forms.TextInput):
 
 class FilteredSelectMultiple2(forms.SelectMultiple):
     class Media:
-        js = (settings.ADMIN_MEDIA_PREFIX + "js/core.js",
-              settings.ADMIN_MEDIA_PREFIX + "js/SelectBox.js",
-              settings.ADMIN_MEDIA_PREFIX + "js/SelectFilter2.js")
+        js = (settings.STATIC_URL + "admin/" + "js/core.js",
+              settings.STATIC_URL + "admin/" + "js/SelectBox.js",
+              settings.STATIC_URL + "admin/" + "js/SelectFilter2.js")
 
     def __init__(self, verbose_name, is_stacked, attrs=None, choices=()):
         self.verbose_name = verbose_name
@@ -66,7 +66,7 @@ class FilteredSelectMultiple2(forms.SelectMultiple):
         output.append(u'var t = []; $(".red_row").each(function(i, item) { t[i] = $(item).val() }); ')
         output.append(u' addEvent(window, "load", function(e) {')
         output.append(u'SelectFilter.init("id_%s", "%s", %s, "%s"); });' % \
-            (name, self.verbose_name.replace('"', '\\"'), int(self.is_stacked), settings.ADMIN_MEDIA_PREFIX))
+            (name, self.verbose_name.replace('"', '\\"'), int(self.is_stacked), settings.STATIC_URL + "admin/"))
         output.append(u'$(function() {setTimeout(function() { $.each(window.t, function(i, item) { $("#id_groups_to option[value="+item+"]").css("color","red"); $("#id_groups_from option[value="+item+"]").css("color","red"); }); }, 2000 );} );')
         output.append(u'</script>\n' )
         return mark_safe(u''.join(output))

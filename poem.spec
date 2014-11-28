@@ -7,7 +7,7 @@ Release:        1%{?dist}
 Summary:        Profile Management (POEM) system for Service Availability Monitoring (SAM).
 Group:          Web application
 License:        ASL 2.0
-Vendor:     CERN
+Vendor:         CERN
 URL:            https://tomtools.cern.ch/confluence/display/SAM/POEM
 Source0:        poem-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
@@ -42,18 +42,23 @@ rm -rf $RPM_BUILD_ROOT
 %{python_sitelib}/Poem/*
 %{python_sitelib}/*egg-info
 
-%{_bindir}/sync-servtype
-%{_bindir}/sync-vo
+%{_bindir}/poem-syncservtype
+%{_bindir}/poem-syncvo
+%{_bindir}/poem-createdb
+%{_bindir}/poem-importprofiles
 
 %config(noreplace) %{_sysconfdir}/%{name}/poem.ini
 %config %{_sysconfdir}/%{name}/poem_logging.ini
 %config %{_sysconfdir}/httpd/conf.d/poem.conf
+%attr(0644,root,root) %{_sysconfdir}/cron.d/poem-syncvosf
 
-%dir %{_var}/log/%{name}
-%dir %{_var}/lib/%{name}
 %{_datadir}/%{name}/apache/poem.wsgi
-
 %{_datadir}/%{name}/media/*
+
+
+%defattr(-,apache,apache,-)
+%dir %{_var}/lib/%{name}
+%dir %{_var}/log/%{name}
 
 %pre 
 

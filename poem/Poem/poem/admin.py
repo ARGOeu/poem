@@ -25,11 +25,11 @@ from Poem.poem.models import MetricInstance, Profile, UserProfile
 from Poem.poem import widgets
 from Poem.poem.admin_ext import ReadPermissionModelAdmin
 
-#HINTS_URL = u"'%s" % (settings.POEM_URL_PREFIX+"/api/0.1/json/hints")
+HINTS_URL = u"'%s" % (settings.POEM_URL_PREFIX+"/api/0.1/json/hints")
 
 # POEM_URL_PREFIX is needed for apache
 # TODO remove it once we are done with testing
-HINTS_URL = u"'%s" % ("/api/0.1/json/hints")
+# HINTS_URL = u"'%s" % ("/api/0.1/json/hints")
 
 class MetricInstanceForm(forms.ModelForm):
     """
@@ -39,26 +39,18 @@ class MetricInstanceForm(forms.ModelForm):
         model = MetricInstance
         exclude = ('vo',)
 
-    metric = forms.CharField(help_text='Namespace of the probe.',
-                             label='Metric', max_length=128,
+    metric = forms.CharField(label='Metric', max_length=128,
                              widget = widgets.JQueryAutoComplete(
                                         options={'source': HINTS_URL+"/metrics/'",
                                                  'minLegth': 2},
                                         attrs={'maxlength': 128, 'size': 50})
                             )
-    service_flavour = forms.CharField(label='Service Flavour',
-                                help_text='Service flavour of the probe.', max_length=128,
+    service_flavour = forms.CharField(label='Service Flavour', max_length=128,
                                 widget = widgets.JQueryAutoComplete(
                                   options={'source': HINTS_URL+"/service_flavours/'",
                                            'minLength': 2},
                                   attrs={'maxlength': 128, 'size': 25})
                                 )
-    #vo = forms.CharField(help_text='Virtual organization.', required=False,
-    #                         label='VO', max_length=128,
-    #                         widget = widgets.JQueryAutoComplete(
-    #                                        options={'source': HINTS_URL+"/vo/'",
-    #                                                 'minLength': 2},
-    #                                        attrs={'maxlength': 128, 'size': 11}))
 
     def clean_service_flavour(self):
         form_flavour = self.cleaned_data['service_flavour']
@@ -80,7 +72,7 @@ class ProfileForm(forms.ModelForm):
         css = { "all" : ("/poem_media/css/poem_profile.custom.css",) }
         js = ( '/poem_media/js/poem-custom.js', )
 
-    name = forms.CharField(help_text='Namespace and name of this profile. This entry will appear in the MyEGI/MyWLCG.',
+    name = forms.CharField(help_text='Namespace and name of this profile.',
                            max_length=128,
                            widget = widgets.NamespaceTextInput(
                                            attrs={'maxlength': 128, 'size': 45})
@@ -92,12 +84,6 @@ class ProfileForm(forms.ModelForm):
                                                      'minLength': 2},
                                             attrs={'maxlength': 128, 'size': 11})
                              )
-    #tags = TagField(required=False, help_text='A comma separated list of tags assigned to this profile.',
-    #                       label='Tags',
-    #                       max_length=128,
-    #                       widget = widgets.TagAutocomplete(attrs={'style':'width:480px',
-    #                                                               'autocomplete': 'off'})
-    #                       )
     description = forms.CharField(help_text='Free text description outlining the purpose of this profile.',
                                   widget = forms.Textarea(attrs={'style':'width:480px;height:100px'})
                                   )
@@ -149,6 +135,11 @@ class ProfileAdmin(ReadPermissionModelAdmin):
         if change and obj.vo:
             obj.metric_instances.update(vo=obj.vo)
         obj.save()
+
+    def get_row_css(self, obj, index):
+        if not obj.valid:
+            return 'row_red red%d' % index
+        return ''
 
 admin.site.register(Profile, ProfileAdmin)
 
