@@ -6,6 +6,7 @@ include setup.py
 include etc/*
 include poem/apache/*
 include cron/*
+include bin/*
 
 recursive-include poem/media *.css *.js *.jpg *.png *.gif
 recursive-include poem/Poem/poem/templates *.html
