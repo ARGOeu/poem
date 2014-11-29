@@ -2,7 +2,7 @@
 from distutils.core import setup
 import os
 
-VERSION='0.10.0'
+NAME='poem'
 
 def get_files(install_prefix, directory):
     files = []
@@ -15,11 +15,17 @@ def get_files(install_prefix, directory):
             files.append((os.path.join(install_prefix, root), subdir_files))
     return files
 
-poem_media_files = get_files("/usr/share", "poem/media")
-# poem_doc_files = get_files("/usr/share/doc/poem-"+VERSION, "poem/doc")
+def get_ver():
+    for fn in os.listdir('.'):
+        if NAME+'.spec' in fn:
+            for line in open(NAME+'.spec'):
+                if "Version:" in line:
+                    return line.split()[1]
 
-setup(name='poem',
-    version=VERSION,
+poem_media_files = get_files("/usr/share", "poem/media")
+
+setup(name=NAME,
+    version=get_ver(),
     description='Profile Management (POEM) for ARGO.',
     author='CERN',
     author_email='tom-developers@cern.ch',
