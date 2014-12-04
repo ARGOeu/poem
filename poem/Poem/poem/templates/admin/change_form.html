@@ -15,12 +15,24 @@
 {% block bodyclass %}{{ opts.app_label }}-{{ opts.object_name.lower }} change-form{% endblock %}
 
 {% block breadcrumbs %}{% if not is_popup %}
-<div class="breadcrumbs">
-     <a href="../../../">{% trans "Home" %}</a> &rsaquo;
-     <a href="../../">{{ app_label|capfirst|escape }}</a> &rsaquo;
-     {% if has_change_permission %}<a href="../">{{ opts.verbose_name_plural|capfirst }}</a>{% else %}{{ opts.verbose_name_plural|capfirst }}{% endif %} &rsaquo;
-     {% if add %}{% trans "Add" %} {{ opts.verbose_name }}{% else %}{{ original|truncatewords:"18" }}{% endif %}
-</div>
+  <div class="breadcrumbs">
+     <a href="../../../">{% trans "Home" %}</a> 
+     {% comment %}
+     {% if user.is_superuser %}
+       &rsaquo; <a href="../../">{{ app_label|capfirst|escape  }}</a>
+     {% endif %} 
+     {% endcomment %}
+     {% if has_change_permission %}
+       &rsaquo; <a href="../">{{ opts.verbose_name_plural|capfirst }}</a>
+     {% else %}
+       &rsaquo; {{ opts.verbose_name_plural|capfirst }}
+     {% endif %} 
+     {% if add %}
+        {% trans "Add" %} {{ opts.verbose_name }}
+      {% else %}
+        &rsaquo; {{ original|truncatewords:"18" }}
+      {% endif %}
+  </div>
 {% endif %}{% endblock %}
 
 {% block content %}<div id="content-main">
@@ -58,9 +70,9 @@
 {% block after_related_objects %}{% endblock %}
 
 {% if not request.readonly %}
-	{% submit_row %}
+  {% submit_row %}
 {% else %}
-	<div class="submit-row"> This is a read-only instance, please request the corresponding permissions to perform any changes in this form. </div>
+  <div class="submit-row"> This is a read-only instance, please request the corresponding permissions to perform any changes in this form. </div>
 {% endif %}
 {% if adminform and add %}
    <script type="text/javascript">document.getElementById("{{ adminform.first_field.id_for_label }}").focus();</script>

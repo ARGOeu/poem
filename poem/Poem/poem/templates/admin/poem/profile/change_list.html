@@ -7,5 +7,11 @@
    <link rel="stylesheet" type="text/css" href="/poem_media/css/poem_profile.custom.css" />
 {% endblock %}
 
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+       <a href="/poem/admin">{% trans "Home" %}</a>
+   </div>
+{% endblock %}
+
 {% block content_title %}{% if title %}<h1>{{ title }} in namespace {{ POEM_NAMESPACE|upper }}</h1>{% endif %}{% endblock %}
 
