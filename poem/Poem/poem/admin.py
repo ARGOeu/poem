@@ -1,14 +1,7 @@
 """
 Admin interface is following a customization pattern explain in Django Admin docs.
-The implemented hierarchy is as follows:
-::
-  -> class ProfileAdmin(ReadPermissionModelAdmin) uses ProfileForm & MetricInstanceInline
-  \-->  class ProfileForm(forms.ModelForm)
-  \-->  class MetricInstanceInline(admin.TabularInline) uses MetricInstanceForm
-    \---> class MetricInstanceForm(forms.ModelForm)
-
-Read-only ModelAdmin extension is documented in :py:mod:`poem.admin_ext`. Custom ProfileForm connects
-core profile attribute to jQuery widgets. MetricInstanceForm does the same for metric instances.
+Custom ProfileForm connects core profile attribute to jQuery widgets.
+MetricInstanceForm does the same for metric instances.
 
 """
 from django import forms
@@ -17,19 +10,20 @@ from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
 from django.contrib import admin
 from django.conf import settings
+from django.core.cache import cache
 
 from piston.models import Nonce, Consumer, Token
 from piston.resource import Resource
 
-from Poem.poem.models import MetricInstance, Profile, UserProfile
+from Poem.poem.models import MetricInstance, Profile, UserProfile, VO, ServiceFlavour
 from Poem.poem import widgets
-from Poem.poem.admin_ext import ReadPermissionModelAdmin
 
 HINTS_URL = u"'%s" % (settings.POEM_URL_PREFIX+"/api/0.1/json/hints")
 
 # POEM_URL_PREFIX is needed for apache
 # TODO remove it once we are done with testing
 # HINTS_URL = u"'%s" % ("/api/0.1/json/hints")
+
 
 class MetricInstanceForm(forms.ModelForm):
     """
@@ -53,12 +47,46 @@ class MetricInstanceForm(forms.ModelForm):
                                 )
 
     def clean_service_flavour(self):
+        clean_values = []
+        getcache = cache.get("/api/0.2/json/hints/service_flavours")
+        if not getcache:
+            clean_values = [sf.name for sf in ServiceFlavour.objects.all()]
+            cache.set("/api/0.2/json/hints/service_flavours", clean_values)
+        else:
+            clean_values = getcache
         form_flavour = self.cleaned_data['service_flavour']
+        if form_flavour not in clean_values:
+            raise ValidationError("Unable to find flavour %s." % (str(form_flavour)))
         return form_flavour
+
+class MetricInstanceFormRO(MetricInstanceForm):
+    metric = forms.CharField(label='Metric', widget=None)
+    service_flavour = forms.CharField(label='Service Flavour', widget=None)
 
 class MetricInstanceInline(admin.TabularInline):
     model = MetricInstance
     form = MetricInstanceForm
+
+    def has_add_permission(self, request):
+        if request.user.has_perm('poem.readonly_profile') and \
+                not request.user.is_superuser:
+            self.form = MetricInstanceFormRO
+            return False
+        else:
+            return True
+
+    def has_delete_permission(self, request, obj=None):
+        if request.user.has_perm('poem.readonly_profile') and \
+                not request.user.is_superuser:
+            self.form = MetricInstanceFormRO
+            return False
+        else:
+            return True
+
+    def has_change_permission(self, request, obj=None):
+        # if request.user.has_perm('poem.readonly_profile'):
+        #     self.readonly_fields = ('profile', 'service_flavour', 'metric', 'fqan')
+        return True
 
 class ProfileForm(forms.ModelForm):
     """
@@ -92,7 +120,16 @@ class ProfileForm(forms.ModelForm):
                             widget=forms.TextInput(attrs={'style':'width:540px'}))
 
     def clean_vo(self):
+        clean_values = []
+        getcache = cache.get("/api/0.2/json/hints/vo")
+        if not getcache:
+            clean_values = [vo.name for vo in VO.objects.all()]
+            cache.set("/api/0.2/json/hints/vo", clean_values)
+        else:
+            clean_values = getcache
         form_vo = self.cleaned_data['vo']
+        if form_vo not in clean_values:
+            raise ValidationError("Unable to find virtual organization %s." % (str(form_vo)))
         return form_vo
 
     def clean(self):
@@ -114,7 +151,11 @@ class ProfileForm(forms.ModelForm):
 
         return self.cleaned_data
 
-class ProfileAdmin(ReadPermissionModelAdmin):
+class ProfileFormRO(ProfileForm):
+    vo = forms.CharField(help_text='Virtual organization that owns this profile.',
+                             label='VO', max_length=128, widget=None)
+
+class ProfileAdmin(admin.ModelAdmin):
     """
     POEM admin core class that customizes its look and feel.
     """
@@ -140,6 +181,28 @@ class ProfileAdmin(ReadPermissionModelAdmin):
         if not obj.valid:
             return 'row_red red%d' % index
         return ''
+
+    def has_add_permission(self, request):
+        if request.user.has_perm('poem.readonly_profile') and \
+                not request.user.is_superuser:
+            self.form = ProfileFormRO
+            return False
+        else:
+            return True
+
+    def has_delete_permission(self, request, obj=None):
+        if request.user.has_perm('poem.readonly_profile') and \
+                not request.user.is_superuser:
+            self.form = ProfileFormRO
+            return False
+        else:
+            return True
+
+    def has_change_permission(self, request, obj=None):
+        # if request.user.has_perm('poem.readonly_profile'):
+        #     self.readonly_fields = ('name', 'vo', 'owner', 'description')
+        return True
+
 
 admin.site.register(Profile, ProfileAdmin)
 

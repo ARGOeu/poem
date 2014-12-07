@@ -81,6 +81,7 @@ class MetricInstance(models.Model):
         return u'%s %s %s %s' % (self.service_flavour, self.metric,
                               self.fqan, self.vo)
 
+
 # workaround for default metric instance VO
 def mi_default_vo(sender, instance, **kwargs):
     instance.vo=instance.profile.vo

@@ -69,7 +69,7 @@
 
 {% block after_related_objects %}{% endblock %}
 
-{% if not request.readonly %}
+{% if user.is_superuser or not perms.poem.readonly_profile %}
   {% submit_row %}
 {% else %}
   <div class="submit-row"> This is a read-only instance, please request the corresponding permissions to perform any changes in this form. </div>
