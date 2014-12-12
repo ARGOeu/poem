@@ -50,7 +50,8 @@ class MetricInstanceForm(forms.ModelForm):
         clean_values = []
         getcache = cache.get("/api/0.2/json/hints/service_flavours")
         if not getcache:
-            clean_values = [sf.name for sf in ServiceFlavour.objects.all()]
+            clean_values = set([sf.name for sf in ServiceFlavour.objects.all()])
+            clean_values.update(set([mi.service_flavour for mi in MetricInstance.objects.all()]))
             cache.set("/api/0.2/json/hints/service_flavours", clean_values)
         else:
             clean_values = getcache
