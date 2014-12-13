@@ -57,6 +57,7 @@ class Profile(models.Model):
     class Meta:
         ordering = ['name', 'version']
         unique_together = ('name', 'version')
+        permissions = (('owner', 'Owner of profile'),)
 
     def __unicode__(self):
         return u'%s %s %s' % (self.name, self.version, self.vo)

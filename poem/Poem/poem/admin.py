@@ -6,7 +6,7 @@ MetricInstanceForm does the same for metric instances.
 """
 from django import forms
 from django.forms import ValidationError
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Permission
 from django.contrib.auth.admin import UserAdmin
 from django.contrib import admin
 from django.conf import settings
@@ -24,6 +24,7 @@ HINTS_URL = u"'%s" % (settings.POEM_URL_PREFIX+"/api/0.1/json/hints")
 # TODO remove it once we are done with testing
 # HINTS_URL = u"'%s" % ("/api/0.1/json/hints")
 
+dnowner = ""
 
 class MetricInstanceForm(forms.ModelForm):
     """
@@ -69,6 +70,11 @@ class MetricInstanceInline(admin.TabularInline):
     form = MetricInstanceForm
 
     def has_add_permission(self, request):
+        try:
+            if request.META['SSL_CLIENT_S_DN'] == dnowner:
+                return True
+        except KeyError:
+            pass
         if request.user.has_perm('poem.readonly_profile') and \
                 not request.user.is_superuser:
             self.form = MetricInstanceFormRO
@@ -77,6 +83,11 @@ class MetricInstanceInline(admin.TabularInline):
             return True
 
     def has_delete_permission(self, request, obj=None):
+        try:
+            if request.META['SSL_CLIENT_S_DN'] == dnowner:
+                return True
+        except KeyError:
+            pass
         if request.user.has_perm('poem.readonly_profile') and \
                 not request.user.is_superuser:
             self.form = MetricInstanceFormRO
@@ -133,25 +144,6 @@ class ProfileForm(forms.ModelForm):
             raise ValidationError("Unable to find virtual organization %s." % (str(form_vo)))
         return form_vo
 
-    def clean(self):
-        # Basic object-level authorization workaround
-        super(ProfileForm, self).clean()
-
-        owner = self.instance.owner
-        if self._request.user.is_superuser:
-            return self.cleaned_data
-
-        # if user has no profile (default django user) then deny
-        try:
-            self._request.user.get_profile()
-        except UserProfile.DoesNotExist:
-            raise ValidationError("Unable to authorize user, please request to add your DN to this profile (%s)." % owner)
-
-        if owner and self._request.user.get_profile().subject != owner:
-            raise ValidationError("Sorry, this profile can only be changed by its owner (%s)." % owner)
-
-        return self.cleaned_data
-
 class ProfileFormRO(ProfileForm):
     vo = forms.CharField(help_text='Virtual organization that owns this profile.',
                              label='VO', max_length=128, widget=None)
@@ -171,6 +163,8 @@ class ProfileAdmin(admin.ModelAdmin):
     def get_form(self, request, obj=None, **kwargs):
         cls = super(ProfileAdmin, self).get_form(request, obj=None, **kwargs)
         cls._request = request
+        global dnowner
+        dnowner = obj.owner
         return cls
 
     def save_model(self, request, obj, form, change):
@@ -184,6 +178,16 @@ class ProfileAdmin(admin.ModelAdmin):
         return ''
 
     def has_add_permission(self, request):
+        try:
+            if request.META['SSL_CLIENT_S_DN'] == dnowner:
+                ownerperm = Permission.objects.get(codename='owner')
+                request.user.user_permissions.add(ownerperm)
+                return True
+            elif request.user.has_perm('poem.owner'):
+                ownerperm = Permission.objects.get(codename='owner')
+                request.user.user_permissions.remove(ownerperm)
+        except KeyError:
+            pass
         if request.user.has_perm('poem.readonly_profile') and \
                 not request.user.is_superuser:
             self.form = ProfileFormRO
@@ -192,6 +196,16 @@ class ProfileAdmin(admin.ModelAdmin):
             return True
 
     def has_delete_permission(self, request, obj=None):
+        try:
+            if request.META['SSL_CLIENT_S_DN'] == dnowner:
+                ownerperm = Permission.objects.get(codename='owner')
+                request.user.user_permissions.add(ownerperm)
+                return True
+            elif request.user.has_perm('poem.owner'):
+                ownerperm = Permission.objects.get(codename='owner')
+                request.user.user_permissions.remove(ownerperm)
+        except KeyError:
+            pass
         if request.user.has_perm('poem.readonly_profile') and \
                 not request.user.is_superuser:
             self.form = ProfileFormRO
