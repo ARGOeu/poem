@@ -16,11 +16,13 @@ def get_files(install_prefix, directory):
     return files
 
 def get_ver():
-    for fn in os.listdir('.'):
-        if NAME+'.spec' in fn:
-            for line in open(NAME+'.spec'):
-                if "Version:" in line:
-                    return line.split()[1]
+    try:
+        for line in open(NAME+'.spec'):
+            if "Version:" in line:
+                return line.split()[1]
+    except IOError:
+        print "Make sure that %s is in directory"  % (NAME+'.spec')
+        sys.exit(1)
 
 poem_media_files = get_files("/usr/share", "poem/media")
 
