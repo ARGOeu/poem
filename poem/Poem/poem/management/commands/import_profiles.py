@@ -28,11 +28,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         logger.info( "Running synchronizer for POEM sync")
-        #sync_ob.sync_expression_list_from_url('file:///root//workspace/poem/poem_sync/Poem_sync/poem_sync/fixtures/api/0.1/expressions')
-        #sync_ob.sync_profile_list_from_url('file:///root//workspace/poem/poem_sync/Poem_sync/poem_sync/fixtures/api/0.1/profiles')
         if not options.get('url'):
-            raise CommandError('Usage is %s' % self.args)
-        if args and options.get('is_mddb'):
             raise CommandError('Usage is %s' % self.args)
         if options.get('is_initial') and Profile.objects.all():
             logger.warning('Database already contains profiles .. skipping.')

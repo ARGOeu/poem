@@ -144,10 +144,6 @@ class ProfileForm(forms.ModelForm):
             raise ValidationError("Unable to find virtual organization %s." % (str(form_vo)))
         return form_vo
 
-class ProfileFormRO(ProfileForm):
-    vo = forms.CharField(help_text='Virtual organization that owns this profile.',
-                             label='VO', max_length=128, widget=None)
-
 class ProfileAdmin(admin.ModelAdmin):
     """
     POEM admin core class that customizes its look and feel.
@@ -190,7 +186,6 @@ class ProfileAdmin(admin.ModelAdmin):
             pass
         if request.user.has_perm('poem.readonly_profile') and \
                 not request.user.is_superuser:
-            self.form = ProfileFormRO
             return False
         else:
             return True
@@ -208,14 +203,11 @@ class ProfileAdmin(admin.ModelAdmin):
             pass
         if request.user.has_perm('poem.readonly_profile') and \
                 not request.user.is_superuser:
-            self.form = ProfileFormRO
             return False
         else:
             return True
 
     def has_change_permission(self, request, obj=None):
-        # if request.user.has_perm('poem.readonly_profile'):
-        #     self.readonly_fields = ('name', 'vo', 'owner', 'description')
         return True
 
 

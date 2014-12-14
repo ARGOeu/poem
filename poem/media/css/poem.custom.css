@@ -22,6 +22,9 @@ td.field-fqan {
   width: 258px;
 }
 
+input#id_vo.ui-autocomplete-input {
+ width: 200px;
+}
 
 td.field-fqan input {
   width: 228px;
