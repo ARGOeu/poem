@@ -24,14 +24,14 @@ def getDataFromXMLX509(url, u_key_file, u_cert_file, header = {'Python-urllib': 
         def https_open(self, req):
             return self.do_open(HTTPSClientAuthConnection, req)
 
-    output_data = None
+    ret = None
     try:
         opener = urllib2.build_opener(urllib2.HTTPHandler(),HTTPSClientAuthHandler())
         req = urllib2.Request(url, None, header)
-        output_data = opener.open(req).read()
+        ret = opener.open(req).read()
     except Exception, e:
-        output_data = None
-    return output_data
+        return (1, e)
+    return (0, ret)
 
 
 def main():
@@ -45,29 +45,38 @@ def main():
             if not os.path.exists(fp):
                 raise IOError("invalid path %s" % (fp))
             else:
-               fos.append(open(fp))
-
-        XML_Element_Feed = getDataFromXMLX509(settings.GOCDB_SERVICETYPE_URL,\
-                                        settings.HOST_KEY, settings.HOST_CERT)
-        Root = ElementTree.XML(XML_Element_Feed)
-        Feed_List = []
-        for element in Root.findall("SERVICE_TYPE"):
-            Element_List = {}
-            if element.getchildren():
-                for child_element in element.getchildren():
-                    Element_List[string.lower(child_element.tag)] = (child_element.text)
-            Feed_List.append(Element_List)
-
-        for fo in fos:
-            fo.close()
-
+                fos.append(open(fp))
     except IOError as e:
         logger.error(e)
         sys.exit(1)
+    for fo in fos:
+        fo.close()
 
+    (excepraise, ret) = getDataFromXMLX509(settings.GOCDB_SERVICETYPE_URL,\
+                                    settings.HOST_KEY, settings.HOST_CERT)
+    if excepraise:
+        logger.error("Error service flavours feed - %s" % (ret))
+        sys.exit(1)
+
+    try:
+        Root = ElementTree.XML(ret)
     except Exception as e:
+        logger.error("Error parsing service flavours - %s" % (e))
+        sys.exit(1)
+
+    elements = Root.findall("SERVICE_TYPE")
+    if not elements:
         logger.error("Error parsing service flavours")
         sys.exit(1)
+
+    Feed_List = []
+    for element in elements:
+        Element_List = {}
+        if element.getchildren():
+            for child_element in element.getchildren():
+                Element_List[string.lower(child_element.tag)] = (child_element.text)
+        Feed_List.append(Element_List)
+
 
     sfindb = set([sf.name for sf in models.ServiceFlavour.objects.all()])
     if len(sfindb) != len(Feed_List):

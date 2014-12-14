@@ -13,22 +13,20 @@ from xml.etree import ElementTree
 
 logger = logging.getLogger("POEM")
 
-
-def getDataFromXML(url):
-    "Extracts XML data from an URL feed."
-    output_data = None
-    try:
-        output_data = urllib2.urlopen(url).read()
-    except Exception, e:
-        output_data = None
-    return output_data
-
 def main():
     "Parses VO list provided by CIC portal"
 
-    vo_xml = getDataFromXML(settings.CIC_VO_URL)
-    Root = ElementTree.XML(vo_xml)
-    idcards = Root.findall("IDCard")
+    try:
+        ret = urllib2.urlopen(settings.CIC_VO_URL).read()
+    except Exception as e:
+        logger.error('VO card - '+'%s' % (e))
+        sys.exit(1)
+    try:
+        Root = ElementTree.XML(ret)
+        idcards = Root.findall("IDCard")
+    except Exception as e:
+        logger.error('Could not parse VO card - '+'%s' % (e))
+        sys.exit(1)
     if len(idcards) > 0:
         vos = []
         for vo_element in idcards:
