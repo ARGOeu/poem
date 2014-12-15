@@ -35,37 +35,46 @@
                 {% if docsroot %}
                     <a href="{{ docsroot }}">{% trans 'Documentation' %}</a> /
                 {% endif %}
-				{% if not user.get_profile.subject %}
-	                {% url 'admin:password_change' as password_change_url %}
-	                {% if password_change_url %}
-	                    <a href="{{ password_change_url }}">
-	                {% else %}
-	                    <a href="{{ root_path }}password_change/">
-	                {% endif %}
-	                {% trans 'Change password' %}</a>
-				{% endif %} /
-	                {% url 'admin:logout' as logout_url %}
-	                {% if logout_url %}
-	                    <a href="{% to_http request.build_absolute_uri logout_url %}">
-	                {% else %}
+        {% if not user.get_profile.subject %}
+                  {% url 'admin:password_change' as password_change_url %}
+                  {% if password_change_url %}
+                      <a href="{{ password_change_url }}">
+                  {% else %}
+                      <a href="{{ root_path }}password_change/">
+                  {% endif %}
+                  {% trans 'Change password' %}</a>
+        {% endif %} /
+                  {% url 'admin:logout' as logout_url %}
+                  {% if logout_url %}
+                      <a href="{% to_http request.build_absolute_uri logout_url %}">
+                  {% else %}
                         {% with root_path|add:"logout/" as root_logout_url %}
-	                    <a href="{% to_http request.build_absolute_uri root_logout_url %}">
-	                    {% endwith %}
-	                {% endif %}
-	                {% trans 'Log out' %}</a>
+                      <a href="{% to_http request.build_absolute_uri root_logout_url %}">
+                      {% endwith %}
+                  {% endif %}
+                  {% trans 'Log out' %}</a>
             {% endblock %}
         </div>
         {% endif %}
         {% block nav-global %}{% endblock %}
     </div>
     <!-- END Header -->
-    {% block breadcrumbs %}<div class="breadcrumbs"><a href="/">{% trans 'Home' %}</a>{% if title %} &rsaquo; {{ title }}{% endif %}</div>{% endblock %}
+    {% block breadcrumbs %}
+
+      <div class="breadcrumbs">
+        <a href="/">{% trans 'Home' %}</a>
+        {% if title %} 
+          &rsaquo; {{ title }}
+        {% endif %}
+      </div>
+
+    {% endblock %}
     {% endif %}
 
         {% if messages %}
         <ul class="messagelist">{% for message in messages %}
           <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-	{% endfor %}</ul>
+  {% endfor %}</ul>
         {% endif %}
 
     <!-- Content -->

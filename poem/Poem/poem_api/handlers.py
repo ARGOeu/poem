@@ -263,7 +263,8 @@ class SuggestionHandler(handler.BaseHandler):
             if attribute == "vo":
                 values = [vo.name for vo in models.VO.objects.all()]
             elif attribute == "service_flavours":
-                values = [sf.name for sf in models.ServiceFlavour.objects.all()]
+                values = set([sf.name for sf in models.ServiceFlavour.objects.all()])
+                values.update(set([mi.service_flavour for mi in models.MetricInstance.objects.all()]))
             cache.set(cache_key, values)
         else:
             values = cache.get(cache_key)

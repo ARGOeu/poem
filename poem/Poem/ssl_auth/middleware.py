@@ -6,7 +6,7 @@ from django.contrib.auth.middleware import RemoteUserMiddleware
 
 class SSLMiddleware(RemoteUserMiddleware):
     header = settings.SSL_USERNAME
-    
+
     def process_request(self, request):
         # AuthenticationMiddleware is required so that request.user exists.
         if not hasattr(request, 'user'):

@@ -88,14 +88,22 @@ class SSLBackend(ModelBackend):
 
         # set default permissions (add/change metric instance, change profile)
         try:
-#            pr_ct = ContentType.objects.get(app_label='poem', model='profile')
-            mi_ct = ContentType.objects.get(app_label='poem', model='metricinstance')
+            pr_ct = ContentType.objects.get(app_label='poem', model='profile')
+#            mi_ct = ContentType.objects.get(app_label='poem', model='metricinstance')
 #            user.user_permissions.add(Permission.objects.get(
 #                                            codename='change_profile',
 #                                            content_type=pr_ct))
-            user.user_permissions.add(Permission.objects.get(
-                                            codename='change_metricinstance',
-                                            content_type=mi_ct))
+            user.user_permissions.add(Permission.objects.create(
+                                            codename='readonly_profile',
+                                            content_type=pr_ct,
+                                            name="Readonly profile"))
+#            user.user_permissions.add(Permission.objects.get(
+#                                            codename='change_metricinstance',
+#                                            content_type=mi_ct))
+#            user.user_permissions.add(Permission.objects.create(
+#                                            codename='readonly_metricinstance',
+#                                            content_type=mi_ct,
+#                                            name='Readonly metricinstance'))
 #            user.user_permissions.add(Permission.objects.get(
 #                                            codename='add_metricinstance',
 #                                            content_type=mi_ct))

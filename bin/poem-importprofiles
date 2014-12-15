@@ -3,18 +3,41 @@
 RUNASUSER="apache"
 URLDEF="http://mon.egi.eu/poem/api/0.2/json/profiles/"
 
-if [ "$1" = "--url" ]
+initial=
+url=$URLDEF
+
+usage()
+{
+	printf "Usage: %s [-i] [-url <URL>] PROFILE1 PROFILE2 ...\n" $(basename $0) >&2
+	printf "       [-i] - Only import profiles if poem database is empty\n" >&2
+	printf "       [-u <URL>] - URL containing JSON encoded list of profiles\n" >&2
+	printf "       PROFILE1 PROFILE2 - space separated list of profiles\n" >&2
+	exit 2
+}
+
+while getopts 'iu:' OPTION
+do
+	case $OPTION in
+		i)
+			initial="--initial"
+			;;
+		u)
+			url="$OPTARG"
+			;;
+		?)
+			usage
+			;;
+	esac
+done
+
+if (($# == 0))
 then
-	url="$2"
-	shift 2
-else
-	url=$URLDEF
+	usage
+	exit 2
 fi
 
-for prof in $@
-do
-	su -s /bin/sh - $RUNASUSER -c \
-	"export DJANGO_SETTINGS_MODULE=Poem.settings && \
-	django-admin import_profiles --url $url $prof" 
-done	
+shift $(($OPTIND - 1))
 
+su -s /bin/sh - $RUNASUSER -c \
+"export DJANGO_SETTINGS_MODULE=Poem.settings && \
+django-admin import_profiles $initial --url $url $*"

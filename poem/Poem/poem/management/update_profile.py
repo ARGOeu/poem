@@ -59,7 +59,8 @@ class PoemSync(object):
             except KeyError: key='atp_vo'
             pobj1 = Profile(name=p_dict['name'],
                     version=p_dict['version'],
-                    vo=p_dict[key]
+                    vo=p_dict[key],
+                    description=p_dict['description']
                     )
             try:
                 pobj = Profile.objects.get(name=p_dict['name'], version=p_dict['version'])
@@ -79,7 +80,7 @@ class PoemSync(object):
         try:
             pobj = Profile.objects.get(name=p_dict['name'], version=p_dict['version'])
             pobj.owner = pobj1.owner
-            pobj.description = pobj.description
+            pobj.description = pobj1.description
             pobj.vo = pobj1.vo
         except Profile.DoesNotExist:
             pobj = pobj1

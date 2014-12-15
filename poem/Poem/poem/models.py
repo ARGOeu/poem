@@ -57,6 +57,7 @@ class Profile(models.Model):
     class Meta:
         ordering = ['name', 'version']
         unique_together = ('name', 'version')
+        permissions = (('owner', 'Owner of profile'),)
 
     def __unicode__(self):
         return u'%s %s %s' % (self.name, self.version, self.vo)
@@ -80,6 +81,7 @@ class MetricInstance(models.Model):
     def __unicode__(self):
         return u'%s %s %s %s' % (self.service_flavour, self.metric,
                               self.fqan, self.vo)
+
 
 # workaround for default metric instance VO
 def mi_default_vo(sender, instance, **kwargs):
