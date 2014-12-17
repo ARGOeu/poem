@@ -30,8 +30,8 @@ def getDataFromXMLX509(url, u_key_file, u_cert_file, header = {'Python-urllib': 
         req = urllib2.Request(url, None, header)
         ret = opener.open(req).read()
     except Exception, e:
-        return (1, e)
-    return (0, ret)
+        return (True, e)
+    return (False, ret)
 
 
 def main():

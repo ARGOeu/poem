@@ -11,6 +11,7 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib import admin
 from django.conf import settings
 from django.core.cache import cache
+from django.core.exceptions import PermissionDenied
 
 from piston.models import Nonce, Consumer, Token
 from piston.resource import Resource
@@ -35,7 +36,7 @@ class MetricInstanceForm(forms.ModelForm):
         exclude = ('vo',)
 
     metric = forms.CharField(label='Metric', max_length=128,
-                             widget = widgets.JQueryAutoComplete(
+                             widget=widgets.JQueryAutoComplete(
                                         options={'source': HINTS_URL+"/metrics/'",
                                                  'minLegth': 2},
                                         attrs={'maxlength': 128, 'size': 50})
@@ -62,8 +63,10 @@ class MetricInstanceForm(forms.ModelForm):
         return form_flavour
 
 class MetricInstanceFormRO(MetricInstanceForm):
-    metric = forms.CharField(label='Metric', widget=None)
-    service_flavour = forms.CharField(label='Service Flavour', widget=None)
+    metric = forms.CharField(label='Metric', \
+                             widget=forms.TextInput(attrs={'readonly' : 'readonly'}))
+    service_flavour = forms.CharField(label='Service Flavour', \
+                                   widget=forms.TextInput(attrs={'readonly' : 'readonly'}))
 
 class MetricInstanceInline(admin.TabularInline):
     model = MetricInstance
@@ -166,7 +169,18 @@ class ProfileAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         if change and obj.vo:
             obj.metric_instances.update(vo=obj.vo)
-        obj.save()
+        try:
+            if request.META['SSL_CLIENT_S_DN'] == dnowner:
+                obj.save()
+                return
+        except KeyError:
+            pass
+        if not request.user.has_perm('poem.readonly_profile') or \
+                request.user.is_superuser:
+            obj.save()
+            return
+        else:
+            raise PermissionDenied()
 
     def get_row_css(self, obj, index):
         if not obj.valid:
