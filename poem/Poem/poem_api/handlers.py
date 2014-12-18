@@ -72,37 +72,54 @@ class MetricsInProfile(handler.BaseHandler):
     """
     Dumps all metrics, service flavours and profile names
     for a given VO. Example:
-    [
-        {
-            "service_flavour": "APEL",
-            "fqan": "",
-            "profile__name": "ROC_OPERATORS",
-            "metric": "org.apel.APEL-Pub",
-            "vo": "ops"
-        },
-        {
-            "service_flavour": "ARC-CE",
-            "fqan": "",
-            "profile__name": "ROC_OPERATORS",
-            "metric": "org.nordugrid.ARC-CE-ARIS",
-            "vo": "ops"
-        },
-    ]
-    * *Supported formats*: xml, json
-    * *URL*: ``/api/0.1/<format>/metrics_in_profiles/?vo_name=ops[&profile_name=ROC]``
+
+    {
+        "name": "ops",
+        "profiles": [
+            {
+                "metrics": [
+                    {
+                        "service_flavour": "APEL",
+                        "fqan": "",
+                        "name": "org.apel.APEL-Pub",
+                        "profile__name": "ROC_OPERATORS"
+                    },
+                    {
+                        "service_flavour": "ARC-CE",
+                        "fqan": "",
+                        "name": "org.nordugrid.ARC-CE-ARIS",
+                        "profile__name": "ROC_OPERATORS"
+                    },
+                ],
+                "namespace": "CH.CERN.SAM",
+                "name": "ROC_OPERATORS",
+                "description": "The main profile that contains Operations tests."
+            },
+        ]
+    }
+
+    * *Supported formats*: json
+    * *URL*: ``/api/0.2/<format>/metrics_in_profiles/?vo_name=ops
     * *Supported methods*: GET
     """
 
     def read(self, request, attribute):
-        lookup = request.GET.get("vo_name")
+        lookup = request.GET.get('vo_name')
         if lookup:
-            result = models.MetricInstance.objects.filter(vo__exact=lookup)
-            profile = request.GET.get("profile_name")
-            if profile:
-                result = result.filter(profile__name__exact=profile)
-            result = list(result.values('profile__name', 'service_flavour', 'vo', 'fqan', 'metric'))
-            result = map(lambda d: RemoveDoubleUnderscore(d), result)
-            return result
+            metrics = {}
+            metrics = models.MetricInstance.objects.filter(vo__exact=lookup).values('metric', 'service_flavour', 'fqan', 'profile__name')
+            for m in metrics:
+                m['name'] = m.pop('metric')
+            profiles = set(models.MetricInstance.objects.filter(vo__exact=lookup).values_list('profile__name', 'profile__description'))
+            metrics_in_profiles = []
+            for p in profiles:
+                metrics_in_profiles.append({'name' : p[0], \
+                                          'namespace' : settings.POEM_NAMESPACE, \
+                                          'description' : p[1], \
+                                          'metrics' : [m for m in metrics \
+                                                       if m['profile__name'] == p[0]]})
+            return [{'name' : lookup, \
+                     'profiles' : metrics_in_profiles}]
         else:
             # Piston bug:
             # return HttpResponseServerError("Need the name of VO")
