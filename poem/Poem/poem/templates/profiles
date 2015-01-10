@@ -1,0 +1,23 @@
+[
+  {% for pr in result %}
+    {
+      "name" : "{{ pr.name }}", "atp_vo" : "{{ pr.vo }}",
+      "version" : "{{ pr.version }}", "owner" : "{{ pr.owner }}",
+      "description" : "{{ pr.description }}", 
+      "metric_instances" : [
+                           {% for mi in pr.metric_instances %}
+                             {
+                               "metric" : "{{ mi.metric }}",
+                               "fqan" : "{{ mi.fqan }}",
+                               "vo" : "{{ mi.vo }}",
+                               "atp_service_flavour" : "{{ mi.service_flavour }}"
+                             } 
+                           {% if not forloop.last %},
+                           {% endif %}
+                           {% endfor %}
+                         ]
+    }
+    {% if not forloop.last %},
+    {% endif %}
+  {% endfor %} 
+]

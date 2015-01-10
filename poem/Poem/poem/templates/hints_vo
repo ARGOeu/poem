@@ -1,0 +1,7 @@
+[
+  {% for vo in result %}
+		"{{ vo }}"
+		{% if not forloop.last %},
+		{% endif %}
+	{% endfor %} 
+]

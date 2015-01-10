@@ -15,7 +15,7 @@ admin.autodiscover()
 urlpatterns = patterns('',
                        (r'^$', lambda x: HttpResponseRedirect('/poem/admin/poem/profile')),
 #                       (r'^$', lambda x: HttpResponseRedirect(urlresolvers.reverse('admin:poem_profile_changelist'))),
-                       (r'^api/', include('Poem.poem_api.urls')),
+                       (r'^api/', include('Poem.urls_api')),
                        (r'^admin/', include(admin.site.urls)),
                        (r'^poem_media/(.*)$', 'django.views.static.serve',
                                     {'document_root': os.path.join(settings.APP_PATH, '../media')}),

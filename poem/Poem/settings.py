@@ -51,11 +51,6 @@ try:
 except NoSectionError, e:
     raise ImproperlyConfigured(e)
 
-if DEBUG:
-    PISTON_DISPLAY_ERRORS = True
-else:
-    PISTON_DISPLAY_ERRORS = False
-
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -132,8 +127,8 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'Poem.ssl_auth.middleware.SSLMiddleware',

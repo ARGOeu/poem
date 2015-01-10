@@ -1,0 +1,26 @@
+[
+  { 
+    "name" : "{{ result.name }}", 
+    "profiles" : [ 
+                   {% for pr in result.profiles %} 
+                     { 
+                       "name" : "{{ pr.name }}", "namespace" : "{{ pr.namespace }}",
+                       "description" : "{{ pr.description }}",
+                       "metrics" : [ 
+                                     {% for me in pr.metrics %}
+                                       {
+                                         "service_flavour" :  "{{ me.service_flavour }}",
+                                         "name" : "{{ me.metric }}",
+                                         "fqan" : "{{ me.fqan }}" 
+                                       } 
+                                       {% if not forloop.last %},
+                                       {% endif %}
+                                     {% endfor %}
+                                   ] 
+                     }
+                     {% if not forloop.last %},
+                     {% endif %}
+                   {% endfor %}
+                ] 
+  }
+]

@@ -13,7 +13,6 @@ Source0:        poem-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch:      noarch
 Requires:       Django >= 1.1
-Requires:       django-piston >= 0.2
 Requires:       mod_wsgi
 Requires:       mod_ssl 
 

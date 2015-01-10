@@ -13,9 +13,6 @@ from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 
-from piston.models import Nonce, Consumer, Token
-from piston.resource import Resource
-
 from Poem.poem.models import MetricInstance, Profile, UserProfile, VO, ServiceFlavour
 from Poem.poem import widgets
 
@@ -37,13 +34,13 @@ class MetricInstanceForm(forms.ModelForm):
 
     metric = forms.CharField(label='Metric', max_length=128,
                              widget=widgets.JQueryAutoComplete(
-                                        options={'source': HINTS_URL+"/metrics/'",
+                                        options={'source': HINTS_URL+"/metrics'",
                                                  'minLegth': 2},
                                         attrs={'maxlength': 128, 'size': 50})
                             )
     service_flavour = forms.CharField(label='Service Flavour', max_length=128,
                                 widget = widgets.JQueryAutoComplete(
-                                  options={'source': HINTS_URL+"/service_flavours/'",
+                                  options={'source': HINTS_URL+"/service_flavours'",
                                            'minLength': 2},
                                   attrs={'maxlength': 128, 'size': 25})
                                 )
@@ -123,7 +120,7 @@ class ProfileForm(forms.ModelForm):
     vo = forms.CharField(help_text='Virtual organization that owns this profile.',
                              label='VO', max_length=128,
                              widget = widgets.JQueryAutoComplete(
-                                            options={'source': HINTS_URL+"/vo/'",
+                                            options={'source': HINTS_URL+"/vo'",
                                                      'minLength': 2},
                                             attrs={'maxlength': 128, 'size': 11})
                              )
