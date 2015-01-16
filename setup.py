@@ -45,10 +45,11 @@ setup(name=NAME,
     ] + poem_media_files,
     package_dir = {'Poem': 'poem/Poem'},
     packages = ['Poem', 'Poem.poem', 'Poem.poem.management',
-                'Poem.poem.management.commands', 'Poem.poem_api',
-                'Poem.ssl_auth', 'Poem.sync', 'Poem.poem.templatetags'],
+                'Poem.poem.management.commands', 'Poem.ssl_auth', 'Poem.sync',
+				'Poem.poem.templatetags'],
     package_data = {'Poem' : ['poem/templates/admin/*.html', 'poem/templates/poem/*.html',
-                              'poem/templates/admin/poem/profile/*.html']
+                              'poem/templates/admin/poem/profile/*.html', 'poem/templates/hints_*',
+							  'poem/templates/metrics_in_profiles', 'poem/templates/profiles']
                     },
 )
 
