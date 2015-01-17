@@ -2,7 +2,7 @@
 %{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name:           poem
-Version:        0.10.0
+Version:        0.10.5
 Release:        1%{?dist}
 Summary:        Profile Management (POEM) system for Service Availability Monitoring (SAM).
 Group:          Web application
@@ -62,6 +62,17 @@ rm -rf $RPM_BUILD_ROOT
 %pre 
 
 %changelog
+* Sat Jan 17 2014 Daniel Vrcic <daniel.vrcic@srce.hr> - 0.10.5-1
+- rid of django-piston
+- redesigned metrics_in_profiles API for ar-sync
+- prevent potential malicious profile change due to django bug
+- more verbose syncers
+- cert DN as a owner of profile
+- augment completion with service types not in GOCDB
+- readonly mode
+- redundant Poem link in UI removed
+- RPM build from .spec stored in tarball
+- deleted leftovers
 * Wed Nov 19 2014 Daniel Vrcic <dvrcic@srce.hr> - 0.10.0-1
 - POEM for ARGO framework
 * Fri Jan 24 2014 Marian Babik <marian.babik@cern.ch> - 0.9.91-1
