@@ -62,7 +62,7 @@ rm -rf $RPM_BUILD_ROOT
 %pre 
 
 %changelog
-* Sat Jan 17 2014 Daniel Vrcic <daniel.vrcic@srce.hr> - 0.10.5-1
+* Sat Jan 17 2015 Daniel Vrcic <dvrcic@srce.hr> - 0.10.5-1
 - rid of django-piston
 - redesigned metrics_in_profiles API for ar-sync
 - prevent potential malicious profile change due to django bug
