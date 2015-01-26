@@ -4,7 +4,7 @@
     "profiles" : [ 
                    {% for pr in result.profiles %} 
                      { 
-                       "name" : "{{ pr.name }}", "namespace" : "{{ pr.namespace }}",
+                       "name" : "{{ pr.name }}", "namespace" : "{{ pr.namespace.lower }}",
                        "description" : "{{ pr.description }}",
                        "metrics" : [ 
                                      {% for me in pr.metrics %}
