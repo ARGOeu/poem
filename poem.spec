@@ -3,7 +3,7 @@
 
 Name:           poem
 Version:        0.10.6
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Profile Management (POEM) system for Service Availability Monitoring (SAM).
 Group:          Web application
 License:        ASL 2.0
@@ -63,9 +63,13 @@ rm -rf $RPM_BUILD_ROOT
 %pre 
 
 %changelog
+* Wed Feb 11 2015 Daniel Vrcic <dvrcic@srce.hr> - 0.10.6-2
+- added forgotten completion for metrics
+- SRMv2 service type is now manually added in syncservtype
 * Thu Feb 5 2015 Daniel Vrcic <dvrcic@srce.hr> - 0.10.6-1
 - update deprecated manage.py django project setter
 - automate superuser creation: createdb tool doesn't need to be interactive anymore
+	https://github.com/ARGOeu/poem/issues/9
 * Sat Jan 17 2015 Daniel Vrcic <dvrcic@srce.hr> - 0.10.5-2
 - rid of django-piston
 - redesigned metrics_in_profiles API for ar-sync

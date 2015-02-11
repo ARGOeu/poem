@@ -9,6 +9,32 @@ from django.core.serializers.json import DateTimeAwareJSONEncoder
 
 from Poem.poem import models
 
+def hints_metrics(request):
+    """
+    This one is used by autocomplete widget. Example:
+    [
+        "pl.plgrid.QCG-Broker",
+        "pl.plgrid.QCG-Computing",
+        "pl.plgrid.QCG-Notification"
+    ]
+
+    * *Supported formats*: json
+    * *URL*: api/0.1/json/hints/metrics/?term=plgrid
+    * *Supported methods*: GET
+
+    """
+    cache_key = request.path.split('?')[0]
+    lookup = request.GET.get('term')
+
+    if not cache.get(cache_key):
+        values = set([metric.metric for metric in models.MetricInstance.objects.all()])
+        cache.set(cache_key, values)
+    else:
+        values = cache.get(cache_key)
+
+    result = sorted(filter(lambda x: lookup.lower() in x.lower(), values))
+    return render_to_response('hints_metrics', {'result' : result}, mimetype='application/json')
+
 def hints_vo(request):
     """
     This one is used by autocomplete widget. Example:
@@ -57,7 +83,6 @@ def hints_service_flavours(request):
 
     if not cache.get(cache_key):
         values = set([sf.name for sf in models.ServiceFlavour.objects.all()])
-        values.update(set([mi.service_flavour for mi in models.MetricInstance.objects.all()]))
         cache.set(cache_key, values)
     else:
         values = cache.get(cache_key)
