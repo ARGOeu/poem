@@ -1,0 +1,7 @@
+[
+  {% for metric in result %}
+    "{{ metric }}"
+    {% if not forloop.last %},
+    {% endif %}
+  {% endfor %}
+]

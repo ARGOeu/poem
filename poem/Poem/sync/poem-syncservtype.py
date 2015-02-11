@@ -79,20 +79,21 @@ def main():
 
 
     sfindb = set([sf.name for sf in models.ServiceFlavour.objects.all()])
-    if len(sfindb) != len(Feed_List):
+    if len(sfindb) != len(Feed_List) + 1:
         sfs = set([(feed['service_type_name'], feed['service_type_desc']) \
                 for feed in Feed_List])
+        sfs.add(('SRMv2', '[Site service] Storage Resource Manager. Mandatory for all sites running an SRM enabled storage element.'))
         cur = connection.cursor()
-        if len(sfindb) < len(Feed_List):
+        if len(sfindb) < len(Feed_List) + 1:
             cur.executemany('INSERT INTO poem_serviceflavour VALUES (?,?)', \
                     sfs.difference(sfindb))
             logger.info("Added %d service flavours" %\
-                        (len(Feed_List) - len(sfindb)))
-        elif len(sfindb) > len(Feed_List):
+                        (len(Feed_List) + 1 - len(sfindb)))
+        elif len(sfindb) > len(Feed_List) + 1:
             cur.executemany('DELETE FROM poem_serviceflavour WHERE name IN (?,?)', \
                     sfindb.difference(sfs))
             logger.info("Deleted %d service flavours" %\
-                        (len(sfindb) - len(Feed_List)))
+                        (len(sfindb) - len(Feed_List) + 1))
         transaction.commit_unless_managed()
         connection.close()
     else:
