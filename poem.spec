@@ -3,7 +3,7 @@
 
 Name:           poem
 Version:        0.10.6
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        Profile Management (POEM) system for Service Availability Monitoring (SAM).
 Group:          Web application
 License:        ASL 2.0
@@ -63,6 +63,8 @@ rm -rf $RPM_BUILD_ROOT
 %pre 
 
 %changelog
+* Tue Feb 17 2015 Daniel Vrcic <dvrcic@srce.hr> - 0.10.6-3
+- fixed bug when superuser wants to create completely new profile
 * Wed Feb 11 2015 Daniel Vrcic <dvrcic@srce.hr> - 0.10.6-2
 - added forgotten completion for metrics
 - SRMv2 service type is now manually added in syncservtype
