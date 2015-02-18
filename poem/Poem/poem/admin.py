@@ -160,7 +160,7 @@ class ProfileAdmin(admin.ModelAdmin):
         cls = super(ProfileAdmin, self).get_form(request, obj=None, **kwargs)
         cls._request = request
         global dnowner
-        dnowner = obj.owner
+        dnowner = obj.owner if obj else None
         return cls
 
     def save_model(self, request, obj, form, change):
