@@ -1,7 +1,0 @@
-[
-  {% for sf in result %}
-		"{{ sf }}"
-		{% if not forloop.last %},
-		{% endif %}
-	{% endfor %} 
-]

@@ -1,9 +1,3 @@
-"""
-Admin interface is following a customization pattern explain in Django Admin docs.
-Custom ProfileForm connects core profile attribute to jQuery widgets.
-MetricInstanceForm does the same for metric instances.
-
-"""
 from django import forms
 from django.forms import ValidationError
 from django.contrib.auth.models import User, Permission
@@ -15,12 +9,9 @@ from django.core.exceptions import PermissionDenied
 
 from Poem.poem.models import MetricInstance, Profile, UserProfile, VO, ServiceFlavour
 from Poem.poem import widgets
+from Poem.poem.lookups import check_cache
+from ajax_select import make_ajax_field
 
-HINTS_URL = u"'%s" % (settings.POEM_URL_PREFIX+"/api/0.1/json/hints")
-
-# POEM_URL_PREFIX is needed for apache
-# TODO remove it once we are done with testing
-# HINTS_URL = u"'%s" % ("/api/0.1/json/hints")
 
 dnowner = ""
 
@@ -32,28 +23,15 @@ class MetricInstanceForm(forms.ModelForm):
         model = MetricInstance
         exclude = ('vo',)
 
-    metric = forms.CharField(label='Metric', max_length=128,
-                             widget=widgets.JQueryAutoComplete(
-                                        options={'source': HINTS_URL+"/metrics'",
-                                                 'minLegth': 2},
-                                        attrs={'maxlength': 128, 'size': 50})
-                            )
-    service_flavour = forms.CharField(label='Service Flavour', max_length=128,
-                                widget = widgets.JQueryAutoComplete(
-                                  options={'source': HINTS_URL+"/service_flavours'",
-                                           'minLength': 2},
-                                  attrs={'maxlength': 128, 'size': 25})
-                                )
+    metric = make_ajax_field(MetricInstance, 'metric', 'hintsmetrics', \
+                             plugin_options = {'minLength' : 2})
+    service_flavour = make_ajax_field(ServiceFlavour, 'name', 'hintsserviceflavours', \
+                                      plugin_options = {'minLength' : 2})
 
     def clean_service_flavour(self):
         clean_values = []
-        getcache = cache.get("/api/0.2/json/hints/service_flavours")
-        if not getcache:
-            clean_values = set([sf.name for sf in ServiceFlavour.objects.all()])
-            clean_values.update(set([mi.service_flavour for mi in MetricInstance.objects.all()]))
-            cache.set("/api/0.2/json/hints/service_flavours", clean_values)
-        else:
-            clean_values = getcache
+        clean_values = check_cache('/poem/admin/lookups/ajax_lookup/hintsserviceflavours', \
+                                   ServiceFlavour, 'name')
         form_flavour = self.cleaned_data['service_flavour']
         if form_flavour not in clean_values:
             raise ValidationError("Unable to find flavour %s." % (str(form_flavour)))
@@ -110,35 +88,21 @@ class ProfileForm(forms.ModelForm):
 
     class Media:
         css = { "all" : ("/poem_media/css/poem_profile.custom.css",) }
-        js = ( '/poem_media/js/poem-custom.js', )
 
     name = forms.CharField(help_text='Namespace and name of this profile.',
                            max_length=128,
                            widget = widgets.NamespaceTextInput(
                                            attrs={'maxlength': 128, 'size': 45})
                            )
-    vo = forms.CharField(help_text='Virtual organization that owns this profile.',
-                             label='VO', max_length=128,
-                             widget = widgets.JQueryAutoComplete(
-                                            options={'source': HINTS_URL+"/vo'",
-                                                     'minLength': 2},
-                                            attrs={'maxlength': 128, 'size': 11})
-                             )
-    description = forms.CharField(help_text='Free text description outlining the purpose of this profile.',
-                                  widget = forms.Textarea(attrs={'style':'width:480px;height:100px'})
-                                  )
-    owner = forms.CharField(required=False,
-                            help_text='Certificate DN of the owner of this profile (if present it implies authorization control for changes).',
-                            widget=forms.TextInput(attrs={'style':'width:540px'}))
+    vo = make_ajax_field(Profile, 'name', 'hintsvo', \
+                         help_text='Virtual organization that owns this profile.', \
+                         plugin_options = {'minLength' : 2})
+    description = forms.CharField(help_text='Free text description outlining the purpose of this profile.', widget=forms.Textarea(attrs={'style':'width:480px;height:100px'}))
+    owner = forms.CharField(required=False, help_text='Certificate DN of the owner of this profile (if present it implies authorization control for changes).', widget=forms.TextInput(attrs={'style':'width:540px'}))
 
     def clean_vo(self):
         clean_values = []
-        getcache = cache.get("/api/0.2/json/hints/vo")
-        if not getcache:
-            clean_values = [vo.name for vo in VO.objects.all()]
-            cache.set("/api/0.2/json/hints/vo", clean_values)
-        else:
-            clean_values = getcache
+        clean_values = check_cache('/poem/admin/lookups/ajax_lookup/hintsvo', VO, 'name')
         form_vo = self.cleaned_data['vo']
         if form_vo not in clean_values:
             raise ValidationError("Unable to find virtual organization %s." % (str(form_vo)))

@@ -1,7 +1,7 @@
 # Django settings
 from os import path as os_path
 from ConfigParser import RawConfigParser, NoSectionError
-
+from distutils.sysconfig import get_python_lib
 from django.core.exceptions import ImproperlyConfigured
 
 PROJECT_NAME = 'poem'
@@ -81,22 +81,15 @@ USE_I18N = False
 
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"
-if DEBUG:
-    MEDIA_ROOT = os_path.join(APP_PATH, 'media')
-else:
-    MEDIA_ROOT = ''
+MEDIA_URL = ''
+MEDIA_ROOT = ''
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash if there is a path component (optional in other cases).
 # Examples: "http://media.lawrence.com", "http://example.com/media/"
-# MEDIA_URL = '/poem_media/'
-STATIC_URL = '/poem_media/'
-# STATIC_ROOT = '/usr/share/poem/'
+STATIC_URL = '/admin'
+STATIC_ROOT = get_python_lib() + '/django/contrib/admin/static/admin/'
 
-# URL prefix for admin media -- CSS, JavaScript and images. Make sure to use a
-# trailing slash.
-# Examples: "http://foo.com/media/", "/media/".
-# ADMIN_MEDIA_PREFIX = '/poem_media/admin/'
 
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = 'gjrm%pqd!)3l^)x%5)nb1r%x6_2c1lo@j#)1*sh9hwwzfji8dw'
@@ -153,5 +146,12 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.sessions',
     'django.contrib.admin',
+    'ajax_select',
     'Poem.poem',
 )
+
+AJAX_LOOKUP_CHANNELS = {
+    'hintsvo' : ('Poem.poem.lookups', 'VOLookup'),
+    'hintsmetrics' : ('Poem.poem.lookups', 'MILookup'),
+    'hintsserviceflavours' : ('Poem.poem.lookups', 'SFLookup'),
+}
