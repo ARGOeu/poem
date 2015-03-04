@@ -2,8 +2,8 @@
 %{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name:           poem
-Version:        0.10.5
-Release:        2%{?dist}
+Version:        0.10.6
+Release:        3%{?dist}
 Summary:        Profile Management (POEM) system for Service Availability Monitoring (SAM).
 Group:          Web application
 License:        ASL 2.0
@@ -46,9 +46,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/poem-createdb
 %{_bindir}/poem-importprofiles
 
-%config(noreplace) %{_sysconfdir}/%{name}/poem.ini
 %config %{_sysconfdir}/%{name}/poem_logging.ini
 %config %{_sysconfdir}/httpd/conf.d/poem.conf
+%attr(0640,root,apache)
+%config(noreplace) %{_sysconfdir}/%{name}/poem.ini
 %attr(0644,root,root) %{_sysconfdir}/cron.d/poem-syncvosf
 
 %{_datadir}/%{name}/apache/poem.wsgi
@@ -62,6 +63,15 @@ rm -rf $RPM_BUILD_ROOT
 %pre 
 
 %changelog
+* Tue Feb 17 2015 Daniel Vrcic <dvrcic@srce.hr> - 0.10.6-3
+- fixed bug when superuser wants to create completely new profile
+* Wed Feb 11 2015 Daniel Vrcic <dvrcic@srce.hr> - 0.10.6-2
+- added forgotten completion for metrics
+- SRMv2 service type is now manually added in syncservtype
+* Thu Feb 5 2015 Daniel Vrcic <dvrcic@srce.hr> - 0.10.6-1
+- update deprecated manage.py django project setter
+- automate superuser creation: createdb tool doesn't need to be interactive anymore
+  https://github.com/ARGOeu/poem/issues/9
 * Sat Jan 17 2015 Daniel Vrcic <dvrcic@srce.hr> - 0.10.5-2
 - rid of django-piston
 - redesigned metrics_in_profiles API for ar-sync

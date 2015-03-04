@@ -15,13 +15,11 @@ if not config.read([CONFIG_FILE]):
 
 try:
     # General
-    ADMIN_NAME = config.get('general','ADMIN_NAME')
-    ADMIN_EMAIL = config.get('general','ADMIN_EMAIL')
-    # Database
-    # 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
+    SUPERUSER_NAME = config.get('general', 'SUPERUSER_NAME')
+    SUPERUSER_PASS = config.get('general', 'SUPERUSER_PASSWORD')
+    SUPERUSER_EMAIL = config.get('general', 'SUPERUSER_EMAIL')
     DATABASES = {
         'default': {
-           # 'NAME':  config.get('database', 'DATABASE_PATH'),
             'NAME':  '/var/lib/poem/poemserv.db',
             'ENGINE': 'django.db.backends.sqlite3',
         }
@@ -29,10 +27,10 @@ try:
     CACHES = {
         'default': {
             'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-			'TIMEOUT': 3600,
-			'OPTIONS': {
-				'MAX_ENTRIES': 400
-			}
+            'TIMEOUT': 3600,
+            'OPTIONS': {
+                'MAX_ENTRIES': 400
+            }
         }
     }
     # Others
@@ -57,10 +55,6 @@ LOGGING = {
 }
 
 TEMPLATE_DEBUG = DEBUG
-ADMINS = (
-    (ADMIN_NAME, ADMIN_EMAIL),
-)
-MANAGERS = ADMINS
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
