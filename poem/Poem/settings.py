@@ -43,7 +43,6 @@ try:
     CIC_VO_URL = config.get('others', 'CIC_VO_URL')
     HOST_CERT = config.get('others', 'HOST_CERT')
     HOST_KEY = config.get('others', 'HOST_KEY')
-    POEM_URL_PREFIX = config.get('others', 'POEM_URL_PREFIX')
     TIME_ZONE = config.get('others', 'TIME_ZONE')
 
 except NoSectionError, e:
@@ -87,7 +86,7 @@ MEDIA_ROOT = ''
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash if there is a path component (optional in other cases).
 # Examples: "http://media.lawrence.com", "http://example.com/media/"
-STATIC_URL = '/admin'
+STATIC_URL = '/'
 STATIC_ROOT = get_python_lib() + '/django/contrib/admin/static/admin/'
 
 
