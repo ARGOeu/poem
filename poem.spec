@@ -70,6 +70,7 @@ rm -rf $RPM_BUILD_ROOT
 * Wed Feb 25 2015 Daniel Vrcic <dvrcic@srce.hr> - 0.10.7-1
 - removed embedded jquery and django-admin static files
 - django-ajax-selects for autocompletion
+  https://github.com/ARGOeu/poem/issues/8
 * Tue Feb 17 2015 Daniel Vrcic <dvrcic@srce.hr> - 0.10.6-3
 - fixed bug when superuser wants to create completely new profile
 * Wed Feb 11 2015 Daniel Vrcic <dvrcic@srce.hr> - 0.10.6-2
