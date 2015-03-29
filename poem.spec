@@ -2,8 +2,8 @@
 %{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name:           poem
-Version:        0.10.6
-Release:        3%{?dist}
+Version:        0.10.7
+Release:        2%{?dist}
 Summary:        Profile Management (POEM) system for Service Availability Monitoring (SAM).
 Group:          Web application
 License:        ASL 2.0
@@ -13,11 +13,13 @@ Source0:        poem-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch:      noarch
 Requires:       Django >= 1.1
+Requires:       django-ajax-selects
 Requires:       mod_wsgi
 Requires:       mod_ssl 
 
 %description
-The Profile Management (POEM) system couples metrics and services and enables profile-based configuration of SAM Nagios.
+The Profile Management (POEM) system couples metrics and services and enables
+profile-based configuration of SAM Nagios.
 
 %prep
 %setup -q
@@ -63,6 +65,12 @@ rm -rf $RPM_BUILD_ROOT
 %pre 
 
 %changelog
+* Mon Mar 23 2015 Daniel Vrcic <dvrcic@srce.hr> - 0.10.7-2
+- remove deprecations
+* Wed Feb 25 2015 Daniel Vrcic <dvrcic@srce.hr> - 0.10.7-1
+- removed embedded jquery and django-admin static files
+- django-ajax-selects for autocompletion
+  https://github.com/ARGOeu/poem/issues/8
 * Tue Feb 17 2015 Daniel Vrcic <dvrcic@srce.hr> - 0.10.6-3
 - fixed bug when superuser wants to create completely new profile
 * Wed Feb 11 2015 Daniel Vrcic <dvrcic@srce.hr> - 0.10.6-2

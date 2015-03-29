@@ -1,11 +1,11 @@
-from django.conf.urls.defaults import patterns, url
-
+from django.contrib import admin
+from django.conf.urls.defaults import patterns, url, include
+from ajax_select import urls as ajax_select_urls
 from Poem.poem import views
 
+admin.autodiscover()
+
 urlpatterns = patterns('Poem.poem.views',
-    url(r'^0.1/json/hints/service_flavours$','hints_service_flavours'),
-    url(r'^0.1/json/hints/vo$', 'hints_vo'),
-    url(r'^0.1/json/hints/metrics$', 'hints_metrics'),
     url(r'^0.2/json/profiles$', 'profiles'),
     url(r'^0.2/json/metrics_in_profiles$', 'metrics_in_profiles')
 )
