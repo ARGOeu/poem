@@ -81,22 +81,26 @@ class SSLBackend(ModelBackend):
         user.is_staff = settings.SSL_CREATE_STAFF
         user.save()
 
+        pr_ct = ContentType.objects.get(app_label='poem', model='profile')
+        try:
+            perm = Permission.objects.get(codename='readonly_profile')
+        except Permission.DoesNotExist:
+            perm = Permission.objects.create(codename='readonly_profile',
+                                             content_type=pr_ct,
+                                             name="Readonly profile")
+
         # user post save event ensures profile is created
         up=user.get_profile()
         up.subject = request.META.get(settings.SSL_DN)
         up.save()
-
         # set default permissions (add/change metric instance, change profile)
         try:
-            pr_ct = ContentType.objects.get(app_label='poem', model='profile')
 #            mi_ct = ContentType.objects.get(app_label='poem', model='metricinstance')
 #            user.user_permissions.add(Permission.objects.get(
 #                                            codename='change_profile',
 #                                            content_type=pr_ct))
-            user.user_permissions.add(Permission.objects.create(
-                                            codename='readonly_profile',
-                                            content_type=pr_ct,
-                                            name="Readonly profile"))
+            self.log.debug('set default permission to readonly for %s' % str(up.subject))
+            user.user_permissions.add(perm)
 #            user.user_permissions.add(Permission.objects.get(
 #                                            codename='change_metricinstance',
 #                                            content_type=mi_ct))
@@ -115,4 +119,3 @@ class SSLBackend(ModelBackend):
             self.log.debug('failed to set default permissions for %s' % str(up.subject))
 
         return user
-
