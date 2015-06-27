@@ -248,8 +248,7 @@ class MyModelMultipleChoiceField(forms.ModelMultipleChoiceField):
         for val in value:
             if force_unicode(val) not in pks:
                 raise ValidationError(self.error_messages['invalid_choice'] % val)
-        if self.ftype != 'profiles':
-            self.run_validators(value)
+        self.run_validators(value)
         return qs
 
     def run_validators(self, value):
@@ -290,16 +289,7 @@ class MySelectMultiple(forms.widgets.SelectMultiple):
 class MyFilteredSelectMultiple(admin.widgets.FilteredSelectMultiple):
     def render(self, name, value, attrs=None, choices=()):
         self.selformname = name
-        if attrs is None:
-            attrs = {}
-        attrs['class'] = 'selectfilter'
-        if self.is_stacked:
-            attrs['class'] += 'stacked'
-        output = [super(MyFilteredSelectMultiple, self).render(name, value, attrs, choices)]
-        output.append(u'<script type="text/javascript">addEvent(window, "load", function(e) {')
-        output.append(u'SelectFilter.init("id_%s", "%s", %s, "%s"); });</script>\n'
-            % (name, self.verbose_name.replace('"', '\\"'), int(self.is_stacked), static('admin/')))
-        return mark_safe(u''.join(output))
+        return super(MyFilteredSelectMultiple, self).render(name, value, attrs, choices)
 
     def render_options(self, choices, selected_choices):
         selected_choices = set(force_unicode(v) for v in selected_choices)
