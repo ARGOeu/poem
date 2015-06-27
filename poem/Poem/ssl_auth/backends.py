@@ -47,7 +47,10 @@ class SSLBackend(ModelBackend):
             # user is new
             # try to generate username from CN
             username = self.clean_username(request.META.get(settings.SSL_USERNAME))
-            user, created = User.objects.get_or_create(username=username)
+            first, last = username.split('_', 1)
+            user, created = User.objects.get_or_create(username=username,
+                                                       first_name=first,
+                                                       last_name=last)
 
             if not created:
                 # didn't work, same username for different DNs ? hmm ...
