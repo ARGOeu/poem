@@ -356,7 +356,7 @@ class CustGroupAdmin(GroupAdmin):
     search_field = ()
     filter_horizontal=('profiles',)
     fieldsets = [(None, {'fields': ['name']}),
-                 ('Permissions', {'fields': ['permissions', 'profiles']})]
+                 ('Settings', {'fields': ['permissions', 'profiles']})]
 
 admin.site.unregister(auth.models.Group)
 admin.site.register(poem.models.Group, CustGroupAdmin)
