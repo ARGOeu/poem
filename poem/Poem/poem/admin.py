@@ -241,7 +241,6 @@ class ProfileAdmin(admin.ModelAdmin):
     inlines = (GroupInline, MetricInstanceInline, )
     exclude = ('version',)
     form = ProfileForm
-    _useringroup = False
     actions = None
 
     def _groupown_turn(self, user, flag):
@@ -263,8 +262,6 @@ class ProfileAdmin(admin.ModelAdmin):
     def get_form(self, request, obj=None, **kwargs):
         try:
             gp = poem.models.Group.objects.get(profiles__id=obj.id)
-            qug = request.user.groups.all()
-            self._useringroup = True if qug else False
             for ug in request.user.groups.all():
                 if ug.id == gp.id:
                     self._groupown_turn(request.user, 'add')
@@ -296,7 +293,7 @@ class ProfileAdmin(admin.ModelAdmin):
         return ''
 
     def has_add_permission(self, request):
-        if self._useringroup or request.user.is_superuser:
+        if request.user.groups.all() or request.user.is_superuser:
             return True
 
     def has_delete_permission(self, request, obj=None):
