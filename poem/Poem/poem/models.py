@@ -52,7 +52,7 @@ class Profile(models.Model):
                                help_text='Multiple versions of the profile can exist (defaults to 1.0).')
     vo = models.CharField(max_length=128,
                     help_text='', verbose_name='VO')
-    owner = models.CharField(max_length=255, blank=True, null=True)
+    #owner = models.CharField(max_length=255, blank=True, null=True)
     description = models.CharField(max_length=1024, blank=True, null=True)
 
     class Meta:

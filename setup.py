@@ -50,7 +50,7 @@ setup(name=NAME,
     package_data = {'Poem' : ['poem/templates/admin/*.html', 'poem/templates/poem/*.html',
                               'poem/templates/admin/poem/profile/*.html', 'poem/templates/hints_*',
                               'poem/templates/metrics_in_profiles', 'poem/templates/profiles',
-                              'poem/templates/admin/edit_inline/*.html']
+                              'poem/templates/admin/edit_inline/*.html', 'poem/templates/admin/includes/*.html']
                     },
 )
 

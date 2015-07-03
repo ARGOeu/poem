@@ -84,13 +84,13 @@ class SSLBackend(ModelBackend):
         user.is_staff = settings.SSL_CREATE_STAFF
         user.save()
 
-        pr_ct = ContentType.objects.get(app_label='poem', model='profile')
         try:
             perm = Permission.objects.get(codename='readonly_profile')
         except Permission.DoesNotExist:
+            ct = ContentType.objects.get(app_label='poem', model='profile')
             perm = Permission.objects.create(codename='readonly_profile',
-                                             content_type=pr_ct,
-                                             name="Readonly profile")
+                                                content_type=ct,
+                                                name="Readonly profile")
 
         # user post save event ensures profile is created
         up=user.get_profile()
