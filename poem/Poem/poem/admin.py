@@ -15,6 +15,9 @@ from django.forms.util import flatatt
 from django.utils.safestring import mark_safe
 from django.contrib.admin.templatetags.admin_static import static
 from django.contrib.contenttypes.models import ContentType
+from django.db import models
+from django.utils.translation import ungettext, ugettext, ugettext_lazy as _
+from django.forms.util import ErrorList
 
 from Poem import poem
 from django.contrib import auth
@@ -24,13 +27,23 @@ from Poem.poem import widgets
 from Poem.poem.lookups import check_cache
 from ajax_select import make_ajax_field
 
+class SharedInfo:
+    def __init__(self, requser=None):
+        if requser:
+            self.__class__.user = requser
+
+    def getuser(self):
+        if getattr(self.__class__, 'user', None):
+            return self.__class__.user
+        else:
+            return None
 
 class MyModelMultipleChoiceField(forms.ModelMultipleChoiceField):
-    def __init__(self, queryset, cache_choices=False, required=True, widget=None, label=None,
-                 initial=None, help_text=None, ftype='', *args, **kwargs):
-        self.ftype = ftype
-        super(forms.ModelMultipleChoiceField, self).__init__(queryset, None, cache_choices, required, widget,
-                                                       label, initial, help_text, *args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        self.ftype = kwargs.pop('ftype', None)
+        #if self.ftype == 'groupadd':
+        #    queryset = queryset.filter(pk=2)
+        super(forms.ModelMultipleChoiceField, self).__init__(*args, **kwargs)
     def clean(self, value):
         if self.required and not value:
             raise ValidationError(self.error_messages['required'])
@@ -173,21 +186,46 @@ class MetricInstanceInline(admin.TabularInline):
     def has_change_permission(self, request, obj=None):
         return True
 
-class GroupFrom(forms.ModelForm):
+class GroupForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        rquser = SharedInfo()
+        self.user = rquser.getuser()
+        self.usergroups  = self.user.groups.all()
+        super(GroupForm, self).__init__(*args, **kwargs)
+
+
     queryset = poem.models.Group.objects.all()
     group = MyModelMultipleChoiceField(queryset=queryset,
                                        widget=forms.widgets.Select(),
                                        help_text='Profile is a member of given group')
     group.empty_label = '----------------'
 
+    def clean_group(self):
+        groupsel = self.cleaned_data['group']
+        ugid = [f.id for f in self.usergroups]
+        if groupsel.id not in ugid and not self.user.is_superuser:
+            raise ValidationError("You are not member of group %s." % (str(groupsel)))
+        return groupsel
+
+class GroupFormAdd(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(GroupFormAdd, self).__init__(*args, **kwargs)
+        self.fields['group'].help_text = 'Select one of the groups you are member of'
+        self.fields['group'].empty_label = None
+
 class GroupInline(admin.TabularInline):
     model = poem.models.Group.profiles.through
-    form = GroupFrom
+    form = GroupForm
     verbose_name_plural = ''
     verbose_name = ''
     max_num = 1
     extra = 3
     template = 'admin/edit_inline/stacked-group.html'
+
+    def queryset(self, request):
+        qs = super(GroupInline, self).queryset(request)
+        qs.user = request.user
+        return qs
 
     def has_add_permission(self, request):
         return True
@@ -197,6 +235,14 @@ class GroupInline(admin.TabularInline):
 
     def has_change_permission(self, request, obj=None):
         return True
+
+class GroupInlineAdd(GroupInline):
+    form = GroupFormAdd
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        lgi = [i.id for i in request.user.groups.all()]
+        kwargs["queryset"] = poem.models.Group.objects.filter(pk__in=lgi)
+        return super(GroupInline, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
 class ProfileForm(forms.ModelForm):
     """
@@ -217,7 +263,6 @@ class ProfileForm(forms.ModelForm):
                          plugin_options = {'minLength' : 2}, label='Virtual organization')
     description = forms.CharField(help_text='Free text description outlining the purpose of this profile.',
                                   widget=forms.Textarea(attrs={'style':'width:480px;height:100px'}))
-    #owner = forms.CharField(required=False, help_text='Certificate DN of the owner of this profile (if present it implies authorization control for changes).', widget=forms.TextInput(attrs={'style':'width:540px'}))
 
     def clean_vo(self):
         clean_values = []
@@ -260,6 +305,7 @@ class ProfileAdmin(admin.ModelAdmin):
             user.user_permissions.remove(perm_prdel)
 
     def get_form(self, request, obj=None, **kwargs):
+        rquser = SharedInfo(request.user)
         try:
             gp = poem.models.Group.objects.get(profiles__id=obj.id)
             for ug in request.user.groups.all():
@@ -271,7 +317,9 @@ class ProfileAdmin(admin.ModelAdmin):
         except poem.models.Group.DoesNotExist:
             self._groupown_turn(request.user, 'del')
         except AttributeError:
+            self.inlines = (GroupInlineAdd, MetricInstanceInline,)
             self._groupown_turn(request.user, 'add')
+        self.user = request.user
         return super(ProfileAdmin, self).get_form(request, obj=None, **kwargs)
 
     def save_model(self, request, obj, form, change):
