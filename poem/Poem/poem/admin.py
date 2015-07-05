@@ -222,11 +222,6 @@ class GroupInline(admin.TabularInline):
     extra = 3
     template = 'admin/edit_inline/stacked-group.html'
 
-    def queryset(self, request):
-        qs = super(GroupInline, self).queryset(request)
-        qs.user = request.user
-        return qs
-
     def has_add_permission(self, request):
         return True
 
