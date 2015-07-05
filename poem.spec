@@ -2,12 +2,12 @@
 %{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name:           poem
-Version:        0.10.7
-Release:        4%{?dist}
+Version:        0.11.0
+Release:        1%{?dist}
 Summary:        Profile Management (POEM) system for Service Availability Monitoring (SAM).
 Group:          Web application
 License:        ASL 2.0
-Vendor:         CERN
+Vendor:         SRCE 
 URL:            https://tomtools.cern.ch/confluence/display/SAM/POEM
 Source0:        poem-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
@@ -65,8 +65,15 @@ rm -rf $RPM_BUILD_ROOT
 %pre 
 
 %changelog
+* Sun Jul 5 2015 Daniel Vrcic <dvrcic@srce.hr> - 0.11.0-1%{?dist}
+- introduced group permissions
+- group settings label in admin page
+- fix add profile permission for user member of any group
+- assignment of profile to a group respects user permissions
+- replaced DN with group membership info
 * Sat Jun 27 2015 Daniel Vrcic <dvrcic@srce.hr> - 0.10.7-4
-- introduced groups of profiles
+- introduced groups of profiles and ther owners
+  https://github.com/ARGOeu/ARGO/issues/140
 * Tue Jun 16 2015 Daniel Vrcic <dvrcic@srce.hr> - 0.10.7-3
 - fixed bug with assignment of readonly perm for new user
 * Mon Mar 23 2015 Daniel Vrcic <dvrcic@srce.hr> - 0.10.7-2
