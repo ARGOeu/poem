@@ -18,6 +18,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils.translation import ungettext, ugettext, ugettext_lazy as _
 from django.forms.util import ErrorList
+from django.core.exceptions import ObjectDoesNotExist
 
 from Poem import poem
 from django.contrib import auth
@@ -235,7 +236,7 @@ class GroupInlineAdd(GroupInline):
     form = GroupFormAdd
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        lgi = [i.id for i in request.user.groups.all()]
+        lgi = request.user.groups.all().values_list('id', flat=True)
         kwargs["queryset"] = poem.models.Group.objects.filter(pk__in=lgi)
         return super(GroupInline, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
@@ -301,20 +302,22 @@ class ProfileAdmin(admin.ModelAdmin):
 
     def get_form(self, request, obj=None, **kwargs):
         rquser = SharedInfo(request.user)
-        try:
+        if obj:
             gp = poem.models.Group.objects.get(profiles__id=obj.id)
-            for ug in request.user.groups.all():
-                if ug.id == gp.id:
-                    self._groupown_turn(request.user, 'add')
-                    break
-                else:
-                    self._groupown_turn(request.user, 'del')
-        except poem.models.Group.DoesNotExist:
-            self._groupown_turn(request.user, 'del')
-        except AttributeError:
+            if not gp:
+                self._groupown_turn(request.user, 'del')
+            else:
+                ugis = request.user.groups.all().values_list('id', flat=True)
+                if ugis:
+                    for ugi in ugis:
+                        if ugi == gp.id:
+                            self._groupown_turn(request.user, 'add')
+                            break
+                        else:
+                            self._groupown_turn(request.user, 'del')
+        elif not request.user.is_superuser:
             self.inlines = (GroupInlineAdd, MetricInstanceInline,)
             self._groupown_turn(request.user, 'add')
-        self.user = request.user
         return super(ProfileAdmin, self).get_form(request, obj=None, **kwargs)
 
     def save_model(self, request, obj, form, change):
@@ -336,8 +339,13 @@ class ProfileAdmin(admin.ModelAdmin):
         return ''
 
     def has_add_permission(self, request):
-        if request.user.groups.all() or request.user.is_superuser:
+        if request.user.is_superuser:
             return True
+        try:
+            if request.user.groups.get(pk=1):
+                return True
+        except ObjectDoesNotExist:
+            return False
 
     def has_delete_permission(self, request, obj=None):
         if request.user.has_perm('poem.groupown_profile'):
