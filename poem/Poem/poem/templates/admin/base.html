@@ -29,7 +29,12 @@
         {% if user.is_authenticated and user.is_staff %}
         <div id="user-tools">
             {% trans 'Welcome,' %}
-            <strong>{% filter force_escape %}{% firstof user.get_profile.subject user.first_name user.username %}{% endfilter %}</strong>.
+            <strong>{% filter force_escape %}{% firstof user.first_name user.username %}
+              {% if user.groups.all.0 %}
+                ({% for group in user.groups.all %}{{ group.name }}{% if not forloop.last %},{% endif %}{% if forloop.last %}){% endif %}
+                {% endfor %}
+              {% endif %}
+              {% endfilter %}</strong>.
             {% block userlinks %}
                 {% url 'django-admindocs-docroot' as docsroot %}
                 {% if docsroot %}

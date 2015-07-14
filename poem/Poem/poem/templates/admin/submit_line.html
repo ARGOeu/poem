@@ -1,8 +1,4 @@
 {% load i18n %}
-{% if user.is_superuser or not perms.poem.readonly_profile or perms.poem.owner %}
   <div class="submit-row">
   {% if show_save %}<input type="submit" value="{% trans 'Save' %}" class="default" name="_save" {{ onclick_attrib }}/>{% endif %}
   {% if show_delete_link %}<p class="deletelink-box"><a href="delete/" class="deletelink">{% trans "Delete" %}</a></p>{% endif %}
-{% else %}
-  <div class="submit-row"><center> This is a read-only instance, please request the corresponding permissions to perform any changes in this form. </center></div>
-{% endif %}

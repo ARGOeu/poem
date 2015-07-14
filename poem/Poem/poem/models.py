@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.db.models.signals import post_save, pre_save
 
 class UserProfile(models.Model):
@@ -36,6 +36,7 @@ class ServiceFlavour(models.Model):
     def __unicode__(self):
         return u'%s' % self.name
 
+
 class Profile(models.Model):
     """
     Profile is the core model and is defined as a set of metric instances, where
@@ -51,17 +52,19 @@ class Profile(models.Model):
                                help_text='Multiple versions of the profile can exist (defaults to 1.0).')
     vo = models.CharField(max_length=128,
                     help_text='', verbose_name='VO')
-    owner = models.CharField(max_length=255, blank=True, null=True)
+    #owner = models.CharField(max_length=255, blank=True, null=True)
     description = models.CharField(max_length=1024, blank=True, null=True)
 
     class Meta:
         ordering = ['name', 'version']
         unique_together = ('name', 'version')
-        permissions = (('owner', 'Owner of profile'),)
+        permissions = (('custowners', 'Profile own'),)
 
     def __unicode__(self):
         return u'%s %s %s' % (self.name, self.version, self.vo)
                                  #self.valid_from, self.valid_to)
+class Group(Group):
+    profiles = models.ManyToManyField(Profile, null=True, blank=True)
 
 class MetricInstance(models.Model):
     """
@@ -81,7 +84,6 @@ class MetricInstance(models.Model):
     def __unicode__(self):
         return u'%s %s %s %s' % (self.service_flavour, self.metric,
                               self.fqan, self.vo)
-
 
 # workaround for default metric instance VO
 def mi_default_vo(sender, instance, **kwargs):

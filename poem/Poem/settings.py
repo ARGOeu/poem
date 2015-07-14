@@ -140,11 +140,11 @@ TEMPLATE_DIRS = (
 )
 
 INSTALLED_APPS = (
+    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.staticfiles',
     'django.contrib.sessions',
-    'django.contrib.admin',
     'ajax_select',
     'Poem.poem',
 )
