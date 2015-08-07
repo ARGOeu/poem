@@ -48,11 +48,6 @@ try:
 except NoSectionError, e:
     raise ImproperlyConfigured(e)
 
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-}
-
 TEMPLATE_DEBUG = DEBUG
 
 # Local time zone for this installation. Choices can be found here:

@@ -3,7 +3,7 @@
 
 Name:           poem
 Version:        0.11.0
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Profile Management (POEM) system for Service Availability Monitoring (SAM).
 Group:          Web application
 License:        ASL 2.0
@@ -65,6 +65,15 @@ rm -rf $RPM_BUILD_ROOT
 %pre 
 
 %changelog
+* Thu Aug 6 2015 Daniel Vrcic <dvrcic@srce.hr> - 0.11.0-2%{?dist}
+- consistent service flavour name field with old profiles API
+  https://github.com/ARGOeu/ARGO/issues/151
+- remove DN owner field from profiles API
+- scripts should complain about any argument passed
+  https://github.com/ARGOeu/ARGO/issues/150
+- minor render changes in group-profiles widget
+- sync tools write to syslog
+  https://github.com/ARGOeu/ARGO/issues/152
 * Sun Jul 5 2015 Daniel Vrcic <dvrcic@srce.hr> - 0.11.0-1%{?dist}
 - introduced group permissions
 - group settings label in admin page

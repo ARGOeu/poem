@@ -42,16 +42,13 @@ class SharedInfo:
 class MyModelMultipleChoiceField(forms.ModelMultipleChoiceField):
     def __init__(self, *args, **kwargs):
         self.ftype = kwargs.pop('ftype', None)
-        #if self.ftype == 'groupadd':
-        #    queryset = queryset.filter(pk=2)
         super(forms.ModelMultipleChoiceField, self).__init__(*args, **kwargs)
+
     def clean(self, value):
         if self.required and not value:
             raise ValidationError(self.error_messages['required'])
         elif not self.required and not value:
             return []
-        #if not isinstance(value, (list, tuple)):
-        #    raise ValidationError(self.error_messages['list'])
         key = self.to_field_name or 'pk'
         for pk in value:
             try:
@@ -74,6 +71,7 @@ class MyModelMultipleChoiceField(forms.ModelMultipleChoiceField):
 
     def label_from_instance(self, obj):
         return str(obj.name)
+
 
 class MySelect(forms.widgets.SelectMultiple):
     allow_multiple_selected = False
@@ -120,7 +118,7 @@ class MyFilteredSelectMultiple(admin.widgets.FilteredSelectMultiple):
         if self.selformname == 'profiles':
             for sel in selected_choices:
                 output.append('<option value="%s" selected="selected">' % (sel)
-                              + str(Profile.objects.get(id=int(sel)))
+                              + str(Profile.objects.get(id=int(sel)).name)
                               + '</option>\n')
         for option_value, option_label in chain(self.choices, choices):
             if isinstance(option_label, (list, tuple)):
@@ -130,7 +128,7 @@ class MyFilteredSelectMultiple(admin.widgets.FilteredSelectMultiple):
                 output.append(u'</optgroup>')
             else:
                 output.append(self.render_option(selected_choices, option_value, option_label))
-        return u'\n'.join(output)
+        return u'\n'.join(filter(lambda x: '----' not in x, output))
 
 class MetricInstanceForm(forms.ModelForm):
     """
@@ -303,10 +301,8 @@ class ProfileAdmin(admin.ModelAdmin):
     def get_form(self, request, obj=None, **kwargs):
         rquser = SharedInfo(request.user)
         if obj:
-            gp = poem.models.Group.objects.get(profiles__id=obj.id)
-            if not gp:
-                self._groupown_turn(request.user, 'del')
-            else:
+            try:
+                gp = poem.models.Group.objects.get(profiles__id=obj.id)
                 ugis = request.user.groups.all().values_list('id', flat=True)
                 if ugis:
                     for ugi in ugis:
@@ -315,6 +311,8 @@ class ProfileAdmin(admin.ModelAdmin):
                             break
                         else:
                             self._groupown_turn(request.user, 'del')
+            except poem.models.Group.DoesNotExist:
+                self._groupown_turn(request.user, 'del')
         elif not request.user.is_superuser:
             self.inlines = (GroupInlineAdd, MetricInstanceInline,)
             self._groupown_turn(request.user, 'add')

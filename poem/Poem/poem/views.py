@@ -27,7 +27,7 @@ def profiles(request):
     lp = []
     for profile in models.Profile.objects.all():
         lp.append({"name" : profile.name, "vo" : profile.vo,
-                   "version" : profile.version, "owner" : profile.owner,
+                   "version" : profile.version,
                    "description" : profile.description,
                    "metric_instances" : profile.metric_instances.all().\
                                   values('metric', 'fqan', 'vo', 'service_flavour')

@@ -12,8 +12,8 @@ from Poem.poem import models
 from django.db import connection, transaction
 from xml.etree import ElementTree
 
+logging.basicConfig(format='%(filename)s[%(process)s]: %(levelname)s %(message)s', level=logging.INFO)
 logger = logging.getLogger("POEM")
-
 
 def getDataFromXMLX509(url, u_key_file, u_cert_file, header = {'Python-urllib': ''}):
     "Extracts XML data from an URL feed using X509 certificates."
@@ -32,7 +32,6 @@ def getDataFromXMLX509(url, u_key_file, u_cert_file, header = {'Python-urllib': 
     except Exception, e:
         return (True, e)
     return (False, ret)
-
 
 def main():
     "Parses service flavours list from GOCDB"
@@ -97,6 +96,6 @@ def main():
         transaction.commit_unless_managed()
         connection.close()
     else:
-        print "POEM - INFO - Service Flavours database is up to date"
+        logger.info("Service Flavours database is up to date")
 
 main()
