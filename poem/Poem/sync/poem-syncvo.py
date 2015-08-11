@@ -11,6 +11,7 @@ from Poem.poem import models
 from django.db import connection, transaction
 from xml.etree import ElementTree
 
+logging.basicConfig(format='%(filename)s[%(process)s]: %(levelname)s %(message)s', level=logging.INFO)
 logger = logging.getLogger("POEM")
 
 def main():
@@ -55,6 +56,6 @@ def main():
         transaction.commit_unless_managed()
         connection.close()
     else:
-        print "POEM - INFO - VO database is up to date"
+        logger.info("VO database is up to date")
 
 main()

@@ -5,10 +5,9 @@ from django.utils import simplejson
 
 from Poem.poem.models import Profile, MetricInstance
 
-LOG_INSTANCE = logging.getLogger('POEM')
+LOG_INSTANCE = logging.getLogger('POEMIMPORTPROFILES')
 
 class SyncException(Exception):
-
     def __init__(self, value):
         self.parameter = value
 
@@ -16,7 +15,6 @@ class SyncException(Exception):
         return repr(self.parameter)
 
 class PoemSync(object):
-
     def __init__(self, url="", profile_list=None):
         self._base_url = url
         self._has_error = False
@@ -41,11 +39,8 @@ class PoemSync(object):
     def sync_metricinstances(self, list_object, pobj):
         pobj.metric_instances.all().delete()
         for mins_dict in list_object:
-                key='atp_service_type_flavour'
-                try: mins_dict[key]
-                except KeyError: key='service_flavour'
                 MetricInstance.objects.create(profile=pobj, metric=mins_dict['metric'],
-                    service_flavour=mins_dict[key],
+                    service_flavour=mins_dict['atp_service_type_flavour'],
                     vo=mins_dict['vo'], fqan=mins_dict['fqan'])
 
 
@@ -79,7 +74,6 @@ class PoemSync(object):
 
         try:
             pobj = Profile.objects.get(name=p_dict['name'], version=p_dict['version'])
-            pobj.owner = pobj1.owner
             pobj.description = pobj1.description
             pobj.vo = pobj1.vo
         except Profile.DoesNotExist:
