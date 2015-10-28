@@ -339,10 +339,9 @@ class ProfileAdmin(admin.ModelAdmin):
     def has_add_permission(self, request):
         if request.user.is_superuser:
             return True
-        try:
-            if request.user.groups.get(pk=1):
-                return True
-        except ObjectDoesNotExist:
+        if request.user.groups.count():
+            return True
+        else:
             return False
 
     def has_delete_permission(self, request, obj=None):
