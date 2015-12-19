@@ -3,7 +3,7 @@
 
 Name:           poem
 Version:        0.11.0
-Release:        4%{?dist}
+Release:        5%{?dist}
 Summary:        Profile Management (POEM) system for Service Availability Monitoring (SAM).
 Group:          Web application
 License:        ASL 2.0
@@ -65,6 +65,8 @@ rm -rf $RPM_BUILD_ROOT
 %pre 
 
 %changelog
+* Sat Dec 19 2015 Daniel Vrcic <dvrcic@srce.hr> - 0.11.0-5%{?dist}
+- allow creation of empty group of profiles
 * Wed Oct 28 2015 Daniel Vrcic <dvrcic@srce.hr> - 0.11.0-4%{?dist}
 - fixed bug when inspecting add profile perm
 * Fri Aug 14 2015 Daniel Vrcic <dvrcic@srce.hr> - 0.11.0-3%{?dist}
