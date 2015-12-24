@@ -74,18 +74,21 @@ def main():
                 for feed in Feed_List])
         sfs.add(('SRMv2', '[Site service] Storage Resource Manager. Mandatory for all sites running an SRM enabled storage element.'))
         cur = connection.cursor()
-        if len(sfindb) < len(Feed_List) + 1:
-            cur.executemany('INSERT INTO poem_serviceflavour VALUES (?,?)', \
-                    sfs.difference(sfindb))
-            logger.info("Added %d service flavours" %\
-                        (len(Feed_List) + 1 - len(sfindb)))
-        elif len(sfindb) > len(Feed_List) + 1:
-            cur.executemany('DELETE FROM poem_serviceflavour WHERE name IN (?,?)', \
-                    sfindb.difference(sfs))
-            logger.info("Deleted %d service flavours" %\
-                        (len(sfindb) - len(Feed_List) + 1))
-        transaction.commit_unless_managed()
-        connection.close()
+        try:
+            if len(sfindb) < len(Feed_List) + 1:
+                cur.executemany('INSERT INTO poem_serviceflavour VALUES (?,?)', \
+                        sfs.difference(sfindb))
+                logger.info("Added %d service flavours" %\
+                            (len(Feed_List) + 1 - len(sfindb)))
+            elif len(sfindb) > len(Feed_List) + 1:
+                cur.executemany('DELETE FROM poem_serviceflavour WHERE name IN (?,?)', \
+                        sfindb.difference(sfs))
+                logger.info("Deleted %d service flavours" %\
+                            (len(sfindb) - len(Feed_List) + 1))
+            transaction.commit_unless_managed()
+            connection.close()
+        except Exception as e:
+            logger.error("database operations failed - %s" % e)
     else:
         logger.info("Service Flavours database is up to date")
 
