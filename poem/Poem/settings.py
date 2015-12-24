@@ -48,11 +48,6 @@ try:
 except NoSectionError, e:
     raise ImproperlyConfigured(e)
 
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-}
-
 TEMPLATE_DEBUG = DEBUG
 
 # Local time zone for this installation. Choices can be found here:
@@ -140,11 +135,11 @@ TEMPLATE_DIRS = (
 )
 
 INSTALLED_APPS = (
+    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.staticfiles',
     'django.contrib.sessions',
-    'django.contrib.admin',
     'ajax_select',
     'Poem.poem',
 )

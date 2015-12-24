@@ -8,7 +8,7 @@ url=$URLDEF
 
 usage()
 {
-	printf "Usage: %s [-i] [-url <URL>] PROFILE1 PROFILE2 ...\n" $(basename $0) >&2
+	printf "Usage: %s [-i] [-u <URL>] PROFILE1 PROFILE2 ...\n" $(basename $0) >&2
 	printf "       [-i] - Only import profiles if poem database is empty\n" >&2
 	printf "       [-u <URL>] - URL containing JSON encoded list of profiles\n" >&2
 	printf "       PROFILE1 PROFILE2 - space separated list of profiles\n" >&2

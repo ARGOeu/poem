@@ -2,7 +2,7 @@
   {% for pr in result %}
     {
       "name" : "{{ pr.name }}", "atp_vo" : "{{ pr.vo }}",
-      "version" : "{{ pr.version }}", "owner" : "{{ pr.owner }}",
+      "version" : "{{ pr.version }}",
       "description" : "{{ pr.description }}", 
       "metric_instances" : [
                            {% for mi in pr.metric_instances %}
@@ -10,7 +10,7 @@
                                "metric" : "{{ mi.metric }}",
                                "fqan" : "{{ mi.fqan }}",
                                "vo" : "{{ mi.vo }}",
-                               "atp_service_flavour" : "{{ mi.service_flavour }}"
+                               "atp_service_type_flavour" : "{{ mi.service_flavour }}"
                              } 
                            {% if not forloop.last %},
                            {% endif %}
