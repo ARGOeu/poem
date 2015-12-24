@@ -11,27 +11,10 @@ from Poem import settings
 from Poem.poem import models
 from django.db import connection, transaction
 from xml.etree import ElementTree
+from urlparse import urlparse
 
 logging.basicConfig(format='%(filename)s[%(process)s]: %(levelname)s %(message)s', level=logging.INFO)
 logger = logging.getLogger("POEM")
-
-def getDataFromXMLX509(url, u_key_file, u_cert_file, header = {'Python-urllib': ''}):
-    "Extracts XML data from an URL feed using X509 certificates."
-    class HTTPSClientAuthConnection(httplib.HTTPSConnection):
-        def __init__(self, host, timeout=None):
-            httplib.HTTPSConnection.__init__(self, host, key_file=u_key_file,cert_file=u_cert_file)
-    class HTTPSClientAuthHandler(urllib2.HTTPSHandler):
-        def https_open(self, req):
-            return self.do_open(HTTPSClientAuthConnection, req)
-
-    ret = None
-    try:
-        opener = urllib2.build_opener(urllib2.HTTPHandler(),HTTPSClientAuthHandler())
-        req = urllib2.Request(url, None, header)
-        ret = opener.open(req).read()
-    except Exception, e:
-        return (True, e)
-    return (False, ret)
 
 def main():
     "Parses service flavours list from GOCDB"
@@ -47,26 +30,34 @@ def main():
                 fos.append(open(fp))
     except IOError as e:
         logger.error(e)
-        sys.exit(1)
+        raise SystemExit(1)
     for fo in fos:
         fo.close()
 
-    (excepraise, ret) = getDataFromXMLX509(settings.GOCDB_SERVICETYPE_URL,\
-                                    settings.HOST_KEY, settings.HOST_CERT)
-    if excepraise:
-        logger.error("Error service flavours feed - %s" % (ret))
-        sys.exit(1)
+    o = urlparse(settings.GOCDB_SERVICETYPE_URL)
+    try:
+        if o.scheme.startswith('https'):
+            conn = httplib.HTTPSConnection(host=o.netloc, \
+                                            key_file=settings.HOST_KEY, cert_file=settings.HOST_CERT)
+        else:
+            conn = httplib.HTTPSConnection(host=o.netloc)
+        conn.putrequest('GET', o.path+'?'+o.query)
+        conn.endheaders()
+        ret = conn.getresponse().read()
+    except Exception as e:
+        logger.error("Error service flavours feed - %s" % (e))
+        raise SystemExit(1)
 
     try:
         Root = ElementTree.XML(ret)
     except Exception as e:
         logger.error("Error parsing service flavours - %s" % (e))
-        sys.exit(1)
+        raise SystemExit(1)
 
     elements = Root.findall("SERVICE_TYPE")
     if not elements:
         logger.error("Error parsing service flavours")
-        sys.exit(1)
+        raise SystemExit(1)
 
     Feed_List = []
     for element in elements:
@@ -77,7 +68,7 @@ def main():
         Feed_List.append(Element_List)
 
 
-    sfindb = set([sf.name for sf in models.ServiceFlavour.objects.all()])
+    sfindb = set([(sf.name, sf.description) for sf in models.ServiceFlavour.objects.all()])
     if len(sfindb) != len(Feed_List) + 1:
         sfs = set([(feed['service_type_name'], feed['service_type_desc']) \
                 for feed in Feed_List])
