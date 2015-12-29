@@ -113,9 +113,9 @@ class PoemSync(object):
                 dcstr = simplejson.JSONDecoder().decode(open('/'+o.hostname+o.path).read())
             else:
                 if o.scheme.startswith('https'):
-                    conn = httplib.HTTPSConnection(host=o.netloc,\
-                                                key_file=settings.HOST_KEY,
-                                                cert_file=settings.HOST_CERT)
+                    conn = httplib.HTTPSConnection(host=o.netloc,
+                                                   key_file=settings.HOST_KEY,
+                                                   cert_file=settings.HOST_CERT)
                 else:
                     conn = httplib.HTTPConnection(host=o.netloc)
                 conn.putrequest('GET', o.path+'?'+o.query)
