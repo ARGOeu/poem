@@ -1,9 +1,11 @@
 import Poem.django_logging
 import logging, urllib
+import httplib
 
 from django.utils import simplejson
-
 from Poem.poem.models import Profile, MetricInstance
+from urlparse import urlparse
+from Poem import settings
 
 LOG_INSTANCE = logging.getLogger('POEMIMPORTPROFILES')
 
@@ -106,10 +108,19 @@ class PoemSync(object):
         if not url:
             url = self._base_url
         try:
-            if url[0:6] == 'file:/':
-                dcstr = simplejson.JSONDecoder().decode(open(url[6:]).read())
+            o = urlparse(url)
+            if o.scheme.startswith('file'):
+                dcstr = simplejson.JSONDecoder().decode(open('/'+o.hostname+o.path).read())
             else:
-                dcstr = simplejson.JSONDecoder().decode(urllib.urlopen(url + append).read())
+                if o.scheme.startswith('https'):
+                    conn = httplib.HTTPSConnection(host=o.netloc,\
+                                                key_file=settings.HOST_KEY,
+                                                cert_file=settings.HOST_CERT)
+                else:
+                    conn = httplib.HTTPConnection(host=o.netloc)
+                conn.putrequest('GET', o.path+'?'+o.query)
+                conn.endheaders()
+                dcstr = simplejson.JSONDecoder().decode(conn.getresponse().read())
         except IOError, (er):
             self._raise_error("Error Occurred while Retrieving URL: %s%s : %s" % (url, append, er))
         except Exception, (er):
