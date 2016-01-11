@@ -391,6 +391,7 @@ class GroupPermForm(forms.ModelForm):
     permissions.empty_label = '-------'
     queryset = Profile.objects.filter(group__id__isnull=True)
     profiles = MyModelMultipleChoiceField(queryset=queryset,
+                                          required=False,
                                           widget=MyFilteredSelectMultiple('profiles', False), ftype='profiles')
 
 class CustGroupAdmin(GroupAdmin):

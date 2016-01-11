@@ -2,8 +2,8 @@
 %{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name:           poem
-Version:        0.11.0
-Release:        4%{?dist}
+Version:        0.11.1
+Release:        1%{?dist}
 Summary:        Profile Management (POEM) system for Service Availability Monitoring (SAM).
 Group:          Web application
 License:        ASL 2.0
@@ -65,6 +65,14 @@ rm -rf $RPM_BUILD_ROOT
 %pre 
 
 %changelog
+* Tue Dec 29 2015 Daniel Vrcic <dvrcic@srce.hr> - 0.11.1-1%{?dist}
+- fix column uniqueness error while syncing service types
+  https://github.com/ARGOeu/ARGO/issues/177
+- catch failed DB operations
+- import profiles over https
+  https://github.com/ARGOeu/ARGO/issues/176
+* Sat Dec 19 2015 Daniel Vrcic <dvrcic@srce.hr> - 0.11.0-5%{?dist}
+- allow creation of empty group of profiles
 * Wed Oct 28 2015 Daniel Vrcic <dvrcic@srce.hr> - 0.11.0-4%{?dist}
 - fixed bug when inspecting add profile perm
 * Fri Aug 14 2015 Daniel Vrcic <dvrcic@srce.hr> - 0.11.0-3%{?dist}
