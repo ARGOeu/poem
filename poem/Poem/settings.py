@@ -48,6 +48,8 @@ try:
 except NoSectionError, e:
     raise ImproperlyConfigured(e)
 
+URL_DEBUG = True
+
 TEMPLATE_DEBUG = DEBUG
 
 # Local time zone for this installation. Choices can be found here:
@@ -81,6 +83,7 @@ MEDIA_ROOT = ''
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash if there is a path component (optional in other cases).
 # Examples: "http://media.lawrence.com", "http://example.com/media/"
+# STATIC_URL = '/static/'
 STATIC_URL = '/'
 STATIC_ROOT = get_python_lib() + '/django/contrib/admin/static/admin/'
 
@@ -131,7 +134,7 @@ AUTH_PROFILE_MODULE = 'poem.UserProfile'
 ROOT_URLCONF = 'Poem.urls'
 
 TEMPLATE_DIRS = (
-    os_path.join(APP_PATH, 'poem/templates')
+    os_path.join(APP_PATH, 'poem/templates'),
 )
 
 INSTALLED_APPS = (
