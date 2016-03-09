@@ -20,7 +20,7 @@ if username and password:
 
     def create_superuser_config(sender, **kwargs):
         print 'Creating superuser account: ' + username
-        user, created = auth_models.User.objects.get_or_create(pk=1)
+        user, created = Poem.poem.models.CustUser.objects.get_or_create(pk=1)
         if user:
             user.is_staff, user.is_active = True, True
             user.is_superuser = True
