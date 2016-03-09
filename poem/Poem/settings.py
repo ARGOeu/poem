@@ -119,7 +119,8 @@ MIDDLEWARE_CLASSES = (
 )
 
 AUTHENTICATION_BACKENDS = (
-    'django.contrib.auth.backends.ModelBackend',
+    #'django.contrib.auth.backends.ModelBackend',
+    'Poem.poem.authbackend.CustModelBackend',
     'Poem.ssl_auth.backends.SSLBackend',
 )
 
@@ -129,8 +130,8 @@ SSL_CREATE_ACTIVE = True
 SSL_CREATE_STAFF = True
 SSL_SERIAL = 'SSL_CLIENT_M_SERIAL'
 
-AUTH_PROFILE_MODULE = 'poem.UserProfile'
 
+AUTH_USER_MODEL = 'poem.CustUser'
 ROOT_URLCONF = 'Poem.urls'
 
 TEMPLATE_DIRS = (

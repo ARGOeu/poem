@@ -1,24 +1,24 @@
-from itertools import chain
 from django import forms
-from django.forms import ValidationError, models
-from django.contrib.auth.models import User, Permission
-from django.contrib.auth.admin import UserAdmin, GroupAdmin
-from django.http import HttpResponseRedirect, HttpResponse
-from django.core import exceptions, validators
-from django.contrib import admin
 from django.conf import settings
-from django.core.cache import cache
-from django.core.exceptions import PermissionDenied
-from django.utils.encoding import force_unicode
-from django.utils.html import escape
-from django.forms.util import flatatt
-from django.utils.safestring import mark_safe
+from django.contrib import admin
 from django.contrib.admin.templatetags.admin_static import static
+from django.contrib.auth.admin import UserAdmin, GroupAdmin
+from django.contrib.auth.models import User, Permission
+from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
-from django.db import models
-from django.utils.translation import ungettext, ugettext, ugettext_lazy as _
-from django.forms.util import ErrorList
+from django.core import exceptions, validators
+from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import PermissionDenied
+from django.forms import ValidationError, models
+from django.forms.util import ErrorList
+from django.forms.util import flatatt
+from django.http import HttpResponseRedirect, HttpResponse
+from django.utils.encoding import force_unicode, force_text
+from django.utils.html import escape
+from django.utils.safestring import mark_safe
+from django.utils.translation import ungettext, ugettext, ugettext_lazy as _
+from itertools import chain
 
 from Poem import poem
 from django.contrib import auth
@@ -72,6 +72,10 @@ class MyModelMultipleChoiceField(forms.ModelMultipleChoiceField):
     def label_from_instance(self, obj):
         return str(obj.name)
 
+    def _has_changed(self, initial, data):
+        initial_value = initial if initial is not None else ''
+        data_value = data if data is not None else ''
+        return force_text(self.prepare_value(initial_value)) != force_text(data_value)
 
 class MySelect(forms.widgets.SelectMultiple):
     allow_multiple_selected = False
@@ -185,22 +189,23 @@ class MetricInstanceInline(admin.TabularInline):
     def has_change_permission(self, request, obj=None):
         return True
 
-class GroupForm(forms.ModelForm):
+class GroupOfProfilesForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         rquser = SharedInfo()
         self.user = rquser.getuser()
         self.usergroups  = self.user.groups.all()
-        super(GroupForm, self).__init__(*args, **kwargs)
+        super(GroupOfProfilesForm, self).__init__(*args, **kwargs)
 
 
-    queryset = poem.models.Group.objects.all()
-    group = MyModelMultipleChoiceField(queryset=queryset,
+    qs = poem.models.GroupOfProfiles.objects.all()
+    groupsofprofiles = MyModelMultipleChoiceField(queryset=qs,
                                        widget=forms.widgets.Select(),
                                        help_text='Profile is a member of given group')
-    group.empty_label = '----------------'
+    groupsofprofiles.empty_label = '----------------'
+    groupsofprofiles.label = 'Group'
 
     def clean_group(self):
-        groupsel = self.cleaned_data['group']
+        groupsel = self.cleaned_data['groupofprofiles']
         ugid = [f.id for f in self.usergroups]
         if groupsel.id not in ugid and not self.user.is_superuser:
             raise ValidationError("You are not member of group %s." % (str(groupsel)))
@@ -212,13 +217,13 @@ class GroupFormAdd(forms.ModelForm):
         self.fields['group'].help_text = 'Select one of the groups you are member of'
         self.fields['group'].empty_label = None
 
-class GroupInline(admin.TabularInline):
-    model = poem.models.Group.profiles.through
-    form = GroupForm
-    verbose_name_plural = ''
-    verbose_name = ''
+class GroupOfProfilesInline(admin.TabularInline):
+    model = poem.models.GroupOfProfiles.profiles.through
+    form = GroupOfProfilesForm
+    verbose_name_plural = 'Group of profiles'
+    verbose_name = 'Group of profile'
     max_num = 1
-    extra = 3
+    extra = 1
     template = 'admin/edit_inline/stacked-group.html'
 
     def has_add_permission(self, request):
@@ -230,13 +235,13 @@ class GroupInline(admin.TabularInline):
     def has_change_permission(self, request, obj=None):
         return True
 
-class GroupInlineAdd(GroupInline):
+class GroupOfProfilesInlineAdd(GroupOfProfilesInline):
     form = GroupFormAdd
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        lgi = request.user.groups.all().values_list('id', flat=True)
-        kwargs["queryset"] = poem.models.Group.objects.filter(pk__in=lgi)
-        return super(GroupInline, self).formfield_for_foreignkey(db_field, request, **kwargs)
+        lgi = request.user.groupofprofiles.all().values_list('id', flat=True)
+        kwargs["queryset"] = poem.models.GroupOfProfiles.objects.filter(pk__in=lgi)
+        return super(GroupOfProfilesInline, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
 class ProfileForm(forms.ModelForm):
     """
@@ -277,7 +282,7 @@ class ProfileAdmin(admin.ModelAdmin):
     list_filter = ('vo',)
     search_fields = ('name', 'vo',)
     fields = ('name', 'vo', 'description')
-    inlines = (GroupInline, MetricInstanceInline, )
+    inlines = (GroupOfProfilesInline, MetricInstanceInline, )
     exclude = ('version',)
     form = ProfileForm
     actions = None
@@ -289,8 +294,8 @@ class ProfileAdmin(admin.ModelAdmin):
         except Permission.DoesNotExist:
             ct = ContentType.objects.get(app_label='poem', model='profile')
             perm_grown = Permission.objects.create(codename='groupown_profile',
-                                             content_type=ct,
-                                             name="Group of profile owners")
+                                                   content_type=ct,
+                                                   name="Group of profile owners")
         if flag == 'add':
             user.user_permissions.add(perm_grown)
             user.user_permissions.add(perm_prdel)
@@ -302,7 +307,7 @@ class ProfileAdmin(admin.ModelAdmin):
         rquser = SharedInfo(request.user)
         if obj:
             try:
-                gp = poem.models.Group.objects.get(profiles__id=obj.id)
+                gp = poem.models.GroupOfProfiles.objects.get(profiles__id=obj.id)
                 ugis = request.user.groups.all().values_list('id', flat=True)
                 if ugis:
                     for ugi in ugis:
@@ -311,10 +316,10 @@ class ProfileAdmin(admin.ModelAdmin):
                             break
                         else:
                             self._groupown_turn(request.user, 'del')
-            except poem.models.Group.DoesNotExist:
+            except poem.models.GroupOfProfiles.DoesNotExist:
                 self._groupown_turn(request.user, 'del')
         elif not request.user.is_superuser:
-            self.inlines = (GroupInlineAdd, MetricInstanceInline,)
+            self.inlines = (GroupOfProfilesInlineAdd, MetricInstanceInline,)
             self._groupown_turn(request.user, 'add')
         return super(ProfileAdmin, self).get_form(request, obj=None, **kwargs)
 
@@ -367,30 +372,39 @@ class UserProfileInline(admin.StackedInline):
     can_delete = False
     verbose_name_plural = 'Additional info'
 
+    class Meta:
+        model = get_user_model()
+
+
 class UserProfileAdmin(UserAdmin):
     class Media:
         css = { "all" : ("/poem_media/css/poem_profile.custom.css",) }
 
+    qs = poem.models.GroupOfProfiles.objects.all()
+    groupsofprofiles = MyModelMultipleChoiceField(queryset=qs,
+                                       widget=forms.widgets.Select(),
+                                       help_text='Profile is a member of given group')
     fieldsets = [(None, {'fields': ['username', 'password']}),
                  ('Personal info', {'fields': ['first_name', 'last_name', 'email']}),
-                 ('Permissions', {'fields': ['is_superuser', 'is_active', 'groups']})]
+                 ('Permissions', {'fields': ['is_superuser', 'is_active', 'groupsofprofiles']})]
     inlines = [UserProfileInline]
     list_filter = ('is_superuser',)
+    filter_horizontal = ('groupsofprofiles', 'user_permissions',)
 
-admin.site.unregister(User)
-admin.site.register(User, UserProfileAdmin)
+#admin.site.unregister(User)
+admin.site.register(poem.models.CustUser, UserProfileAdmin)
 
 class GroupPermForm(forms.ModelForm):
     class Meta:
-        model = poem.models.Group
-    queryset = Permission.objects.filter(codename__startswith='cust')
-    permissions = MyModelMultipleChoiceField(queryset=queryset,
+        model = poem.models.GroupOfProfiles
+    qs = Permission.objects.filter(codename__startswith='cust')
+    permissions = MyModelMultipleChoiceField(queryset=qs,
                                              widget=MySelect,
                                              help_text='Permission given to user members of the group across chosen profiles',
                                              ftype='permissions')
     permissions.empty_label = '-------'
-    queryset = Profile.objects.filter(group__id__isnull=True)
-    profiles = MyModelMultipleChoiceField(queryset=queryset,
+    qs = Profile.objects.filter(groupofprofiles__id__isnull=True)
+    profiles = MyModelMultipleChoiceField(queryset=qs,
                                           required=False,
                                           widget=MyFilteredSelectMultiple('profiles', False), ftype='profiles')
 
@@ -405,4 +419,4 @@ class CustGroupAdmin(GroupAdmin):
                  ('Settings', {'fields': ['permissions', 'profiles']})]
 
 admin.site.unregister(auth.models.Group)
-admin.site.register(poem.models.Group, CustGroupAdmin)
+admin.site.register(poem.models.GroupOfProfiles, CustGroupAdmin)
