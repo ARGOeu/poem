@@ -1,10 +1,12 @@
-from django import forms
+from django.forms import ModelForm, ModelMultipleChoiceField, CharField, Textarea
+from django.forms.widgets import SelectMultiple, TextInput, Select
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.admin.templatetags.admin_static import static
 from django.contrib.auth.admin import UserAdmin, GroupAdmin
+from django.contrib.auth import forms
+from django.contrib.auth.forms import UserChangeForm
 from django.contrib.auth.models import User, Permission
-from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core import exceptions, validators
 from django.core.cache import cache
@@ -39,10 +41,10 @@ class SharedInfo:
         else:
             return None
 
-class MyModelMultipleChoiceField(forms.ModelMultipleChoiceField):
+class MyModelMultipleChoiceField(ModelMultipleChoiceField):
     def __init__(self, *args, **kwargs):
         self.ftype = kwargs.pop('ftype', None)
-        super(forms.ModelMultipleChoiceField, self).__init__(*args, **kwargs)
+        super(ModelMultipleChoiceField, self).__init__(*args, **kwargs)
 
     def clean(self, value):
         if self.required and not value:
@@ -77,7 +79,7 @@ class MyModelMultipleChoiceField(forms.ModelMultipleChoiceField):
         data_value = data if data is not None else ''
         return force_text(self.prepare_value(initial_value)) != force_text(data_value)
 
-class MySelect(forms.widgets.SelectMultiple):
+class MySelect(SelectMultiple):
     allow_multiple_selected = False
 
     def render(self, name, value, attrs=None, choices=()):
@@ -134,7 +136,7 @@ class MyFilteredSelectMultiple(admin.widgets.FilteredSelectMultiple):
                 output.append(self.render_option(selected_choices, option_value, option_label))
         return u'\n'.join(filter(lambda x: '----' not in x, output))
 
-class MetricInstanceForm(forms.ModelForm):
+class MetricInstanceForm(ModelForm):
     """
     Connects metric instance attributes to autocomplete widget (:py:mod:`poem.widgets`).
     """
@@ -157,10 +159,10 @@ class MetricInstanceForm(forms.ModelForm):
         return form_flavour
 
 class MetricInstanceFormRO(MetricInstanceForm):
-    metric = forms.CharField(label='Metric', \
-                             widget=forms.TextInput(attrs={'readonly' : 'readonly'}))
-    service_flavour = forms.CharField(label='Service Flavour', \
-                                   widget=forms.TextInput(attrs={'readonly' : 'readonly'}))
+    metric = CharField(label='Metric', \
+                             widget=TextInput(attrs={'readonly' : 'readonly'}))
+    service_flavour = CharField(label='Service Flavour', \
+                                   widget=TextInput(attrs={'readonly' : 'readonly'}))
 
 class MetricInstanceInline(admin.TabularInline):
     model = MetricInstance
@@ -189,17 +191,17 @@ class MetricInstanceInline(admin.TabularInline):
     def has_change_permission(self, request, obj=None):
         return True
 
-class GroupOfProfilesForm(forms.ModelForm):
+class GroupOfProfilesForm(ModelForm):
     def __init__(self, *args, **kwargs):
         rquser = SharedInfo()
         self.user = rquser.getuser()
-        self.usergroups  = self.user.groups.all()
+        self.usergroups = self.user.groups.all()
         super(GroupOfProfilesForm, self).__init__(*args, **kwargs)
 
 
     qs = poem.models.GroupOfProfiles.objects.all()
     groupsofprofiles = MyModelMultipleChoiceField(queryset=qs,
-                                       widget=forms.widgets.Select(),
+                                       widget=Select(),
                                        help_text='Profile is a member of given group')
     groupsofprofiles.empty_label = '----------------'
     groupsofprofiles.label = 'Group'
@@ -211,7 +213,7 @@ class GroupOfProfilesForm(forms.ModelForm):
             raise ValidationError("You are not member of group %s." % (str(groupsel)))
         return groupsel
 
-class GroupFormAdd(forms.ModelForm):
+class GroupFormAdd(ModelForm):
     def __init__(self, *args, **kwargs):
         super(GroupFormAdd, self).__init__(*args, **kwargs)
         self.fields['group'].help_text = 'Select one of the groups you are member of'
@@ -243,7 +245,7 @@ class GroupOfProfilesInlineAdd(GroupOfProfilesInline):
         kwargs["queryset"] = poem.models.GroupOfProfiles.objects.filter(pk__in=lgi)
         return super(GroupOfProfilesInline, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
-class ProfileForm(forms.ModelForm):
+class ProfileForm(ModelForm):
     """
     Connects profile attributes to autocomplete widget (:py:mod:`poem.widgets`). Also
     adds media and does basic sanity checking for input.
@@ -251,7 +253,7 @@ class ProfileForm(forms.ModelForm):
     class Meta:
         model = Profile
 
-    name = forms.CharField(help_text='Namespace and name of this profile.',
+    name = CharField(help_text='Namespace and name of this profile.',
                            max_length=128,
                            widget=widgets.NamespaceTextInput(
                                            attrs={'maxlength': 128, 'size': 45}),
@@ -260,8 +262,8 @@ class ProfileForm(forms.ModelForm):
     vo = make_ajax_field(Profile, 'name', 'hintsvo', \
                          help_text='Virtual organization that owns this profile.', \
                          plugin_options = {'minLength' : 2}, label='Virtual organization')
-    description = forms.CharField(help_text='Free text description outlining the purpose of this profile.',
-                                  widget=forms.Textarea(attrs={'style':'width:480px;height:100px'}))
+    description = CharField(help_text='Free text description outlining the purpose of this profile.',
+                                  widget=Textarea(attrs={'style':'width:480px;height:100px'}))
 
     def clean_vo(self):
         clean_values = []
@@ -363,8 +365,8 @@ class ProfileAdmin(admin.ModelAdmin):
 
 admin.site.register(Profile, ProfileAdmin)
 
-class UserProfileForm(forms.ModelForm):
-    subject = forms.CharField(widget=forms.TextInput(attrs={'style':'width:500px'}))
+class UserProfileForm(ModelForm):
+    subject = CharField(widget=TextInput(attrs={'style':'width:500px'}))
 
 class UserProfileInline(admin.StackedInline):
     model = UserProfile
@@ -373,28 +375,24 @@ class UserProfileInline(admin.StackedInline):
     verbose_name_plural = 'Additional info'
 
     class Meta:
-        model = get_user_model()
-
+        model = settings.AUTH_USER_MODEL
 
 class UserProfileAdmin(UserAdmin):
     class Media:
         css = { "all" : ("/poem_media/css/poem_profile.custom.css",) }
 
-    qs = poem.models.GroupOfProfiles.objects.all()
-    groupsofprofiles = MyModelMultipleChoiceField(queryset=qs,
-                                       widget=forms.widgets.Select(),
-                                       help_text='Profile is a member of given group')
     fieldsets = [(None, {'fields': ['username', 'password']}),
                  ('Personal info', {'fields': ['first_name', 'last_name', 'email']}),
                  ('Permissions', {'fields': ['is_superuser', 'is_active', 'groupsofprofiles']})]
     inlines = [UserProfileInline]
     list_filter = ('is_superuser',)
-    filter_horizontal = ('groupsofprofiles', 'user_permissions',)
+    filter_horizontal = ('user_permissions',)
+
 
 #admin.site.unregister(User)
 admin.site.register(poem.models.CustUser, UserProfileAdmin)
 
-class GroupPermForm(forms.ModelForm):
+class GroupOfProfilesForm(ModelForm):
     class Meta:
         model = poem.models.GroupOfProfiles
     qs = Permission.objects.filter(codename__startswith='cust')
@@ -408,15 +406,15 @@ class GroupPermForm(forms.ModelForm):
                                           required=False,
                                           widget=MyFilteredSelectMultiple('profiles', False), ftype='profiles')
 
-class CustGroupAdmin(GroupAdmin):
+class GroupOfProfilesAdmin(GroupAdmin):
     class Media:
         css = { "all" : ("/poem_media/css/poem_profile.custom.css",) }
 
-    form = GroupPermForm
+    form = GroupOfProfilesForm
     search_field = ()
     filter_horizontal=('profiles',)
     fieldsets = [(None, {'fields': ['name']}),
                  ('Settings', {'fields': ['permissions', 'profiles']})]
 
 admin.site.unregister(auth.models.Group)
-admin.site.register(poem.models.GroupOfProfiles, CustGroupAdmin)
+admin.site.register(poem.models.GroupOfProfiles, GroupOfProfilesAdmin)

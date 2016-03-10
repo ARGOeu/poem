@@ -1,4 +1,5 @@
 from Poem import settings
+from django import forms
 from django.contrib import auth
 from django.contrib.auth.hashers import (check_password, make_password, is_password_usable)
 from django.contrib.auth.models import UserManager, GroupManager, Permission, PermissionsMixin, AbstractBaseUser
@@ -44,7 +45,6 @@ class Profile(models.Model):
                                help_text='Multiple versions of the profile can exist (defaults to 1.0).')
     vo = models.CharField(max_length=128,
                     help_text='', verbose_name='VO')
-    #owner = models.CharField(max_length=255, blank=True, null=True)
     description = models.CharField(max_length=1024, blank=True, null=True)
 
     class Meta:
@@ -54,7 +54,6 @@ class Profile(models.Model):
 
     def __unicode__(self):
         return u'%s %s %s' % (self.name, self.version, self.vo)
-                                 #self.valid_from, self.valid_to)
 
 class GroupOfProfiles(models.Model):
     name = models.CharField(_('name'), max_length=80, unique=True)
@@ -73,8 +72,6 @@ class GroupOfProfiles(models.Model):
     def natural_key(self):
         return (self.name,)
 
-#class Group(Group):
-#    profiles = models.ManyToManyField(Profile, null=True, blank=True)
 
 class MetricInstance(models.Model):
     """
