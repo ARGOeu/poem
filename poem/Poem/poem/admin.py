@@ -191,20 +191,20 @@ class MetricInstanceInline(admin.TabularInline):
     def has_change_permission(self, request, obj=None):
         return True
 
-class GroupOfProfilesForm(ModelForm):
+class GroupOfProfilesInlineForm(ModelForm):
     def __init__(self, *args, **kwargs):
         rquser = SharedInfo()
         self.user = rquser.getuser()
-        self.usergroups = self.user.groups.all()
-        super(GroupOfProfilesForm, self).__init__(*args, **kwargs)
+        self.usergroups = self.user.groupsofprofiles.all()
+        super(GroupOfProfilesInlineForm, self).__init__(*args, **kwargs)
 
 
     qs = poem.models.GroupOfProfiles.objects.all()
-    groupsofprofiles = MyModelMultipleChoiceField(queryset=qs,
+    groupofprofiles = MyModelMultipleChoiceField(queryset=qs,
                                        widget=Select(),
                                        help_text='Profile is a member of given group')
-    groupsofprofiles.empty_label = '----------------'
-    groupsofprofiles.label = 'Group'
+    groupofprofiles.empty_label = '----------------'
+    groupofprofiles.label = 'Group of profiles'
 
     def clean_group(self):
         groupsel = self.cleaned_data['groupofprofiles']
@@ -213,15 +213,15 @@ class GroupOfProfilesForm(ModelForm):
             raise ValidationError("You are not member of group %s." % (str(groupsel)))
         return groupsel
 
-class GroupFormAdd(ModelForm):
+class GroupOfProfilesInlineAdd(ModelForm):
     def __init__(self, *args, **kwargs):
-        super(GroupFormAdd, self).__init__(*args, **kwargs)
+        super(GroupOfProfilesInlineAdd, self).__init__(*args, **kwargs)
         self.fields['group'].help_text = 'Select one of the groups you are member of'
         self.fields['group'].empty_label = None
 
 class GroupOfProfilesInline(admin.TabularInline):
     model = poem.models.GroupOfProfiles.profiles.through
-    form = GroupOfProfilesForm
+    form = GroupOfProfilesInlineForm
     verbose_name_plural = 'Group of profiles'
     verbose_name = 'Group of profile'
     max_num = 1
@@ -238,7 +238,7 @@ class GroupOfProfilesInline(admin.TabularInline):
         return True
 
 class GroupOfProfilesInlineAdd(GroupOfProfilesInline):
-    form = GroupFormAdd
+    form = GroupOfProfilesInlineAdd
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         lgi = request.user.groupofprofiles.all().values_list('id', flat=True)
@@ -292,17 +292,17 @@ class ProfileAdmin(admin.ModelAdmin):
     def _groupown_turn(self, user, flag):
         perm_prdel = Permission.objects.get(codename='delete_profile')
         try:
-            perm_grown = Permission.objects.get(codename='groupown_profile')
+            perm_grpown = Permission.objects.get(codename='groupown_profile')
         except Permission.DoesNotExist:
             ct = ContentType.objects.get(app_label='poem', model='profile')
-            perm_grown = Permission.objects.create(codename='groupown_profile',
+            perm_grpown = Permission.objects.create(codename='groupown_profile',
                                                    content_type=ct,
                                                    name="Group of profile owners")
         if flag == 'add':
-            user.user_permissions.add(perm_grown)
+            user.user_permissions.add(perm_grpown)
             user.user_permissions.add(perm_prdel)
         elif flag == 'del':
-            user.user_permissions.remove(perm_grown)
+            user.user_permissions.remove(perm_grpown)
             user.user_permissions.remove(perm_prdel)
 
     def get_form(self, request, obj=None, **kwargs):
@@ -310,7 +310,7 @@ class ProfileAdmin(admin.ModelAdmin):
         if obj:
             try:
                 gp = poem.models.GroupOfProfiles.objects.get(profiles__id=obj.id)
-                ugis = request.user.groups.all().values_list('id', flat=True)
+                ugis = request.user.groupsofprofiles.all().values_list('id', flat=True)
                 if ugis:
                     for ugi in ugis:
                         if ugi == gp.id:
@@ -346,7 +346,7 @@ class ProfileAdmin(admin.ModelAdmin):
     def has_add_permission(self, request):
         if request.user.is_superuser:
             return True
-        if request.user.groups.count():
+        if request.user.groupsofprofiles.count():
             return True
         else:
             return False
@@ -373,9 +373,6 @@ class UserProfileInline(admin.StackedInline):
     form = UserProfileForm
     can_delete = False
     verbose_name_plural = 'Additional info'
-
-    class Meta:
-        model = settings.AUTH_USER_MODEL
 
 class UserProfileAdmin(UserAdmin):
     class Media:

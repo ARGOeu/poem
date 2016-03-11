@@ -4,6 +4,7 @@ import logging
 from django.conf import settings
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.models import User, Permission
+from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 
 from Poem.poem.models import UserProfile
@@ -33,46 +34,43 @@ class SSLBackend(ModelBackend):
         if not username or not dn:
             return
         # certificate validation should be done by apache
-        profile = UserProfile.objects.filter(subject=dn)
+        userprof = get_user_model().objects.filter(userprofile__subject=dn)
         # all other cases mean that there was a constraint violation
         # since dn should be unique across all profiles
-        assert len(profile) == 0 or len(profile) == 1
+        assert len(userprof) == 0 or len(userprof) == 1
 
-        user = None
-        if profile:
+        if userprof:
             # user is known
-            user = profile[0].user
-            self.log.debug('authentication succeeds for %s' % str(dn))
+            self.log.info('authentication succeeds for %s' % str(dn))
         else:
             # user is new
             # try to generate username from CN
             username = self.clean_username(request.META.get(settings.SSL_USERNAME))
             if '_' in username:
                 first, last = username.split('_', 1)
-                user, created = User.objects.get_or_create(username=username,
+                user, created = get_user_model().objects.get_or_create(username=username,
                                                         first_name=first,
                                                         last_name=last)
             else:
-                user, created = User.objects.get_or_create(username=username)
+                user, created = get_user_model().objects.get_or_create(username=username)
 
             if not created:
                 # didn't work, same username for different DNs ? hmm ...
                 # try generating username from serial
-                self.log.debug('failed to generate username from CN for %s' % str(dn))
+                self.log.error('failed to generate username from CN for %s' % str(dn))
                 username = request.META.get(settings.SSL_SERIAL)[:30]
-                user, created = User.objects.get_or_create(username=username)
+                user, created = get_user_model().objects.get_or_create(username=username)
 
             if not created:
                 # didn't work as well, wtf
                 # fail as there is no way to generate unique username
                 # multiple DNs from the same CA with same CNs ?
-                self.log.debug('authentication failure for %s' % str(dn))
+                self.log.error('authentication failure for %s' % str(dn))
                 return
-
             # configure new user
             self.configure_user(user, request)
 
-        return user
+        return userprof[0]
 
     def clean_username(self, username):
         # replace spaces with _ and remove all non-word characters
@@ -96,32 +94,16 @@ class SSLBackend(ModelBackend):
                                                 name="Readonly profile")
 
         # user post save event ensures profile is created
-        up=user.get_profile()
-        up.subject = request.META.get(settings.SSL_DN)
-        up.save()
+        up, created = UserProfile.objects.get_or_create(user=user)
+        if created:
+            up.subject = request.META.get(settings.SSL_DN)
+            up.save()
+
         # set default permissions (add/change metric instance, change profile)
         try:
-#            mi_ct = ContentType.objects.get(app_label='poem', model='metricinstance')
-#            user.user_permissions.add(Permission.objects.get(
-#                                            codename='change_profile',
-#                                            content_type=pr_ct))
-            self.log.debug('set default permission to readonly for %s' % str(up.subject))
             user.user_permissions.add(perm)
-#            user.user_permissions.add(Permission.objects.get(
-#                                            codename='change_metricinstance',
-#                                            content_type=mi_ct))
-#            user.user_permissions.add(Permission.objects.create(
-#                                            codename='readonly_metricinstance',
-#                                            content_type=mi_ct,
-#                                            name='Readonly metricinstance'))
-#            user.user_permissions.add(Permission.objects.get(
-#                                            codename='add_metricinstance',
-#                                            content_type=mi_ct))
-#            user.user_permissions.add(Permission.objects.get(
-#                                            codename='delete_metricinstance',
-#                                            content_type=mi_ct))
             user.save()
-        except Exception, e:
-            self.log.debug('failed to set default permissions for %s' % str(up.subject))
+        except Exception as e:
+            self.log.error('failed to set default permissions for %s' % str(up.subject))
 
         return user

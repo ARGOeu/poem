@@ -113,21 +113,21 @@ class CustPermissionsMixin(models.Model):
     class Meta:
         abstract = True
 
-    def _user_get_all_permissions(user, obj):
+    def _user_get_all_permissions(self, user, obj):
         permissions = set()
         for backend in auth.get_backends():
             if hasattr(backend, "get_all_permissions"):
                 permissions.update(backend.get_all_permissions(user, obj))
         return permissions
 
-    def _user_has_module_perms(user, app_label):
+    def _user_has_module_perms(self, user, app_label):
         for backend in auth.get_backends():
             if hasattr(backend, "has_module_perms"):
                 if backend.has_module_perms(user, app_label):
                     return True
         return False
 
-    def _user_has_perm(user, perm, obj):
+    def _user_has_perm(self, user, perm, obj):
         for backend in auth.get_backends():
             if hasattr(backend, "has_perm"):
                 if backend.has_perm(user, perm, obj):
@@ -224,7 +224,6 @@ class UserProfile(models.Model):
     """
     # This field is required.
     user = models.OneToOneField(settings.AUTH_USER_MODEL)
-
     subject = models.CharField(max_length=255, blank=True, null=True, unique=True)
 
 def create_user_profile(sender, instance, created, **kwargs):
