@@ -22,7 +22,7 @@ class SSLBackend(ModelBackend):
      * settings.SSL_CREATE_STAFF determines a new user staff role.
      * setting.SSL_DN determines user's DN (defaults to SSL_CLIENT_S_DN).
     """
-    log = logging.getLogger('POEM')
+    log = logging.getLogger('POEMAUTHBACK')
 
     def authenticate(self, request=None):
         if not request:
@@ -39,10 +39,7 @@ class SSLBackend(ModelBackend):
         # since dn should be unique across all profiles
         assert len(userprof) == 0 or len(userprof) == 1
 
-        if userprof:
-            # user is known
-            self.log.info('authentication succeeds for %s' % str(dn))
-        else:
+        if not userprof:
             # user is new
             # try to generate username from CN
             username = self.clean_username(request.META.get(settings.SSL_USERNAME))
@@ -57,7 +54,7 @@ class SSLBackend(ModelBackend):
             if not created:
                 # didn't work, same username for different DNs ? hmm ...
                 # try generating username from serial
-                self.log.error('failed to generate username from CN for %s' % str(dn))
+                self.log.error('SSL - failed to generate username from CN for %s' % str(dn))
                 username = request.META.get(settings.SSL_SERIAL)[:30]
                 user, created = get_user_model().objects.get_or_create(username=username)
 
@@ -65,7 +62,7 @@ class SSLBackend(ModelBackend):
                 # didn't work as well, wtf
                 # fail as there is no way to generate unique username
                 # multiple DNs from the same CA with same CNs ?
-                self.log.error('authentication failure for %s' % str(dn))
+                self.log.error('SSL - authentication failure for %s' % str(dn))
                 return
             # configure new user
             self.configure_user(user, request)
@@ -98,12 +95,14 @@ class SSLBackend(ModelBackend):
         if created:
             up.subject = request.META.get(settings.SSL_DN)
             up.save()
+        else:
+            self.log.error('SSL - failed to set default permissions for %s' % str(up.subject))
 
         # set default permissions (add/change metric instance, change profile)
         try:
             user.user_permissions.add(perm)
             user.save()
         except Exception as e:
-            self.log.error('failed to set default permissions for %s' % str(up.subject))
+            self.log.error('SSL - failed to set default permissions for %s' % str(up.subject))
 
         return user
