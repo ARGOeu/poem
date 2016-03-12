@@ -30,8 +30,8 @@
         <div id="user-tools">
             {% trans 'Welcome,' %}
             <strong>{% filter force_escape %}{% firstof user.first_name user.username %}
-              {% if user.groups.all.0 %}
-                ({% for group in user.groups.all %}{{ group.name }}{% if not forloop.last %},{% endif %}{% if forloop.last %}){% endif %}
+              {% if user.groupsofprofiles.all.0 %}
+                ({% for group in user.groupsofprofiles.all %}{{ group.name }}{% if not forloop.last %},{% endif %}{% if forloop.last %}){% endif %}
                 {% endfor %}
               {% endif %}
               {% endfilter %}</strong>.
