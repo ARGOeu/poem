@@ -1,9 +1,9 @@
 'use strict';
 
-(function ($) {
+(function($) {
 
-  $.fn.autocompleteselect = function (options) {
-    return this.each(function () {
+  $.fn.autocompleteselect = function(options) {
+    return this.each(function() {
       var id = this.id,
           $this = $(this),
           $text = $('#' + id + '_text'),
@@ -15,22 +15,23 @@
         }
         $this.val(ui.item.pk);
         $text.val('');
-        addKiller(ui.item.repr);
+        addKiller(ui.item.repr, ui.item.pk);
         $deck.trigger('added', [ui.item.pk, ui.item]);
+        $this.trigger('change');
 
         return false;
       }
 
       function addKiller(repr, pk) {
-        var killer_id = 'kill_' + pk + id,
-            killButton = '<span class="ui-icon ui-icon-trash" id="' + killer_id + '">X</span> ';
+        var killId = 'kill_' + pk + id,
+            killButton = '<span class="ui-icon ui-icon-trash" id="' + killId + '">X</span> ';
         if (repr) {
           $deck.empty();
           $deck.append('<div>' + killButton + repr + '</div>');
         } else {
-          $('#' + id+'_on_deck > div').prepend(killButton);
+          $('#' + id + '_on_deck > div').prepend(killButton);
         }
-        $('#' + killer_id).click(function () {
+        $('#' + killId).click(function() {
           kill();
           $deck.trigger('killed', [pk]);
         });
@@ -44,42 +45,55 @@
       options.select = receiveResult;
       $text.autocomplete(options);
 
-      if (options.initial) {
-        addKiller(options.initial[0], options.initial[1]);
+      function reset() {
+        if (options.initial) {
+          addKiller(options.initial[0], options.initial[1]);
+          $this.val(options.initial[1]);
+        } else {
+          kill();
+        }
       }
 
-      $this.bind('didAddPopup', function (event, pk, repr) {
+      if (!$this.attr('data-changed')) {
+        reset();
+        $this.attr('data-changed', true);
+      }
+
+      $this.closest('form').on('reset', reset);
+
+      $this.bind('didAddPopup', function(event, pk, repr) {
         receiveResult(null, {item: {pk: pk, repr: repr}});
       });
     });
   };
 
-  $.fn.autocompleteselectmultiple = function (options) {
-    return this.each(function () {
+  $.fn.autocompleteselectmultiple = function(options) {
+    return this.each(function() {
       var id = this.id,
           $this = $(this),
-          $text = $('#' + id+'_text'),
-          $deck = $('#' + id+'_on_deck');
+          $text = $('#' + id + '_text'),
+          $deck = $('#' + id + '_on_deck');
 
       function receiveResult(event, ui) {
         var pk = ui.item.pk,
             prev = $this.val();
 
-        if (prev.indexOf('|'+pk+'|') === -1) {
+        if (prev.indexOf('|' + pk + '|') === -1) {
           $this.val((prev ? prev : '|') + pk + '|');
           addKiller(ui.item.repr, pk);
           $text.val('');
           $deck.trigger('added', [ui.item.pk, ui.item]);
+          $this.trigger('change');
         }
         return false;
       }
 
       function addKiller(repr, pk) {
-        var killer_id = 'kill_' + pk + id,
-            killButton = '<span class="ui-icon ui-icon-trash" id="' + killer_id + '">X</span> ';
+        var killId = 'kill_' + pk + id,
+            killButton = '<span class="ui-icon ui-icon-trash" id="' + killId + '">X</span> ';
         $deck.append('<div id="' + id + '_on_deck_' + pk + '">' + killButton + repr + ' </div>');
 
-        $('#' + killer_id).click(function () {
+        $('#' + killId).click(function() {
           kill(pk);
           $deck.trigger('killed', [pk]);
         });
@@ -87,20 +101,33 @@
 
       function kill(pk) {
         $this.val($this.val().replace('|' + pk + '|', '|'));
-        $('#' + id+'_on_deck_'+pk).fadeOut().remove();
+        $('#' + id + '_on_deck_' + pk).fadeOut().remove();
       }
 
       options.select = receiveResult;
       $text.autocomplete(options);
 
-      if (options.initial) {
-        $.each(options.initial, function (i, its) {
-          addKiller(its[0], its[1]);
-        });
+      function reset() {
+        $deck.empty();
+        var query = '|';
+        if (options.initial) {
+          $.each(options.initial, function(i, its) {
+            addKiller(its[0], its[1]);
+            query += its[1] + '|';
+          });
+        }
+        $this.val(query);
       }
 
-      $this.bind('didAddPopup', function (event, pk, repr) {
-        receiveResult(null, {item: {pk: pk, repr: repr }});
+      if (!$this.attr('data-changed')) {
+        reset();
+        $this.attr('data-changed', true);
+      }
+
+      $this.closest('form').on('reset', reset);
+
+      $this.bind('didAddPopup', function(event, pk, repr) {
+        receiveResult(null, {item: {pk: pk, repr: repr}});
       });
     });
   };
@@ -152,7 +179,7 @@
       }
     },
     _renderItem: function(ul, item) {
-      var body = this.options.html ? item.repr : item.label;
+      var body = this.options.html ? item.match: item.label;
       return $('<li></li>')
         .data('item.autocomplete', item)
         .append($('<a></a>')[this.options.html ? 'html' : 'text' ](body))
@@ -170,12 +197,12 @@
   };
 
   // activate any on page
-  $(window).bind('init-autocomplete', function () {
+  $(window).bind('init-autocomplete', function() {
 
-    $('input[data-ajax-select=autocomplete]').each(function (i, inp) {
-      addAutoComplete(inp, function ($inp, opts) {
+    $('input[data-ajax-select=autocomplete]').each(function(i, inp) {
+      addAutoComplete(inp, function($inp, opts) {
         opts.select =
-            function (event, ui) {
+            function(event, ui) {
               $inp.val(ui.item.value).trigger('added', [ui.item.pk, ui.item]);
               return false;
             };
@@ -183,24 +210,27 @@
       });
     });
 
-    $('input[data-ajax-select=autocompleteselect]').each(function (i, inp) {
-      addAutoComplete(inp, function ($inp, opts) {
+    $('input[data-ajax-select=autocompleteselect]').each(function(i, inp) {
+      addAutoComplete(inp, function($inp, opts) {
         $inp.autocompleteselect(opts);
       });
     });
 
-    $('input[data-ajax-select=autocompleteselectmultiple]').each(function (i, inp) {
-      addAutoComplete(inp, function ($inp, opts) {
+    $('input[data-ajax-select=autocompleteselectmultiple]').each(function(i, inp) {
+      addAutoComplete(inp, function($inp, opts) {
         $inp.autocompleteselectmultiple(opts);
       });
     });
 
   });
 
-  $(document).ready(function () {
+  $(document).ready(function() {
     // if dynamically injecting forms onto a page
     // you can trigger them to be ajax-selects-ified:
     $(window).trigger('init-autocomplete');
+    $(document).on('click', '.inline-group ul.tools a.add, .inline-group div.add-row a, .inline-group .tabular tr.add-row td a', function() {
+        $(window).trigger('init-autocomplete');
+      });
   });
 
 })(window.jQuery);
