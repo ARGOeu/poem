@@ -1,28 +1,37 @@
 #!/bin/sh
 
 RUNASUSER="apache"
-URLDEF="http://mon.egi.eu/poem/api/0.2/json/profiles/"
+DEFPOEM="http://mon.egi.eu/poem/api/0.2/json/profiles"
 
 initial=
-url=$URLDEF
+url=$DEFPOEM
 
 usage()
 {
-	printf "Usage: %s [-i] [-u <URL>] PROFILE1 PROFILE2 ...\n" $(basename $0) >&2
-	printf "       [-i] - Only import profiles if poem database is empty\n" >&2
-	printf "       [-u <URL>] - URL containing JSON encoded list of profiles\n" >&2
-	printf "       PROFILE1 PROFILE2 - space separated list of profiles\n" >&2
+	printf "Usage: %s [-i] [-s] [-p <POEM server>] PROFILE1 PROFILE2 ...\n" $(basename $0) >&2
+	printf "       [-i] - Only import profiles if POEM database is empty\n" >&2
+	printf "       [-s] - Secure HTTP\n" >&2
+	printf "       [-p <POEM server>] - Hostname of POEM server\n" >&2
+	printf "       PROFILE1 PROFILE2 - Space separated list of profiles\n" >&2
 	exit 2
 }
 
-while getopts 'iu:' OPTION
+while getopts 'isp:' OPTION
 do
 	case $OPTION in
 		i)
 			initial="--initial"
 			;;
-		u)
-			url="$OPTARG"
+		s)
+			url=$(echo "$url" | sed "s/http/https/")
+			;;
+		p)
+			if echo $OPTARG | grep -q '^http'
+			then
+				printf "Specify only POEM hostname, without protocol"
+				exit 2
+			fi
+			url=$(echo "$url" | sed "s/mon.egi.eu/$OPTARG/")
 			;;
 		?)
 			usage
