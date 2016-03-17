@@ -29,7 +29,6 @@ class ServiceFlavour(models.Model):
     def __unicode__(self):
         return u'%s' % self.name
 
-
 class Profile(models.Model):
     """
     Profile is the core model and is defined as a set of metric instances, where
@@ -54,24 +53,6 @@ class Profile(models.Model):
 
     def __unicode__(self):
         return u'%s %s %s' % (self.name, self.version, self.vo)
-
-class GroupOfProfiles(models.Model):
-    name = models.CharField(_('name'), max_length=80, unique=True)
-    permissions = models.ManyToManyField(Permission,
-                                         verbose_name=_('permissions'), blank=True)
-    profiles = models.ManyToManyField(Profile, null=True, blank=True)
-    objects = GroupManager()
-
-    class Meta:
-        verbose_name = _('Group of profiles')
-        verbose_name_plural = _('Groups of profiles')
-
-    def __str__(self):
-        return self.name
-
-    def natural_key(self):
-        return (self.name,)
-
 
 class MetricInstance(models.Model):
     """
@@ -98,6 +79,40 @@ def mi_default_vo(sender, instance, **kwargs):
 pre_save.connect(mi_default_vo, sender=MetricInstance)
 
 
+class GroupOfProfiles(models.Model):
+    name = models.CharField(_('name'), max_length=80, unique=True)
+    permissions = models.ManyToManyField(Permission,
+                                         verbose_name=_('permissions'), blank=True)
+    profiles = models.ManyToManyField(Profile, null=True, blank=True)
+    objects = GroupManager()
+
+    class Meta:
+        verbose_name = _('Group of profiles')
+        verbose_name_plural = _('Groups of profiles')
+
+    def __str__(self):
+        return self.name
+
+    def natural_key(self):
+        return (self.name,)
+
+class GroupOfMetrics(models.Model):
+    name = models.CharField(_('name'), max_length=80, unique=True)
+    permissions = models.ManyToManyField(Permission,
+                                         verbose_name=_('permissions'), blank=True)
+    metrics = models.ManyToManyField(MetricInstance, null=True, blank=True)
+    objects = GroupManager()
+
+    class Meta:
+        verbose_name = _('Group of metrics')
+        verbose_name_plural = _('Groups of metrics')
+
+    def __str__(self):
+        return self.name
+
+    def natural_key(self):
+        return (self.name,)
+
 class CustPermissionsMixin(models.Model):
     is_superuser = models.BooleanField(_('superuser status'), default=False,
         help_text=_('Designates that this user has all permissions without '
@@ -108,6 +123,9 @@ class CustPermissionsMixin(models.Model):
         related_name="user_set", related_query_name="user")
     groupsofprofiles = models.ManyToManyField(GroupOfProfiles, verbose_name=('groups of profiles'),
         blank=True, help_text=_('The groups of profiles that this user belongs to'),
+        related_name='user_set', related_query_name='user')
+    groupsofmetrics = models.ManyToManyField(GroupOfMetrics, verbose_name=('groups of metrics'),
+        blank=True, help_text=_('The groups of metrics that this user belongs to'),
         related_name='user_set', related_query_name='user')
 
     class Meta:
@@ -164,7 +182,6 @@ class CustPermissionsMixin(models.Model):
             return True
 
         return self._user_has_module_perms(self, app_label)
-
 
 # class CustAbstractUser(AbstractBaseUser, CustPermissionsMixin):
 class CustAbstractBaseUser(AbstractBaseUser, CustPermissionsMixin):

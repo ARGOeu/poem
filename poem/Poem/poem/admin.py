@@ -59,6 +59,8 @@ class MyModelMultipleChoiceField(ModelMultipleChoiceField):
                 raise ValidationError(self.error_messages['invalid_pk_value'] % pk)
         if self.ftype == 'profiles':
             qs = Profile.objects.filter(**{'%s__in' % key: value})
+        elif self.ftype == 'metrics':
+            qs = MetricInstance.objects.filter(**{'%s__in' % key: value})
         else:
             qs = self.queryset.filter(**{'%s__in' % key: value})
         pks = set([force_unicode(getattr(o, key)) for o in qs])
@@ -66,13 +68,16 @@ class MyModelMultipleChoiceField(ModelMultipleChoiceField):
             if force_unicode(val) not in pks:
                 raise ValidationError(self.error_messages['invalid_choice'] % val)
         self.run_validators(value)
-        if self.ftype == 'profiles' or self.ftype == 'permissions':
+        if self.ftype == 'profiles' or self.ftype == 'permissions' or self.ftype == 'metrics':
             return qs
         else:
             return qs[0]
 
     def label_from_instance(self, obj):
-        return str(obj.name)
+        if self.ftype == 'profiles':
+            return str(obj.name)
+        elif self.ftype == 'metrics':
+            return str(obj.metric)
 
     def _has_changed(self, initial, data):
         initial_value = initial if initial is not None else ''
@@ -125,6 +130,11 @@ class MyFilteredSelectMultiple(admin.widgets.FilteredSelectMultiple):
             for sel in selected_choices:
                 output.append('<option value="%s" selected="selected">' % (sel)
                               + str(Profile.objects.get(id=int(sel)).name)
+                              + '</option>\n')
+        elif self.selformname == 'metrics':
+            for sel in selected_choices:
+                output.append('<option value="%s" selected="selected">' % (sel)
+                              + str(MetricInstance.objects.get(id=int(sel)).metric)
                               + '</option>\n')
         for option_value, option_label in chain(self.choices, choices):
             if isinstance(option_label, (list, tuple)):
@@ -380,7 +390,7 @@ class UserProfileAdmin(UserAdmin):
 
     fieldsets = [(None, {'fields': ['username', 'password']}),
                  ('Personal info', {'fields': ['first_name', 'last_name', 'email']}),
-                 ('Permissions', {'fields': ['is_superuser', 'is_active', 'groupsofprofiles']})]
+                 ('Permissions', {'fields': ['is_superuser', 'is_active', 'groupsofprofiles', 'groupsofmetrics']})]
     inlines = [UserProfileInline]
     list_filter = ('is_superuser',)
     filter_horizontal = ('user_permissions',)
@@ -413,5 +423,31 @@ class GroupOfProfilesAdmin(GroupAdmin):
     fieldsets = [(None, {'fields': ['name']}),
                  ('Settings', {'fields': ['permissions', 'profiles']})]
 
+class GroupOfMetricsForm(ModelForm):
+    class Meta:
+        model = poem.models.GroupOfMetrics
+    qs = Permission.objects.filter(codename__startswith='cust')
+    permissions = MyModelMultipleChoiceField(queryset=qs,
+                                             widget=MySelect,
+                                             help_text='Permission given to user members of the group across chosen metrics',
+                                             ftype='permissions')
+    permissions.empty_label = '-------'
+    qs = MetricInstance.objects.filter(groupofmetrics__id__isnull=True)
+    metrics = MyModelMultipleChoiceField(queryset=qs,
+                                         required=False,
+                                         widget=MyFilteredSelectMultiple('metrics', False), ftype='metrics')
+
+class GroupOfMetricsAdmin(GroupAdmin):
+    class Media:
+        css = { "all" : ("/poem_media/css/poem_profile.custom.css",) }
+
+    form = GroupOfMetricsForm
+    search_field = ()
+    filter_horizontal=('metrics',)
+    fieldsets = [(None, {'fields': ['name']}),
+                 ('Settings', {'fields': ['permissions', 'metrics']})]
+
+
 admin.site.unregister(auth.models.Group)
 admin.site.register(poem.models.GroupOfProfiles, GroupOfProfilesAdmin)
+admin.site.register(poem.models.GroupOfMetrics, GroupOfMetricsAdmin)
