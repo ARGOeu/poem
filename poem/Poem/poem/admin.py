@@ -25,7 +25,7 @@ from itertools import chain
 from Poem import poem
 from django.contrib import auth
 
-from Poem.poem.models import MetricInstance, Profile, UserProfile, VO, ServiceFlavour
+from Poem.poem.models import MetricInstance, Profile, UserProfile, VO, ServiceFlavour, Metrics
 from Poem.poem import widgets
 from Poem.poem.lookups import check_cache
 from ajax_select import make_ajax_field
@@ -432,7 +432,7 @@ class GroupOfMetricsForm(ModelForm):
                                              help_text='Permission given to user members of the group across chosen metrics',
                                              ftype='permissions')
     permissions.empty_label = '-------'
-    qs = MetricInstance.objects.filter(groupofmetrics__id__isnull=True)
+    qs = Metrics.objects.filter(groupofmetrics__id__isnull=True)
     metrics = MyModelMultipleChoiceField(queryset=qs,
                                          required=False,
                                          widget=MyFilteredSelectMultiple('metrics', False), ftype='metrics')

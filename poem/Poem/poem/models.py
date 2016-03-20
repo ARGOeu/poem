@@ -54,6 +54,10 @@ class Profile(models.Model):
     def __unicode__(self):
         return u'%s %s %s' % (self.name, self.version, self.vo)
 
+class Metrics(models.Model):
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=128)
+
 class MetricInstance(models.Model):
     """
     Metric instance is a tuple: (flavour, metric_name, vo, fqan).
@@ -100,7 +104,7 @@ class GroupOfMetrics(models.Model):
     name = models.CharField(_('name'), max_length=80, unique=True)
     permissions = models.ManyToManyField(Permission,
                                          verbose_name=_('permissions'), blank=True)
-    metrics = models.ManyToManyField(MetricInstance, null=True, blank=True)
+    metrics = models.ManyToManyField(Metrics, null=True, blank=True)
     objects = GroupManager()
 
     class Meta:
