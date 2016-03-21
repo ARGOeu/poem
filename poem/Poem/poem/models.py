@@ -49,7 +49,7 @@ class Profile(models.Model):
     class Meta:
         ordering = ['name', 'version']
         unique_together = ('name', 'version')
-        permissions = (('custowners', 'Profile own'),)
+        permissions = (('profileown', 'Read/Write/Modify'),)
 
     def __unicode__(self):
         return u'%s %s %s' % (self.name, self.version, self.vo)
@@ -57,6 +57,9 @@ class Profile(models.Model):
 class Metrics(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=128)
+
+    class Meta:
+        permissions = (('metricsown', 'Read/Write/Modify'),)
 
 class MetricInstance(models.Model):
     """

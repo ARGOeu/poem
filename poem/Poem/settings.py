@@ -27,9 +27,9 @@ try:
     CACHES = {
         'default': {
             'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-            'TIMEOUT': 3600,
+            'TIMEOUT': 7200,
             'OPTIONS': {
-                'MAX_ENTRIES': 400
+                'MAX_ENTRIES': 8192
             }
         }
     }

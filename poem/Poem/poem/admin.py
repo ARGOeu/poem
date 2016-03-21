@@ -60,7 +60,7 @@ class MyModelMultipleChoiceField(ModelMultipleChoiceField):
         if self.ftype == 'profiles':
             qs = Profile.objects.filter(**{'%s__in' % key: value})
         elif self.ftype == 'metrics':
-            qs = MetricInstance.objects.filter(**{'%s__in' % key: value})
+            qs = Metrics.objects.filter(**{'%s__in' % key: value})
         else:
             qs = self.queryset.filter(**{'%s__in' % key: value})
         pks = set([force_unicode(getattr(o, key)) for o in qs])
@@ -74,10 +74,7 @@ class MyModelMultipleChoiceField(ModelMultipleChoiceField):
             return qs[0]
 
     def label_from_instance(self, obj):
-        if self.ftype == 'profiles':
-            return str(obj.name)
-        elif self.ftype == 'metrics':
-            return str(obj.metric)
+        return str(obj.name)
 
     def _has_changed(self, initial, data):
         initial_value = initial if initial is not None else ''
@@ -134,7 +131,7 @@ class MyFilteredSelectMultiple(admin.widgets.FilteredSelectMultiple):
         elif self.selformname == 'metrics':
             for sel in selected_choices:
                 output.append('<option value="%s" selected="selected">' % (sel)
-                              + str(MetricInstance.objects.get(id=int(sel)).metric)
+                              + str(Metrics.objects.get(id=int(sel)).name)
                               + '</option>\n')
         for option_value, option_label in chain(self.choices, choices):
             if isinstance(option_label, (list, tuple)):
@@ -399,16 +396,16 @@ class UserProfileAdmin(UserAdmin):
 #admin.site.unregister(User)
 admin.site.register(poem.models.CustUser, UserProfileAdmin)
 
-class GroupOfProfilesForm(ModelForm):
+class GroupOfProfilesAdminForm(ModelForm):
     class Meta:
         model = poem.models.GroupOfProfiles
-    qs = Permission.objects.filter(codename__startswith='cust')
+    qs = Permission.objects.filter(codename__startswith='profile')
     permissions = MyModelMultipleChoiceField(queryset=qs,
                                              widget=MySelect,
                                              help_text='Permission given to user members of the group across chosen profiles',
                                              ftype='permissions')
-    permissions.empty_label = '-------'
-    qs = Profile.objects.filter(groupofprofiles__id__isnull=True)
+    permissions.empty_label = '----------------'
+    qs = Profile.objects.filter(groupofprofiles__id__isnull=True).order_by('name')
     profiles = MyModelMultipleChoiceField(queryset=qs,
                                           required=False,
                                           widget=MyFilteredSelectMultiple('profiles', False), ftype='profiles')
@@ -417,7 +414,7 @@ class GroupOfProfilesAdmin(GroupAdmin):
     class Media:
         css = { "all" : ("/poem_media/css/poem_profile.custom.css",) }
 
-    form = GroupOfProfilesForm
+    form = GroupOfProfilesAdminForm
     search_field = ()
     filter_horizontal=('profiles',)
     fieldsets = [(None, {'fields': ['name']}),
@@ -426,13 +423,13 @@ class GroupOfProfilesAdmin(GroupAdmin):
 class GroupOfMetricsForm(ModelForm):
     class Meta:
         model = poem.models.GroupOfMetrics
-    qs = Permission.objects.filter(codename__startswith='cust')
+    qs = Permission.objects.filter(codename__startswith='metrics')
     permissions = MyModelMultipleChoiceField(queryset=qs,
                                              widget=MySelect,
                                              help_text='Permission given to user members of the group across chosen metrics',
                                              ftype='permissions')
-    permissions.empty_label = '-------'
-    qs = Metrics.objects.filter(groupofmetrics__id__isnull=True)
+    permissions.empty_label = '----------------'
+    qs = Metrics.objects.filter(groupofmetrics__id__isnull=True).order_by('name')
     metrics = MyModelMultipleChoiceField(queryset=qs,
                                          required=False,
                                          widget=MyFilteredSelectMultiple('metrics', False), ftype='metrics')
