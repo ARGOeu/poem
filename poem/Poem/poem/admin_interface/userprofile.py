@@ -24,7 +24,3 @@ class UserProfileAdmin(UserAdmin):
     inlines = [UserProfileInline]
     list_filter = ('is_superuser',)
     filter_horizontal = ('user_permissions',)
-
-
-admin.site.register(CustUser, UserProfileAdmin)
-admin.site.unregister(auth.models.Group)

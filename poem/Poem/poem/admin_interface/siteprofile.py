@@ -252,4 +252,3 @@ class ProfileAdmin(admin.ModelAdmin):
 
     def has_change_permission(self, request, obj=None):
         return True
-
