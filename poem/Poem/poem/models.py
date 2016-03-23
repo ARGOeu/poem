@@ -29,6 +29,22 @@ class ServiceFlavour(models.Model):
     def __unicode__(self):
         return u'%s' % self.name
 
+class Probes(models.Model):
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=128, null=False,
+                    help_text='Name of the profile.')
+    version = models.CharField(max_length=10, null=False, default='1.0',
+                               help_text='Multiple versions of the profile can exist (defaults to 1.0).')
+    description = models.CharField(max_length=1024, blank=True, null=True)
+
+    class Meta:
+        ordering = ['name', 'version']
+        unique_together = ('name', 'version')
+        permissions = (('probesown', 'Read/Write/Modify'),)
+
+    def __unicode__(self):
+        return u'%s %s %s' % (self.name, self.version, self.vo)
+
 class Profile(models.Model):
     """
     Profile is the core model and is defined as a set of metric instances, where
@@ -85,6 +101,22 @@ def mi_default_vo(sender, instance, **kwargs):
     instance.vo=instance.profile.vo
 pre_save.connect(mi_default_vo, sender=MetricInstance)
 
+class GroupOfProbes(models.Model):
+    name = models.CharField(_('name'), max_length=80, unique=True)
+    permissions = models.ManyToManyField(Permission,
+                                         verbose_name=_('permissions'), blank=True)
+    probes = models.ManyToManyField(Probes, null=True, blank=True)
+    objects = GroupManager()
+
+    class Meta:
+        verbose_name = _('Group of probes')
+        verbose_name_plural = _('Groups of probes')
+
+    def __str__(self):
+        return self.name
+
+    def natural_key(self):
+        return (self.name,)
 
 class GroupOfProfiles(models.Model):
     name = models.CharField(_('name'), max_length=80, unique=True)
