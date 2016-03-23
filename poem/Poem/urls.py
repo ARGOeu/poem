@@ -24,5 +24,5 @@ urlpatterns = patterns('',
 
 # import ipdb; ipdb.set_trace()  # XXX BREAKPOINT
 
-# if URL_DEBUG:
-#     urlpatterns = patterns('', url(r'^poem/', include(urlpatterns)),)
+if URL_DEBUG:
+    urlpatterns = patterns('', url(r'^poem/', include(urlpatterns)),) + static('/poem_media/', document_root='/usr/share/poem/media/')
