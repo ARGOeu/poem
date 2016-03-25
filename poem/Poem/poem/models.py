@@ -29,12 +29,11 @@ class ServiceFlavour(models.Model):
     def __unicode__(self):
         return u'%s' % self.name
 
-class Probes(models.Model):
+class Probe(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=128, null=False,
-                    help_text='Name of the profile.')
-    version = models.CharField(max_length=10, null=False, default='1.0',
-                               help_text='Multiple versions of the profile can exist (defaults to 1.0).')
+                    help_text='Name of the probe.')
+    version = models.CharField(max_length=128, null=False, help_text='Version of the probe.')
     description = models.CharField(max_length=1024, blank=True, null=True)
 
     class Meta:
@@ -43,7 +42,7 @@ class Probes(models.Model):
         permissions = (('probesown', 'Read/Write/Modify'),)
 
     def __unicode__(self):
-        return u'%s %s %s' % (self.name, self.version, self.vo)
+        return u'%s %s' % (self.name, self.version)
 
 class Profile(models.Model):
     """
@@ -105,7 +104,7 @@ class GroupOfProbes(models.Model):
     name = models.CharField(_('name'), max_length=80, unique=True)
     permissions = models.ManyToManyField(Permission,
                                          verbose_name=_('permissions'), blank=True)
-    probes = models.ManyToManyField(Probes, null=True, blank=True)
+    probes = models.ManyToManyField(Probe, null=True, blank=True)
     objects = GroupManager()
 
     class Meta:
@@ -165,6 +164,9 @@ class CustPermissionsMixin(models.Model):
         related_name='user_set', related_query_name='user')
     groupsofmetrics = models.ManyToManyField(GroupOfMetrics, verbose_name=('groups of metrics'),
         blank=True, help_text=_('The groups of metrics that this user belongs to'),
+        related_name='user_set', related_query_name='user')
+    groupsofprobes = models.ManyToManyField(GroupOfProbes, verbose_name=('groups of probes'),
+        blank=True, help_text=_('The groups of probes that this user belongs to'),
         related_name='user_set', related_query_name='user')
 
     class Meta:
@@ -272,7 +274,6 @@ class CustUser(CustAbstractUser):
 
     def email_user(self, subject, message, from_email=None):
         send_mail(subject, message, from_email, [self.email])
-
 
 class UserProfile(models.Model):
     """

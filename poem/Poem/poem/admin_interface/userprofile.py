@@ -20,7 +20,7 @@ class UserProfileAdmin(UserAdmin):
 
     fieldsets = [(None, {'fields': ['username', 'password']}),
                  ('Personal info', {'fields': ['first_name', 'last_name', 'email']}),
-                 ('Permissions', {'fields': ['is_superuser', 'is_active', 'groupsofprofiles', 'groupsofmetrics']})]
+                 ('Permissions', {'fields': ['is_superuser', 'is_active', 'groupsofprofiles', 'groupsofmetrics', 'groupsofprobes']})]
     inlines = [UserProfileInline]
     list_filter = ('is_superuser',)
     filter_horizontal = ('user_permissions',)
