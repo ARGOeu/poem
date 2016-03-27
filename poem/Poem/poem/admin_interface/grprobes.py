@@ -14,14 +14,14 @@ class GroupOfProbesAdminForm(ModelForm):
                                              help_text='Permission given to user members of the group across chosen probes',
                                              ftype='permissions')
     permissions.empty_label = '----------------'
-    qs = Probe.objects.filter(groupofprobes__id__isnull=True).order_by('name')
-    profiles = MyModelMultipleChoiceField(queryset=qs,
-                                          required=False,
-                                          widget=MyFilteredSelectMultiple('profiles', False), ftype='profiles')
+    qs = Probe.objects.filter(groupofprobes__id__isnull=True).order_by('nameversion')
+    probes = MyModelMultipleChoiceField(queryset=qs,
+                                        required=False,
+                                        widget=MyFilteredSelectMultiple('probes', False), ftype='probes')
 
 class GroupOfProbesAdmin(GroupAdmin):
     class Media:
-        css = { "all" : ("/poem_media/css/poem_profile.custom.css",) }
+        css = { "all" : ("/poem_media/css/grprobes.css",) }
 
     form = GroupOfProbesAdminForm
     search_field = ()

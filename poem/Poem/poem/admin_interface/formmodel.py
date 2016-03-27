@@ -1,4 +1,4 @@
-from Poem.poem.models import Profile, Metrics
+from Poem.poem.models import Profile, Metrics, Probe
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.forms import ModelMultipleChoiceField
 from django.forms import ValidationError
@@ -29,6 +29,8 @@ class MyModelMultipleChoiceField(ModelMultipleChoiceField):
             qs = Profile.objects.filter(**{'%s__in' % key: value})
         elif self.ftype == 'metrics':
             qs = Metrics.objects.filter(**{'%s__in' % key: value})
+        elif self.ftype == 'probes':
+            qs = Probe.objects.filter(**{'%s__in' % key: value})
         else:
             qs = self.queryset.filter(**{'%s__in' % key: value})
         pks = set([force_unicode(getattr(o, key)) for o in qs])
@@ -36,13 +38,18 @@ class MyModelMultipleChoiceField(ModelMultipleChoiceField):
             if force_unicode(val) not in pks:
                 raise ValidationError(self.error_messages['invalid_choice'] % val)
         self.run_validators(value)
-        if self.ftype == 'profiles' or self.ftype == 'permissions' or self.ftype == 'metrics':
+        if self.ftype == 'profiles' or self.ftype == 'permissions'\
+                or self.ftype == 'metrics'\
+                or self.ftype == 'probes':
             return qs
         else:
             return qs[0]
 
     def label_from_instance(self, obj):
-        return str(obj.name)
+        if self.ftype == 'probes':
+            return str(obj.nameversion)
+        else:
+            return str(obj.name)
 
     def _has_changed(self, initial, data):
         initial_value = initial if initial is not None else ''
@@ -100,6 +107,11 @@ class MyFilteredSelectMultiple(FilteredSelectMultiple):
             for sel in selected_choices:
                 output.append('<option value="%s" selected="selected">' % (sel)
                               + str(Metrics.objects.get(id=int(sel)).name)
+                              + '</option>\n')
+        elif self.selformname == 'probes':
+            for sel in selected_choices:
+                output.append('<option value="%s" selected="selected">' % (sel)
+                              + str(Probe.objects.get(id=int(sel)).nameversion)
                               + '</option>\n')
         for option_value, option_label in chain(self.choices, choices):
             if isinstance(option_label, (list, tuple)):

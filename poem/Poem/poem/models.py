@@ -1,12 +1,13 @@
 from Poem import settings
 from django import forms
+from django.dispatch import receiver
 from django.contrib import auth
 from django.contrib.auth.hashers import (check_password, make_password, is_password_usable)
 from django.contrib.auth.models import UserManager, GroupManager, Permission, PermissionsMixin, AbstractBaseUser
 from django.core import validators
 from django.core.mail import send_mail
 from django.db import models
-from django.db.models.signals import post_save, pre_save
+from django.db.models.signals import m2m_changed, pre_save, post_save
 from django.utils import timezone
 from django.utils.http import urlquote
 from django.utils.translation import ugettext_lazy as _
@@ -34,15 +35,18 @@ class Probe(models.Model):
     name = models.CharField(max_length=128, null=False,
                     help_text='Name of the probe.')
     version = models.CharField(max_length=128, null=False, help_text='Version of the probe.')
+    nameversion = models.CharField(max_length=128, null=False, help_text='Name, version tuple.')
     description = models.CharField(max_length=1024, blank=True, null=True)
 
     class Meta:
-        ordering = ['name', 'version']
-        unique_together = ('name', 'version')
         permissions = (('probesown', 'Read/Write/Modify'),)
 
     def __unicode__(self):
         return u'%s %s' % (self.name, self.version)
+
+@receiver(pre_save, sender=Probe)
+def probe_handler(sender, instance, **kwargs):
+    instance.nameversion = str(instance.name) + '-' + str(instance.version)
 
 class Profile(models.Model):
     """
@@ -228,12 +232,12 @@ class CustPermissionsMixin(models.Model):
 class CustAbstractBaseUser(AbstractBaseUser, CustPermissionsMixin):
     class Meta:
         abstract = True
-	pass
+    pass
 
 class CustAbstractUser(CustAbstractBaseUser):
     class Meta:
         abstract = True
-	pass
+    pass
 
 class CustUser(CustAbstractUser):
     username = models.CharField(_('username'), max_length=30, unique=True,

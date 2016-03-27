@@ -25,61 +25,6 @@ class SharedInfo:
         else:
             return None
 
-class MetricInstanceForm(ModelForm):
-    """
-    Connects metric instance attributes to autocomplete widget (:py:mod:`poem.widgets`).
-    """
-    class Meta:
-        model = MetricInstance
-        exclude = ('vo',)
-
-    metric = make_ajax_field(MetricInstance, 'metric', 'hintsmetrics', \
-                             plugin_options = {'minLength' : 2})
-    service_flavour = make_ajax_field(ServiceFlavour, 'name', 'hintsserviceflavours', \
-                                      plugin_options = {'minLength' : 2})
-
-    def clean_service_flavour(self):
-        clean_values = []
-        clean_values = check_cache('/poem/admin/lookups/ajax_lookup/hintsserviceflavours', \
-                                   ServiceFlavour, 'name')
-        form_flavour = self.cleaned_data['service_flavour']
-        if form_flavour not in clean_values:
-            raise ValidationError("Unable to find flavour %s." % (str(form_flavour)))
-        return form_flavour
-
-class MetricInstanceFormRO(MetricInstanceForm):
-    metric = CharField(label='Metric', \
-                             widget=TextInput(attrs={'readonly' : 'readonly'}))
-    service_flavour = CharField(label='Service Flavour', \
-                                   widget=TextInput(attrs={'readonly' : 'readonly'}))
-
-class MetricInstanceInline(admin.TabularInline):
-    model = MetricInstance
-    form = MetricInstanceForm
-
-    def has_add_permission(self, request):
-        if request.user.has_perm('poem.groupown_profile'):
-            return True
-        if request.user.has_perm('poem.readonly_profile') and \
-                not request.user.is_superuser:
-            self.form = MetricInstanceFormRO
-            return False
-        else:
-            return True
-
-    def has_delete_permission(self, request, obj=None):
-        if request.user.has_perm('poem.groupown_profile'):
-            return True
-        if request.user.has_perm('poem.readonly_profile') and \
-                not request.user.is_superuser:
-            self.form = MetricInstanceFormRO
-            return False
-        else:
-            return True
-
-    def has_change_permission(self, request, obj=None):
-        return True
-
 class GroupOfProbesInlineForm(ModelForm):
     def __init__(self, *args, **kwargs):
         rquser = SharedInfo()
@@ -151,16 +96,28 @@ class ProbeForm(ModelForm):
                         widget=TextInput(attrs={'maxlength': 128, 'size': 45}),
                         label='Probe version')
     description = CharField(help_text='Free text description outlining the purpose of this probe.',
+                            max_length=100,
                             widget=Textarea(attrs={'style':'width:480px;height:100px'}))
+    version = CharField(help_text='Version of the probe.',
+                        max_length=128,
+                        widget=TextInput(attrs={'maxlength': 128, 'size': 45}),
+                        label='Probe version')
 
 class ProbeAdmin(admin.ModelAdmin):
     """
     POEM admin core class that customizes its look and feel.
     """
     class Media:
-        css = { "all" : ("/poem_media/css/poem_profile.custom.css",) }
+        css = { "all" : ("/poem_media/css/siteprobes.css",) }
 
-    list_display = ('name', 'description')
+    def groupbelong(obj):
+        if obj.groupofprobes_set.count():
+            return obj.groupofprobes_set.values('name')[0]['name']
+        else:
+            return ''
+    groupbelong.short_description = 'Group'
+
+    list_display = ('name', 'version', groupbelong, 'description')
     search_fields = ('name',)
     fields = ('name', 'version', 'description')
     inlines = (GroupOfProbesInline, )
@@ -168,12 +125,12 @@ class ProbeAdmin(admin.ModelAdmin):
     actions = None
 
     def _groupown_turn(self, user, flag):
-        perm_prdel = Permission.objects.get(codename='delete_probes')
+        perm_prdel = Permission.objects.get(codename='delete_probe')
         try:
-            perm_grpown = Permission.objects.get(codename='groupown_probes')
+            perm_grpown = Permission.objects.get(codename='groupown_probe')
         except Permission.DoesNotExist:
-            ct = ContentType.objects.get(app_label='poem', model='probes')
-            perm_grpown = Permission.objects.create(codename='groupown_probes',
+            ct = ContentType.objects.get(app_label='poem', model='probe')
+            perm_grpown = Permission.objects.create(codename='groupown_probe',
                                                    content_type=ct,
                                                    name="Group of probe owners")
         if flag == 'add':
@@ -204,12 +161,10 @@ class ProbeAdmin(admin.ModelAdmin):
         return super(ProbeAdmin, self).get_form(request, obj=None, **kwargs)
 
     def save_model(self, request, obj, form, change):
-        if change and obj.vo:
-            obj.metric_instances.update(vo=obj.vo)
-        if request.user.has_perm('poem.groupown_probes'):
+        if request.user.has_perm('poem.groupown_probe'):
             obj.save()
             return
-        if not request.user.has_perm('poem.readonly_probes') or \
+        if not request.user.has_perm('poem.readonly_probe') or \
                 request.user.is_superuser:
             obj.save()
             return
@@ -230,7 +185,7 @@ class ProbeAdmin(admin.ModelAdmin):
             return False
 
     def has_delete_permission(self, request, obj=None):
-        if request.user.has_perm('poem.groupown_probes'):
+        if request.user.has_perm('poem.groupown_probe'):
             return True
         if request.user.has_perm('poem.readonly_probe') and \
                 not request.user.is_superuser:
