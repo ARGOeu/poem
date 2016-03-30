@@ -151,6 +151,9 @@ INSTALLED_APPS = (
 
 AJAX_LOOKUP_CHANNELS = {
     'hintsvo' : ('Poem.poem.lookups', 'VOLookup'),
-    'hintsmetrics' : ('Poem.poem.lookups', 'MILookup'),
+    'hintstags' : ('Poem.poem.lookups', 'TLookup'),
+    'hintsprobes' : ('Poem.poem.lookups', 'PLookup'),
+    'hintsmetrics' : ('Poem.poem.lookups', 'MLookup'),
+    'hintsmetricinstances' : ('Poem.poem.lookups', 'MILookup'),
     'hintsserviceflavours' : ('Poem.poem.lookups', 'SFLookup'),
 }

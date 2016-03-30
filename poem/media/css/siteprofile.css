@@ -1,36 +1,44 @@
 td.original p {
-  visibility: hidden
+    visibility: hidden
 }
 
 .inline-group .tabular tr.has_original td {
-  padding: 2px;
+    padding: 2px;
 }
 
 td.field-service_flavour, td.field-metric, td.field-fqan, td.delete {
-  padding: 2px;
+    padding: 2px;
 }
 
 td.field-service_flavour input {
-  width: 300px;
+    width: 300px;
 }
 
 td.field-metric input {
-  width: 300px;
+    width: 300px;
 }
 
 td.field-fqan input {
-  width: 200px;
+    width: 200px;
 }
 
 #content-main {
-  float: left;
-  width: 1000px;
+    float: left;
+    width: 1000px;
+}
+
+#changelist-filter {
+    width: 200px;
+}
+
+.filtered #toolbar {
+    margin-right: 50px;
 }
 
 .namespace {
-  vertical-align: middle;
-  color: #666666;
-  font-size: 12px;
-  font-weight: bold !important;
+    vertical-align: middle;
+    color: #666666;
+    font-size: 12px;
+    font-weight: bold !important;
 }
 

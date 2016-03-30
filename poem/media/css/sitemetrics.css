@@ -1,0 +1,19 @@
+td.original p {
+  visibility: hidden
+}
+
+tbody tr > th {
+  width: 300px;
+}
+
+tbody tr td:first-of-type {
+  width: 100px;
+}
+
+tbody tr td:last-of-type {
+  width: 400px;
+}
+#content-main {
+  float: left;
+  width: 1000px;
+}

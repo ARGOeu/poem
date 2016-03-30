@@ -1,4 +1,4 @@
-from django.forms import ModelForm, CharField, Textarea
+from django.forms import ModelForm, CharField, Textarea, ModelChoiceField
 from django.forms.widgets import TextInput, Select
 from django.contrib import admin
 from django.contrib import auth
@@ -8,11 +8,12 @@ from django.core.exceptions import PermissionDenied
 
 from Poem.poem import widgets
 from Poem.poem.lookups import check_cache
-from Poem.poem.admin_interface.formmodel import MyModelMultipleChoiceField
-from Poem.poem.models import MetricInstance, Probe, UserProfile, VO, ServiceFlavour, GroupOfProbes, CustUser
+from Poem.poem.admin_interface.formmodel import MyModelMultipleChoiceField, MyModelChoiceField
+from Poem.poem.models import MetricsProbe, Probe, UserProfile, VO, ServiceFlavour, GroupOfProbes, CustUser, Tags, Metrics, GroupOfMetrics
+
 
 from ajax_select import make_ajax_field
-
+from ajax_select.fields import AutoCompleteField, AutoCompleteSelectField, AutoCompleteSelectMultipleField
 
 class SharedInfo:
     def __init__(self, requser=None):
@@ -25,12 +26,12 @@ class SharedInfo:
         else:
             return None
 
-class GroupOfProbesInlineForm(ModelForm):
+class GroupOfMetricsInlineForm(ModelForm):
     def __init__(self, *args, **kwargs):
         rquser = SharedInfo()
         self.user = rquser.getuser()
         self.usergroups = self.user.groupsofprofiles.all()
-        super(GroupOfProbesInlineForm, self).__init__(*args, **kwargs)
+        super(GroupOfMetricsInlineForm, self).__init__(*args, **kwargs)
 
 
     qs = GroupOfProbes.objects.all()
@@ -47,15 +48,15 @@ class GroupOfProbesInlineForm(ModelForm):
             raise ValidationError("You are not member of group %s." % (str(groupsel)))
         return groupsel
 
-class GroupOfProbesInlineAdd(ModelForm):
+class GroupOfMetricsInlineAdd(ModelForm):
     def __init__(self, *args, **kwargs):
-        super(GroupOfProbesInlineAdd, self).__init__(*args, **kwargs)
+        super(GroupOfMetricsInlineAdd, self).__init__(*args, **kwargs)
         self.fields['group'].help_text = 'Select one of the groups you are member of'
         self.fields['group'].empty_label = None
 
-class GroupOfProbesInline(admin.TabularInline):
+class GroupOfMetricsInline(admin.TabularInline):
     model = GroupOfProbes.probes.through
-    form = GroupOfProbesInlineForm
+    form = GroupOfMetricsInlineForm
     verbose_name_plural = 'Group of probes'
     verbose_name = 'Group of probes'
     max_num = 1
@@ -71,54 +72,70 @@ class GroupOfProbesInline(admin.TabularInline):
     def has_change_permission(self, request, obj=None):
         return True
 
-class GroupOfProbesInlineAdd(GroupOfProbesInline):
-    form = GroupOfProbesInlineAdd
+class GroupOfMetricsInlineAdd(GroupOfMetricsInline):
+    form = GroupOfMetricsInlineAdd
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         lgi = request.user.groupofprobes.all().values_list('id', flat=True)
         kwargs["queryset"] = GroupOfProbes.objects.filter(pk__in=lgi)
-        return super(GroupOfProbesInline, self).formfield_for_foreignkey(db_field, request, **kwargs)
+        return super(GroupOfMetricsInline, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
-class ProbeForm(ModelForm):
+class MetricsProbeForm(ModelForm):
     """
     Connects profile attributes to autocomplete widget (:py:mod:`poem.widgets`). Also
     adds media and does basic sanity checking for input.
     """
     class Meta:
-        model = Probe
+        model = MetricsProbe
 
-    name = CharField(help_text='Name of this probe.',
-                     max_length=128,
-                     widget=TextInput(attrs={'maxlength': 128, 'size': 45}),
-                     label='Probe name')
-    version = CharField(help_text='Version of the probe.',
-                        max_length=128,
-                        widget=TextInput(attrs={'maxlength': 128, 'size': 45}),
-                        label='Probe version')
-    description = CharField(help_text='Free text description outlining the purpose of this probe.',
-                            max_length=100,
-                            widget=Textarea(attrs={'style':'width:480px;height:100px'}))
+    # tag = make_ajax_field(Tags, 'name', 'hintstags', label='Tags')
+    tag = MyModelChoiceField(queryset=Tags.objects, cache_choices=True,
+                           initial='Test', label='Tags', help_text='Select one of the tags available.')
+    name = make_ajax_field(Metrics, 'name', 'hintsmetrics',
+                           plugin_options={'minLength': 2}, label='Metrics', help_text='Metric name')
+    probever = AutoCompleteField('hintsprobes', label='Probes')
+    config = CharField(help_text='List of key, value pairs that configure the metric.',
+                       max_length=100,
+                       widget=Textarea(attrs={'style':'width:480px;height:100px'}))
+    docurl = CharField(help_text='Location of metric documentation.',
+                       max_length=128,
+                       widget=TextInput(attrs={'maxlenght': 128, 'size': 45}),
+                       label='Documentation URL')
+    group = CharField(help_text='Group that metric belong to.', label='Metric group',
+                     widget=TextInput(attrs={'readonly': 'readonly'}))
 
-class ProbeAdmin(admin.ModelAdmin):
+    def clean_tag(self):
+        fetched = self.cleaned_data['tag']
+        return Tags.objects.get(id=fetched.id).name
+
+    def clean_probever(self):
+        fetched = self.cleaned_data['probever']
+        return Probe.objects.get(nameversion__exact=fetched)
+
+class MetricsProbeAdmin(admin.ModelAdmin):
     """
     POEM admin core class that customizes its look and feel.
     """
     class Media:
-        css = { "all" : ("/poem_media/css/siteprobes.css",) }
+        css = { "all" : ("/poem_media/css/sitemetrics.css",) }
 
     def groupbelong(obj):
-        if obj.groupofprobes_set.count():
-            return obj.groupofprobes_set.values('name')[0]['name']
+        if obj.groupofmetrics_set.count():
+            return obj.groupofmetrics_set.values('name')[0]['name']
         else:
             return ''
     groupbelong.short_description = 'Group'
 
-    list_display = ('name', 'version', groupbelong, 'description')
-    fields = ('name', 'version', 'description')
+
+    list_display = ('name', 'tag', 'probever', 'docurl', 'config', 'group')
+    fields = ('name', 'tag', 'probever', 'docurl', 'config', 'group')
+    list_filter = ('tag', 'group')
     search_fields = ('name',)
-    inlines = (GroupOfProbesInline, )
-    form = ProbeForm
+    # fields = ('name', )
+    # inlines = (GroupOfProbes, )
+    form = MetricsProbeForm
     actions = None
+    ordering = ('name',)
 
     def _groupown_turn(self, user, flag):
         perm_prdel = Permission.objects.get(codename='delete_probe')
@@ -140,8 +157,8 @@ class ProbeAdmin(admin.ModelAdmin):
         rquser = SharedInfo(request.user)
         if obj:
             try:
-                gp = GroupOfProbes.objects.get(probes__id=obj.id)
-                ugis = request.user.groupsofprobes.all().values_list('id', flat=True)
+                gp = GroupOfMetrics.objects.get(metrics__id=obj.id)
+                ugis = request.user.groupsofmetrics.all().values_list('id', flat=True)
                 if ugis:
                     for ugi in ugis:
                         if ugi == gp.id:
@@ -149,12 +166,12 @@ class ProbeAdmin(admin.ModelAdmin):
                             break
                         else:
                             self._groupown_turn(request.user, 'del')
-            except GroupOfProbes.DoesNotExist:
+            except GroupOfMetrics.DoesNotExist:
                 self._groupown_turn(request.user, 'del')
         elif not request.user.is_superuser:
-            self.inlines = (GroupOfProbesInlineAdd, )
+            self.inlines = (GroupOfMetricsInlineAdd, )
             self._groupown_turn(request.user, 'add')
-        return super(ProbeAdmin, self).get_form(request, obj=None, **kwargs)
+        return super(MetricsProbeAdmin, self).get_form(request, obj=None, **kwargs)
 
     def save_model(self, request, obj, form, change):
         if request.user.has_perm('poem.groupown_probe'):
@@ -175,7 +192,7 @@ class ProbeAdmin(admin.ModelAdmin):
     def has_add_permission(self, request):
         if request.user.is_superuser:
             return True
-        if request.user.groupsofprofiles.count():
+        if request.user.groupsofmetrics.count():
             return True
         else:
             return False

@@ -103,9 +103,9 @@ class GroupOfProfilesInlineForm(ModelForm):
             raise ValidationError("You are not member of group %s." % (str(groupsel)))
         return groupsel
 
-class GroupOfProfilesInlineAdd(ModelForm):
+class GroupOfProfilesInlineAddForm(ModelForm):
     def __init__(self, *args, **kwargs):
-        super(GroupOfProfilesInlineAdd, self).__init__(*args, **kwargs)
+        super(GroupOfProfilesInlineAddForm, self).__init__(*args, **kwargs)
         self.fields['group'].help_text = 'Select one of the groups you are member of'
         self.fields['group'].empty_label = None
 
@@ -128,7 +128,7 @@ class GroupOfProfilesInline(admin.TabularInline):
         return True
 
 class GroupOfProfilesInlineAdd(GroupOfProfilesInline):
-    form = GroupOfProfilesInlineAdd
+    form = GroupOfProfilesInlineAddForm
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         lgi = request.user.groupofprofiles.all().values_list('id', flat=True)

@@ -1,6 +1,6 @@
 from Poem.poem.models import Profile, Metrics, Probe
 from django.contrib.admin.widgets import FilteredSelectMultiple
-from django.forms import ModelMultipleChoiceField
+from django.forms import ModelMultipleChoiceField, ModelChoiceField
 from django.forms import ValidationError
 from django.forms.widgets import SelectMultiple
 from django.forms.util import flatatt
@@ -8,6 +8,10 @@ from django.utils.encoding import force_unicode, force_text
 from django.utils.safestring import mark_safe
 from itertools import chain
 from django.utils.html import escape
+
+class MyModelChoiceField(ModelChoiceField):
+    def label_from_instance(self, obj):
+        return str(obj.name)
 
 class MyModelMultipleChoiceField(ModelMultipleChoiceField):
     def __init__(self, *args, **kwargs):

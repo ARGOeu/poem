@@ -1,5 +1,5 @@
 from ajax_select import LookupChannel
-from Poem.poem.models import VO, ServiceFlavour, MetricInstance
+from Poem.poem.models import VO, ServiceFlavour, Metrics, MetricInstance, Tags, Probe
 from django.core.cache import cache
 
 def check_cache(request, model, attr):
@@ -28,5 +28,26 @@ class MILookup(LookupChannel):
     model = MetricInstance
 
     def get_query(self, q, request):
-        values = check_cache(request, self.model, 'metric')
+        values = check_cache(request, self.model, 'name')
+        return sorted(filter(lambda x: q.lower() in x.lower(), values))
+
+class MLookup(LookupChannel):
+    model = Metrics
+
+    def get_query(self, q, request):
+        values = check_cache(request, self.model, 'name')
+        return sorted(filter(lambda x: q.lower() in x.lower(), values))
+
+class PLookup(LookupChannel):
+    model = Probe
+
+    def get_query(self, q, request):
+        values = check_cache(request, self.model, 'nameversion')
+        return sorted(filter(lambda x: q.lower() in x.lower(), values))
+
+class TLookup(LookupChannel):
+    model = Tags
+
+    def get_query(self, q, request):
+        values = check_cache(request, self.model, 'name')
         return sorted(filter(lambda x: q.lower() in x.lower(), values))

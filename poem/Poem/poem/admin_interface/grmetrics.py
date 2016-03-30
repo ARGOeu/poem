@@ -21,7 +21,7 @@ class GroupOfMetricsForm(ModelForm):
 
 class GroupOfMetricsAdmin(GroupAdmin):
     class Media:
-        css = { "all" : ("/poem_media/css/poem_profile.custom.css",) }
+        css = { "all" : ("/poem_media/css/grmetrics.css",) }
 
     form = GroupOfMetricsForm
     search_field = ()

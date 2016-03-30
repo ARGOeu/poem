@@ -80,6 +80,20 @@ class Metrics(models.Model):
     class Meta:
         permissions = (('metricsown', 'Read/Write/Modify'),)
 
+class Tags(models.Model):
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=128)
+
+class MetricsProbe(models.Model):
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=128)
+    tag = models.CharField(max_length=128)
+    probever = models.ForeignKey(Probe)
+    config = models.CharField(max_length=128)
+    docurl = models.CharField(max_length=128)
+    group = models.CharField(max_length=128)
+
+
 class MetricInstance(models.Model):
     """
     Metric instance is a tuple: (flavour, metric_name, vo, fqan).
