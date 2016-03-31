@@ -140,7 +140,7 @@ class ProbeAdmin(admin.ModelAdmin):
         rquser = SharedInfo(request.user)
         if obj:
             try:
-                gp = GroupOfProbes.objects.get(probes__id=obj.id)
+                gp = GroupOfProbes.objects.get(probes__nameversion=obj.nameversion)
                 ugis = request.user.groupsofprobes.all().values_list('id', flat=True)
                 if ugis:
                     for ugi in ugis:

@@ -8,6 +8,7 @@ from django.utils.encoding import force_unicode, force_text
 from django.utils.safestring import mark_safe
 from itertools import chain
 from django.utils.html import escape
+from django.utils.translation import ugettext as _
 
 class MyModelChoiceField(ModelChoiceField):
     def label_from_instance(self, obj):
@@ -126,4 +127,3 @@ class MyFilteredSelectMultiple(FilteredSelectMultiple):
             else:
                 output.append(self.render_option(selected_choices, option_value, option_label))
         return u'\n'.join(filter(lambda x: '----' not in x, output))
-

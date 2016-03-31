@@ -32,11 +32,10 @@ class ServiceFlavour(models.Model):
         return u'%s' % self.name
 
 class Probe(models.Model):
-    id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=128, null=False,
                     help_text='Name of the probe.')
     version = models.CharField(max_length=128, null=False, help_text='Version of the probe.')
-    nameversion = models.CharField(max_length=128, null=False, help_text='Name, version tuple.')
+    nameversion = models.CharField(max_length=128, null=False, help_text='Name, version tuple.', primary_key=True)
     description = models.CharField(max_length=1024, blank=True, null=True)
     group = models.CharField(max_length=1024, blank=True, null=True)
 
@@ -83,9 +82,15 @@ class Metrics(models.Model):
     class Meta:
         permissions = (('metricsown', 'Read/Write/Modify'),)
 
+    def __unicode__(self):
+        return u'%s' % self.name
+
 class Tags(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=128)
+
+    def __unicode__(self):
+        return u'%s %s' % (self.name, self.probever)
 
 class MetricsProbe(models.Model):
     id = models.AutoField(primary_key=True)
@@ -95,6 +100,10 @@ class MetricsProbe(models.Model):
     config = models.CharField(max_length=128)
     docurl = models.CharField(max_length=128)
     group = models.CharField(max_length=128)
+
+    def __unicode__(self):
+        return u'%s %s' % (self.name, self.probever)
+
 
 class MetricInstance(models.Model):
     """

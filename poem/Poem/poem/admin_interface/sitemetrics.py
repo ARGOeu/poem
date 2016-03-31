@@ -11,9 +11,7 @@ from Poem.poem.lookups import check_cache
 from Poem.poem.admin_interface.formmodel import MyModelMultipleChoiceField, MyModelChoiceField
 from Poem.poem.models import MetricsProbe, Probe, UserProfile, VO, ServiceFlavour, GroupOfProbes, CustUser, Tags, Metrics, GroupOfMetrics
 
-
 from ajax_select import make_ajax_field
-from ajax_select.fields import AutoCompleteField
 
 class SharedInfo:
     def __init__(self, requser=None):
@@ -88,12 +86,11 @@ class MetricsProbeForm(ModelForm):
     class Meta:
         model = MetricsProbe
 
-    # tag = make_ajax_field(Tags, 'name', 'hintstags', label='Tags')
     tag = MyModelChoiceField(queryset=Tags.objects, cache_choices=True,
                            initial='Test', label='Tags', help_text='Select one of the tags available.')
     name = make_ajax_field(Metrics, 'name', 'hintsmetrics',
                            plugin_options={'minLength': 2}, label='Metrics', help_text='Metric name')
-    probever = AutoCompleteField('hintsprobes', label='Probes')
+    probever = make_ajax_field(Probe, 'nameversion', 'hintsprobes', label='Probes')
     config = CharField(help_text='List of key, value pairs that configure the metric.',
                        max_length=100,
                        widget=Textarea(attrs={'style':'width:480px;height:100px'}))
