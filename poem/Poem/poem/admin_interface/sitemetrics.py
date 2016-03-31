@@ -13,7 +13,7 @@ from Poem.poem.models import MetricsProbe, Probe, UserProfile, VO, ServiceFlavou
 
 
 from ajax_select import make_ajax_field
-from ajax_select.fields import AutoCompleteField, AutoCompleteSelectField, AutoCompleteSelectMultipleField
+from ajax_select.fields import AutoCompleteField
 
 class SharedInfo:
     def __init__(self, requser=None):
@@ -102,7 +102,7 @@ class MetricsProbeForm(ModelForm):
                        widget=TextInput(attrs={'maxlenght': 128, 'size': 45}),
                        label='Documentation URL')
     group = CharField(help_text='Group that metric belong to.', label='Metric group',
-                     widget=TextInput(attrs={'readonly': 'readonly'}))
+                     widget=TextInput(attrs={'readonly': 'readonly'}), required=False)
 
     def clean_tag(self):
         fetched = self.cleaned_data['tag']
@@ -119,20 +119,10 @@ class MetricsProbeAdmin(admin.ModelAdmin):
     class Media:
         css = { "all" : ("/poem_media/css/sitemetrics.css",) }
 
-    def groupbelong(obj):
-        if obj.groupofmetrics_set.count():
-            return obj.groupofmetrics_set.values('name')[0]['name']
-        else:
-            return ''
-    groupbelong.short_description = 'Group'
-
-
     list_display = ('name', 'tag', 'probever', 'docurl', 'config', 'group')
     fields = ('name', 'tag', 'probever', 'docurl', 'config', 'group')
     list_filter = ('tag', 'group')
     search_fields = ('name',)
-    # fields = ('name', )
-    # inlines = (GroupOfProbes, )
     form = MetricsProbeForm
     actions = None
     ordering = ('name',)

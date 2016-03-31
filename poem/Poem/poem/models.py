@@ -12,6 +12,7 @@ from django.utils import timezone
 from django.utils.http import urlquote
 from django.utils.translation import ugettext_lazy as _
 import re
+import copy
 
 YESNO_CHOICE= ((u'Y',u'Yes'), (u'N', u'No'),)
 
@@ -37,6 +38,7 @@ class Probe(models.Model):
     version = models.CharField(max_length=128, null=False, help_text='Version of the probe.')
     nameversion = models.CharField(max_length=128, null=False, help_text='Name, version tuple.')
     description = models.CharField(max_length=1024, blank=True, null=True)
+    group = models.CharField(max_length=1024, blank=True, null=True)
 
     class Meta:
         permissions = (('probesown', 'Read/Write/Modify'),)
@@ -46,7 +48,7 @@ class Probe(models.Model):
 
 @receiver(pre_save, sender=Probe)
 def probe_handler(sender, instance, **kwargs):
-    instance.nameversion = str(instance.name) + '-' + str(instance.version)
+    instance.nameversion = u'%s %s' % (str(instance.name), str(instance.version))
 
 class Profile(models.Model):
     """
@@ -76,6 +78,7 @@ class Profile(models.Model):
 class Metrics(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=128)
+    group = models.CharField(max_length=128)
 
     class Meta:
         permissions = (('metricsown', 'Read/Write/Modify'),)
@@ -92,7 +95,6 @@ class MetricsProbe(models.Model):
     config = models.CharField(max_length=128)
     docurl = models.CharField(max_length=128)
     group = models.CharField(max_length=128)
-
 
 class MetricInstance(models.Model):
     """
@@ -135,6 +137,25 @@ class GroupOfProbes(models.Model):
     def natural_key(self):
         return (self.name,)
 
+wasprobes = []
+def gpprobes_presave(sender, instance, **kwargs):
+    global wasprobes
+    if instance.pk:
+        wasprobes = copy.copy(instance.probes.values_list('pk', flat=True))
+    else:
+       wasprobes = []
+pre_save.connect(gpprobes_presave, sender=GroupOfProbes)
+def gpprobes_m2m(sender, action, pk_set, instance, **kwargs):
+    global wasprobes
+    if action == 'post_clear':
+        for m in wasprobes:
+           Probe.objects.filter(id=m).update(group='')
+    if action == 'post_add':
+        for m in pk_set:
+            Probe.objects.filter(id=m).update(group=instance.name)
+m2m_changed.connect(gpprobes_m2m, sender=GroupOfProbes.probes.through)
+
+
 class GroupOfProfiles(models.Model):
     name = models.CharField(_('name'), max_length=80, unique=True)
     permissions = models.ManyToManyField(Permission,
@@ -168,6 +189,24 @@ class GroupOfMetrics(models.Model):
 
     def natural_key(self):
         return (self.name,)
+
+wasmetrics = []
+def gpmetric_presave(sender, instance, **kwargs):
+    global wasmetrics
+    if instance.pk:
+        wasmetrics = copy.copy(instance.metrics.values_list('pk', flat=True))
+    else:
+       wasmetrics = []
+pre_save.connect(gpmetric_presave, sender=GroupOfMetrics)
+def gpmetric_m2m(sender, action, pk_set, instance, **kwargs):
+    global wasmetrics
+    if action == 'post_clear':
+        for m in wasmetrics:
+           Metrics.objects.filter(id=m).update(group='')
+    if action == 'post_add':
+        for m in pk_set:
+            Metrics.objects.filter(id=m).update(group=instance.name)
+m2m_changed.connect(gpmetric_m2m, sender=GroupOfMetrics.metrics.through)
 
 class CustPermissionsMixin(models.Model):
     is_superuser = models.BooleanField(_('superuser status'), default=False,
