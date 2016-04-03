@@ -81,12 +81,12 @@ class MetricInstanceInline(admin.TabularInline):
     def has_change_permission(self, request, obj=None):
         return True
 
-class GroupOfProfilesInlineForm(ModelForm):
+class GroupOfProfilesInlineChangeForm(ModelForm):
     def __init__(self, *args, **kwargs):
         rquser = SharedInfo()
         self.user = rquser.getuser()
         self.usergroups = self.user.groupsofprofiles.all()
-        super(GroupOfProfilesInlineForm, self).__init__(*args, **kwargs)
+        super(GroupOfProfilesInlineChangeForm, self).__init__(*args, **kwargs)
 
 
     qs = GroupOfProfiles.objects.all()
@@ -109,9 +109,9 @@ class GroupOfProfilesInlineAddForm(ModelForm):
         self.fields['group'].help_text = 'Select one of the groups you are member of'
         self.fields['group'].empty_label = None
 
-class GroupOfProfilesInline(admin.TabularInline):
+class GroupOfProfilesInlineChange(admin.TabularInline):
     model = GroupOfProfiles.profiles.through
-    form = GroupOfProfilesInlineForm
+    form = GroupOfProfilesInlineChangeForm
     verbose_name_plural = 'Group of profiles'
     verbose_name = 'Group of profile'
     max_num = 1
@@ -127,13 +127,13 @@ class GroupOfProfilesInline(admin.TabularInline):
     def has_change_permission(self, request, obj=None):
         return True
 
-class GroupOfProfilesInlineAdd(GroupOfProfilesInline):
+class GroupOfProfilesInlineAdd(GroupOfProfilesInlineChange):
     form = GroupOfProfilesInlineAddForm
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         lgi = request.user.groupofprofiles.all().values_list('id', flat=True)
         kwargs["queryset"] = GroupOfProfiles.objects.filter(pk__in=lgi)
-        return super(GroupOfProfilesInline, self).formfield_for_foreignkey(db_field, request, **kwargs)
+        return super(GroupOfProfilesInlineChange, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
 class ProfileForm(ModelForm):
     """
@@ -174,7 +174,7 @@ class ProfileAdmin(admin.ModelAdmin):
     list_filter = ('vo',)
     search_fields = ('name', 'vo',)
     fields = ('name', 'vo', 'description')
-    inlines = (GroupOfProfilesInline, MetricInstanceInline, )
+    inlines = (GroupOfProfilesInlineChange, MetricInstanceInline, )
     exclude = ('version',)
     form = ProfileForm
     actions = None
