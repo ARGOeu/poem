@@ -9,7 +9,6 @@ from Poem.poem.models import MetricInstance, MetricsProbe, Probe, Profile, UserP
 from Poem.poem.admin_interface.userprofile import *
 from Poem.poem.admin_interface.siteprofile import *
 from Poem.poem.admin_interface.siteprobes import *
-from Poem.poem.admin_interface.siteprobes import *
 from Poem.poem.admin_interface.sitemetrics import *
 
 admin.site.unregister(Group)

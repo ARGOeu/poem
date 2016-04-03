@@ -8,7 +8,7 @@ from django.core.exceptions import PermissionDenied
 
 from Poem.poem import widgets
 from Poem.poem.lookups import check_cache
-from Poem.poem.admin_interface.formmodel import MyModelMultipleChoiceField, MyModelChoiceField
+from Poem.poem.admin_interface.formmodel import MyModelMultipleChoiceField, MyModelChoiceField, MySelect
 from Poem.poem.models import MetricsProbe, Probe, UserProfile, VO, ServiceFlavour, GroupOfProbes, CustUser, Tags, Metrics, GroupOfMetrics
 
 from ajax_select import make_ajax_field
@@ -30,7 +30,6 @@ class GroupOfMetricsInlineForm(ModelForm):
         self.user = rquser.getuser()
         self.usergroups = self.user.groupsofprofiles.all()
         super(GroupOfMetricsInlineForm, self).__init__(*args, **kwargs)
-
 
     qs = GroupOfProbes.objects.all()
     groupofprobes = MyModelMultipleChoiceField(queryset=qs,
@@ -78,7 +77,8 @@ class GroupOfMetricsInlineAdd(GroupOfMetricsInline):
         kwargs["queryset"] = GroupOfProbes.objects.filter(pk__in=lgi)
         return super(GroupOfMetricsInline, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
-class MetricsProbeForm(ModelForm):
+
+class MetricsProbeAddForm(ModelForm):
     """
     Connects profile attributes to autocomplete widget (:py:mod:`poem.widgets`). Also
     adds media and does basic sanity checking for input.
@@ -86,8 +86,10 @@ class MetricsProbeForm(ModelForm):
     class Meta:
         model = MetricsProbe
 
-    tag = MyModelChoiceField(queryset=Tags.objects, cache_choices=True,
+    qs = Tags.objects.all()
+    tag = MyModelChoiceField(queryset=qs, cache_choices=True,
                            initial='Test', label='Tags', help_text='Select one of the tags available.')
+    tag.empty_label = '--------------'
     name = make_ajax_field(Metrics, 'name', 'hintsmetrics',
                            plugin_options={'minLength': 2}, label='Metrics', help_text='Metric name')
     probever = make_ajax_field(Probe, 'nameversion', 'hintsprobes', label='Probes')
@@ -101,13 +103,21 @@ class MetricsProbeForm(ModelForm):
     group = CharField(help_text='Group that metric belong to.', label='Metric group',
                      widget=TextInput(attrs={'readonly': 'readonly'}), required=False)
 
-    def clean_tag(self):
-        fetched = self.cleaned_data['tag']
-        return Tags.objects.get(id=fetched.id).name
+    #def clean_tag(self):
+    #    fetched = self.cleaned_data['tag']
+    #    return Tags.objects.get(id=fetched.id).name
 
     def clean_probever(self):
         fetched = self.cleaned_data['probever']
         return Probe.objects.get(nameversion__exact=fetched)
+
+class MetricsProbeChangeForm(MetricsProbeAddForm):
+    class Meta:
+        model = MetricsProbe
+
+    qs = Tags.objects.all()
+    tag = MyModelChoiceField(queryset=Tags.objects.all(), help_text='Metric tagged.')
+    tag.empty_label = '-------'
 
 class MetricsProbeAdmin(admin.ModelAdmin):
     """
@@ -120,7 +130,6 @@ class MetricsProbeAdmin(admin.ModelAdmin):
     fields = ('name', 'tag', 'probever', 'docurl', 'config', 'group')
     list_filter = ('tag', 'group')
     search_fields = ('name',)
-    form = MetricsProbeForm
     actions = None
     ordering = ('name',)
 
@@ -155,8 +164,10 @@ class MetricsProbeAdmin(admin.ModelAdmin):
                             self._groupown_turn(request.user, 'del')
             except GroupOfMetrics.DoesNotExist:
                 self._groupown_turn(request.user, 'del')
-        elif not request.user.is_superuser:
-            self.inlines = (GroupOfMetricsInlineAdd, )
+            self.form = MetricsProbeChangeForm
+        else:
+            self.form = MetricsProbeAddForm
+            # self.inlines = (GroupOfMetricsInlineAdd, )
             self._groupown_turn(request.user, 'add')
         return super(MetricsProbeAdmin, self).get_form(request, obj=None, **kwargs)
 
