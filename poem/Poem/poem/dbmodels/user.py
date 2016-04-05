@@ -141,7 +141,9 @@ class UserProfile(models.Model):
     """
     Extension of auth.User model that adds certificate DN.
     """
-    # This field is required.
+    class Meta:
+        app_label = 'poem'
+
     user = models.OneToOneField(settings.AUTH_USER_MODEL)
     subject = models.CharField(max_length=255, blank=True, null=True, unique=True)
 

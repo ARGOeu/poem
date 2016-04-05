@@ -37,21 +37,6 @@ class Tags(models.Model):
     def __unicode__(self):
         return u'%s' % (self.name)
 
-class MetricsProbe(models.Model):
-    id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=128)
-    tag = models.ForeignKey(Tags)
-    probever = models.ForeignKey(Probe)
-    config = models.CharField(max_length=128)
-    docurl = models.CharField(max_length=128)
-    group = models.CharField(max_length=128)
-
-    class Meta:
-        app_label = 'poem'
-        unique_together = (('name', 'probever'),)
-    def __unicode__(self):
-        return u'%s %s' % (self.name, self.probever)
-
 class GroupOfMetrics(models.Model):
     name = models.CharField(_('name'), max_length=80, unique=True)
     permissions = models.ManyToManyField(Permission,
@@ -69,6 +54,21 @@ class GroupOfMetrics(models.Model):
 
     def natural_key(self):
         return (self.name,)
+
+class MetricsProbe(models.Model):
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=128)
+    tag = models.ForeignKey(Tags)
+    probever = models.ForeignKey(Probe)
+    config = models.CharField(max_length=128)
+    docurl = models.CharField(max_length=128)
+    group = models.ForeignKey(GroupOfMetrics)
+
+    class Meta:
+        app_label = 'poem'
+        unique_together = (('name', 'probever'),)
+    def __unicode__(self):
+        return u'%s %s' % (self.name, self.probever)
 
 wasmetrics = []
 def gpmetric_presave(sender, instance, **kwargs):

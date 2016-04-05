@@ -5,6 +5,7 @@ from django.contrib import auth
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied
+from django.utils.translation import ugettext as _
 
 from Poem.poem import widgets
 from Poem.poem.lookups import check_cache
@@ -13,83 +14,29 @@ from Poem.poem.models import MetricsProbe, Probe, UserProfile, VO, ServiceFlavou
 
 from ajax_select import make_ajax_field
 
-class SharedInfo:
-    def __init__(self, requser=None):
-        if requser:
-            self.__class__.user = requser
-
-    def getuser(self):
-        if getattr(self.__class__, 'user', None):
-            return self.__class__.user
-        else:
-            return None
-
-class GroupOfMetricsInlineForm(ModelForm):
-    def __init__(self, *args, **kwargs):
-        rquser = SharedInfo()
-        self.user = rquser.getuser()
-        self.usergroups = self.user.groupsofprofiles.all()
-        super(GroupOfMetricsInlineForm, self).__init__(*args, **kwargs)
-
-    qs = GroupOfProbes.objects.all()
-    groupofprobes = MyModelMultipleChoiceField(queryset=qs,
-                                       widget=Select(),
-                                       help_text='Probe is a member of given group')
-    groupofprobes.empty_label = '----------------'
-    groupofprobes.label = 'Group of probes'
-
-    def clean_groupofprobes(self):
-        groupsel = self.cleaned_data['groupofprobes']
-        ugid = [f.id for f in self.usergroups]
-        if groupsel.id not in ugid and not self.user.is_superuser:
-            raise ValidationError("You are not member of group %s." % (str(groupsel)))
-        return groupsel
-
-class GroupOfMetricsInlineAdd(ModelForm):
-    def __init__(self, *args, **kwargs):
-        super(GroupOfMetricsInlineAdd, self).__init__(*args, **kwargs)
-        self.fields['group'].help_text = 'Select one of the groups you are member of'
-        self.fields['group'].empty_label = None
-
-class GroupOfMetricsInline(admin.TabularInline):
-    model = GroupOfProbes.probes.through
-    form = GroupOfMetricsInlineForm
-    verbose_name_plural = 'Group of probes'
-    verbose_name = 'Group of probes'
-    max_num = 1
-    extra = 1
-    template = 'admin/edit_inline/stacked-group.html'
-
-    def has_add_permission(self, request):
-        return True
-
-    def has_delete_permission(self, request, obj=None):
-        return True
-
-    def has_change_permission(self, request, obj=None):
-        return True
-
-class GroupOfMetricsInlineAdd(GroupOfMetricsInline):
-    form = GroupOfMetricsInlineAdd
-
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        lgi = request.user.groupofprobes.all().values_list('id', flat=True)
-        kwargs["queryset"] = GroupOfProbes.objects.filter(pk__in=lgi)
-        return super(GroupOfMetricsInline, self).formfield_for_foreignkey(db_field, request, **kwargs)
-
 
 class MetricsProbeAddForm(ModelForm):
     """
     Connects profile attributes to autocomplete widget (:py:mod:`poem.widgets`). Also
     adds media and does basic sanity checking for input.
     """
+    def __init__(self, *args, **kwargs):
+        super(MetricsProbeAddForm, self).__init__(*args, **kwargs)
+        self.fields['group'].widget.can_add_related = False
+        self.fields['group'].empty_label = None
+
     class Meta:
         model = MetricsProbe
+        labels = {
+            'group': _('Group of metrics'),
+        }
+        help_texts = {
+            'group': _('(Metric, Probe Version) is member of given group'),
+        }
 
     qs = Tags.objects.all()
-    tag = MyModelChoiceField(queryset=qs, cache_choices=True,
-                           initial='Test', label='Tags', help_text='Select one of the tags available.')
-    tag.empty_label = '--------------'
+    tag = MyModelChoiceField(queryset=qs, label='Tags', help_text='Select one of the tags available.')
+    tag.empty_label = None
     name = make_ajax_field(Metrics, 'name', 'hintsmetrics',
                            plugin_options={'minLength': 2}, label='Metrics', help_text='Metric name')
     probever = make_ajax_field(Probe, 'nameversion', 'hintsprobes', label='Probes')
@@ -100,24 +47,20 @@ class MetricsProbeAddForm(ModelForm):
                        max_length=128,
                        widget=TextInput(attrs={'maxlenght': 128, 'size': 45}),
                        label='Documentation URL')
-    group = CharField(help_text='Group that metric belong to.', label='Metric group',
-                     widget=TextInput(attrs={'readonly': 'readonly'}), required=False)
 
-    #def clean_tag(self):
-    #    fetched = self.cleaned_data['tag']
-    #    return Tags.objects.get(id=fetched.id).name
+    def clean_tag(self):
+        fetched = self.cleaned_data['tag']
+        return Tags.objects.get(id=fetched.id)
 
     def clean_probever(self):
         fetched = self.cleaned_data['probever']
         return Probe.objects.get(nameversion__exact=fetched)
 
-class MetricsProbeChangeForm(MetricsProbeAddForm):
-    class Meta:
-        model = MetricsProbe
+class MetricsProbeChangeRWForm(MetricsProbeAddForm):
+    pass
 
-    qs = Tags.objects.all()
-    tag = MyModelChoiceField(queryset=Tags.objects.all(), help_text='Metric tagged.')
-    tag.empty_label = '-------'
+class MetricsProbeChangeROForm(MetricsProbeAddForm):
+    pass
 
 class MetricsProbeAdmin(admin.ModelAdmin):
     """
@@ -126,6 +69,7 @@ class MetricsProbeAdmin(admin.ModelAdmin):
     class Media:
         css = { "all" : ("/poem_media/css/sitemetrics.css",) }
 
+
     list_display = ('name', 'tag', 'probever', 'docurl', 'config', 'group')
     fields = ('name', 'tag', 'probever', 'docurl', 'config', 'group')
     list_filter = ('tag', 'group')
@@ -133,15 +77,22 @@ class MetricsProbeAdmin(admin.ModelAdmin):
     actions = None
     ordering = ('name',)
 
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        # if db_field.name == 'group' and not request.user.is_superuser:
+        if db_field.name == 'group' and not request.user.is_superuser:
+            lgi = request.user.groupsofmetrics.all().values_list('id', flat=True)
+            kwargs["queryset"] = GroupOfMetrics.objects.filter(pk__in=lgi)
+        return super(MetricsProbeAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
+
     def _groupown_turn(self, user, flag):
-        perm_prdel = Permission.objects.get(codename='delete_probe')
+        perm_prdel = Permission.objects.get(codename='delete_metrics')
         try:
-            perm_grpown = Permission.objects.get(codename='groupown_probe')
+            perm_grpown = Permission.objects.get(codename='groupown_metrics')
         except Permission.DoesNotExist:
-            ct = ContentType.objects.get(app_label='poem', model='probe')
-            perm_grpown = Permission.objects.create(codename='groupown_probe',
+            ct = ContentType.objects.get(app_label='poem', model='metrics')
+            perm_grpown = Permission.objects.create(codename='groupown_metrics',
                                                    content_type=ct,
-                                                   name="Group of probe owners")
+                                                   name="Group of metric owners")
         if flag == 'add':
             user.user_permissions.add(perm_grpown)
             user.user_permissions.add(perm_prdel)
@@ -150,25 +101,28 @@ class MetricsProbeAdmin(admin.ModelAdmin):
             user.user_permissions.remove(perm_prdel)
 
     def get_form(self, request, obj=None, **kwargs):
-        rquser = SharedInfo(request.user)
         if obj:
-            try:
-                gp = GroupOfMetrics.objects.get(metrics__id=obj.id)
-                ugis = request.user.groupsofmetrics.all().values_list('id', flat=True)
-                if ugis:
-                    for ugi in ugis:
-                        if ugi == gp.id:
-                            self._groupown_turn(request.user, 'add')
-                            break
-                        else:
-                            self._groupown_turn(request.user, 'del')
-            except GroupOfMetrics.DoesNotExist:
-                self._groupown_turn(request.user, 'del')
-            self.form = MetricsProbeChangeForm
+            # TODO: fetch all see prefetch_related()
+            if request.user.is_superuser:
+                self.form = MetricsProbeChangeRWForm
+                self._groupown_turn(request.user, 'add')
+            else:
+                ug = request.user.groupsofmetrics.all()
+                if ug and obj.group not in ug:
+                    self.form = MetricsProbeChangeROForm
+                    self._groupown_turn(request.user, 'del')
+                elif not ug:
+                    self.form = MetricsProbeChangeROForm
+                    self._groupown_turn(request.user, 'del')
+                else:
+                    self.form = MetricsProbeChangeRWForm
+                    self._groupown_turn(request.user, 'add')
         else:
             self.form = MetricsProbeAddForm
-            # self.inlines = (GroupOfMetricsInlineAdd, )
-            self._groupown_turn(request.user, 'add')
+            if request.user.is_superuser or request.user.groupsofmetrics.count():
+                self._groupown_turn(request.user, 'add')
+            else:
+                self._groupown_turn(request.user, 'del')
         return super(MetricsProbeAdmin, self).get_form(request, obj=None, **kwargs)
 
     def save_model(self, request, obj, form, change):
