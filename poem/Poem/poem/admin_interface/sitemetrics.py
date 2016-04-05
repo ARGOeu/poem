@@ -72,7 +72,7 @@ class MetricsProbeAdmin(admin.ModelAdmin):
 
     list_display = ('name', 'tag', 'probever', 'docurl', 'config', 'group')
     fields = ('name', 'tag', 'probever', 'docurl', 'config', 'group')
-    list_filter = ('tag', 'group')
+    list_filter = ('tag', 'group__name', )
     search_fields = ('name',)
     actions = None
     ordering = ('name',)

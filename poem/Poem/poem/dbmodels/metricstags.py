@@ -18,7 +18,6 @@ import copy
 class Metrics(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=128)
-    group = models.CharField(max_length=128)
 
     class Meta:
         permissions = (('metricsown', 'Read/Write/Modify'),)
@@ -69,21 +68,3 @@ class MetricsProbe(models.Model):
         unique_together = (('name', 'probever'),)
     def __unicode__(self):
         return u'%s %s' % (self.name, self.probever)
-
-wasmetrics = []
-def gpmetric_presave(sender, instance, **kwargs):
-    global wasmetrics
-    if instance.pk:
-        wasmetrics = copy.copy(instance.metrics.values_list('pk', flat=True))
-    else:
-       wasmetrics = []
-pre_save.connect(gpmetric_presave, sender=GroupOfMetrics)
-def gpmetric_m2m(sender, action, pk_set, instance, **kwargs):
-    global wasmetrics
-    if action == 'post_clear':
-        for m in wasmetrics:
-           Metrics.objects.filter(id=m).update(group='')
-    if action == 'post_add':
-        for m in pk_set:
-            Metrics.objects.filter(id=m).update(group=instance.name)
-m2m_changed.connect(gpmetric_m2m, sender=GroupOfMetrics.metrics.through)
