@@ -170,8 +170,8 @@ class ProfileAdmin(admin.ModelAdmin):
     class Media:
         css = { "all" : ("/poem_media/css/siteprofile.css",) }
 
-    list_display = ('name', 'vo', 'description')
-    list_filter = ('vo',)
+    list_display = ('name', 'vo', 'description', 'groupname')
+    list_filter = ('vo', 'groupname',)
     search_fields = ('name', 'vo',)
     fields = ('name', 'vo', 'description')
     inlines = (GroupOfProfilesInlineChange, MetricInstanceInline, )
