@@ -170,8 +170,28 @@ class ProfileAdmin(admin.ModelAdmin):
     class Media:
         css = { "all" : ("/poem_media/css/siteprofile.css",) }
 
-    list_display = ('name', 'vo', 'description', 'groupname')
-    list_filter = ('vo', 'groupname',)
+    def groupname(obj):
+        return obj.groupname
+    groupname.short_description = 'group'
+
+    class GroupProfileListFilter(admin.SimpleListFilter):
+        title = 'profile group'
+        parameter_name = 'group'
+
+        def lookups(self, request, model_admin):
+            qs = model_admin.get_queryset(request)
+            groups = set(qs.values_list('groupname', flat=True))
+            return tuple((x,x) for x in filter(lambda x: x != '', groups))
+
+        def queryset(self, request, queryset):
+            if self.value():
+                return queryset.filter(groupname=self.value())
+            else:
+                return queryset
+
+
+    list_display = ('name', 'vo', 'description', groupname, )
+    list_filter = ('vo', GroupProfileListFilter, )
     search_fields = ('name', 'vo',)
     fields = ('name', 'vo', 'description')
     inlines = (GroupOfProfilesInlineChange, MetricInstanceInline, )

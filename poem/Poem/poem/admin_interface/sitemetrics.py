@@ -78,7 +78,6 @@ class MetricsProbeAdmin(admin.ModelAdmin):
     ordering = ('name',)
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        # if db_field.name == 'group' and not request.user.is_superuser:
         if db_field.name == 'group' and not request.user.is_superuser:
             lgi = request.user.groupsofmetrics.all().values_list('id', flat=True)
             kwargs["queryset"] = GroupOfMetrics.objects.filter(pk__in=lgi)
