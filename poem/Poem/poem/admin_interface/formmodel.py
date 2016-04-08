@@ -1,14 +1,16 @@
 from Poem.poem.models import Profile, Metrics, Probe
 from django.contrib.admin.widgets import FilteredSelectMultiple
+from django.contrib.auth.forms import UserChangeForm, UserCreationForm
+from django.contrib.auth import get_user_model
 from django.forms import ModelMultipleChoiceField, ModelChoiceField
 from django.forms import ValidationError
-from django.forms.widgets import SelectMultiple
 from django.forms.util import flatatt
+from django.forms.widgets import SelectMultiple
 from django.utils.encoding import force_unicode, force_text
-from django.utils.safestring import mark_safe
-from itertools import chain
 from django.utils.html import escape
+from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext as _
+from itertools import chain
 
 class MyModelChoiceField(ModelChoiceField):
     def label_from_instance(self, obj):
@@ -94,6 +96,27 @@ class MySelect(SelectMultiple):
                     del(output[ind])
                     output.insert(ind, o)
         return u'\n'.join(output)
+
+class MyUserChangeForm(UserChangeForm):
+    class Meta:
+        model = get_user_model()
+        fields = '__all__'
+
+class MyUserCreationForm(UserCreationForm):
+    class Meta:
+        model = get_user_model()
+        fields = ('username', )
+
+    def clean_username(self):
+        username = self.cleaned_data["username"]
+        try:
+            get_user_model()._default_manager.get(username=username)
+        except get_user_model().DoesNotExist:
+            return username
+        raise forms.ValidationError(
+            self.error_messages['duplicate_username'],
+            code='duplicate_username',
+        )
 
 class MyFilteredSelectMultiple(FilteredSelectMultiple):
     def render(self, name, value, attrs=None, choices=()):
