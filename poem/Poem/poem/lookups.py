@@ -33,10 +33,14 @@ class MILookup(LookupChannel):
 
 class MLookup(LookupChannel):
     model = Metrics
+    relmodel = model.groupofmetrics_set.related.model
 
     def get_query(self, q, request):
-        values = check_cache(request, self.model, 'name')
-        return sorted(filter(lambda x: q.lower() in x.lower(), values))
+        meting = []
+        ugs = request.user.groupsofmetrics.values_list('name', flat=True)
+        for u in ugs:
+            meting += self.relmodel.objects.get(name=u).metrics.all().values_list('name', flat=True)
+        return sorted(filter(lambda x: q.lower() in x.lower(), meting))
 
 class PLookup(LookupChannel):
     model = Probe
