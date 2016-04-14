@@ -106,6 +106,21 @@ class ProbeAdmin(admin.ModelAdmin):
     class Media:
         css = { "all" : ("/poem_media/css/siteprobes.css",) }
 
+    class GroupProbesListFilter(admin.SimpleListFilter):
+        title = 'probes group'
+        parameter_name = 'group'
+
+        def lookups(self, request, model_admin):
+            qs = model_admin.get_queryset(request)
+            groups = set(qs.values_list('group', flat=True))
+            return tuple((x,x) for x in filter(lambda x: x != '', groups))
+
+        def queryset(self, request, queryset):
+            if self.value():
+                return queryset.filter(group=self.value())
+            else:
+                return queryset
+
     def groupbelong(obj):
         if obj.groupofprobes_set.count():
             return obj.groupofprobes_set.values('name')[0]['name']
@@ -115,6 +130,7 @@ class ProbeAdmin(admin.ModelAdmin):
 
     list_display = ('name', 'version', groupbelong, 'description')
     fields = ('name', 'version', 'description')
+    list_filter= (GroupProbesListFilter, )
     search_fields = ('name',)
     inlines = (GroupOfProbesInline, )
     form = ProbeForm
