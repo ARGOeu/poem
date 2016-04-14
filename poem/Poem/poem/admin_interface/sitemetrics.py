@@ -69,10 +69,24 @@ class MetricsProbeAdmin(admin.ModelAdmin):
     class Media:
         css = { "all" : ("/poem_media/css/sitemetrics.css",) }
 
+    class GroupMetricsListFilter(admin.SimpleListFilter):
+        title = 'metrics group'
+        parameter_name = 'group'
+
+        def lookups(self, request, model_admin):
+            qs = model_admin.get_queryset(request)
+            groups = set(qs.values_list('group__name', flat=True))
+            return tuple((x,x) for x in filter(lambda x: x != '', groups))
+
+        def queryset(self, request, queryset):
+            if self.value():
+                return queryset.filter(group=self.value())
+            else:
+                return queryset
 
     list_display = ('name', 'tag', 'probever', 'docurl', 'config', 'group')
     fields = ('name', 'tag', 'probever', 'docurl', 'config', 'group')
-    list_filter = ('tag', 'group__name', )
+    list_filter = ('tag', GroupMetricsListFilter,)
     search_fields = ('name',)
     actions = None
     ordering = ('name',)
