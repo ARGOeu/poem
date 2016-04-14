@@ -80,7 +80,7 @@ class MetricsProbeAdmin(admin.ModelAdmin):
 
         def queryset(self, request, queryset):
             if self.value():
-                return queryset.filter(group=self.value())
+                return queryset.filter(group__name=self.value())
             else:
                 return queryset
 

@@ -12,8 +12,8 @@ class Probe(models.Model):
                             help_text='Name of the probe.')
     version = models.CharField(max_length=128, null=False, help_text='Version of the probe.')
     nameversion = models.CharField(max_length=128, null=False, help_text='Name, version tuple.', primary_key=True)
-    description = models.CharField(max_length=1024, blank=True, null=True)
-    group = models.CharField(max_length=1024, blank=True, null=True)
+    description = models.CharField(max_length=1024, blank=True)
+    group = models.CharField(max_length=1024, blank=True)
 
     class Meta:
         permissions = (('probesown', 'Read/Write/Modify'),)
@@ -56,8 +56,8 @@ def gpprobes_m2m(sender, action, pk_set, instance, **kwargs):
     global wasprobes
     if action == 'post_clear':
         for m in wasprobes:
-            Probe.objects.filter(id=m).update(group='')
+            Probe.objects.filter(nameversion=m).update(group='')
     if action == 'post_add':
         for m in pk_set:
-            Probe.objects.filter(id=m).update(group=instance.name)
+            Probe.objects.filter(nameversion=m).update(group=instance.name)
 m2m_changed.connect(gpprobes_m2m, sender=GroupOfProbes.probes.through)
