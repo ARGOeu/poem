@@ -139,7 +139,7 @@ class MyFilteredSelectMultiple(FilteredSelectMultiple):
         elif self.selformname == 'probes':
             for sel in selected_choices:
                 output.append('<option value="%s" selected="selected">' % (sel)
-                              + str(Probe.objects.get(id=int(sel)).nameversion)
+                              + str(Probe.objects.get(nameversion=sel))
                               + '</option>\n')
         for option_value, option_label in chain(self.choices, choices):
             if isinstance(option_label, (list, tuple)):
