@@ -46,8 +46,8 @@ class PLookup(LookupChannel):
     model = Probe
 
     def get_query(self, q, request):
-        values = check_cache(request, self.model, 'nameversion')
-        return sorted(filter(lambda x: q.lower() in x.lower(), values))
+        values = self.model.objects.filter(metricsprobe__id__isnull=True)
+        return sorted(filter(lambda x: q.lower() in x.lower(), values.values_list('nameversion', flat=True)))
 
 class TLookup(LookupChannel):
     model = Tags
