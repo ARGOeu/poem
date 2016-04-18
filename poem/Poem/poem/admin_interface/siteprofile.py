@@ -26,7 +26,7 @@ class SharedInfo:
         else:
             return None
 
-class MetricInstanceForm(ModelForm):
+class MetricInstanceFormRW(ModelForm):
     """
     Connects metric instance attributes to autocomplete widget (:py:mod:`poem.widgets`).
     """
@@ -48,7 +48,7 @@ class MetricInstanceForm(ModelForm):
             raise ValidationError("Unable to find flavour %s." % (str(form_flavour)))
         return form_flavour
 
-class MetricInstanceFormRO(MetricInstanceForm):
+class MetricInstanceFormRO(MetricInstanceFormRW):
     metric = CharField(label='Metric', \
                              widget=TextInput(attrs={'readonly' : 'readonly'}))
     service_flavour = CharField(label='Service Flavour', \
@@ -56,27 +56,23 @@ class MetricInstanceFormRO(MetricInstanceForm):
 
 class MetricInstanceInline(admin.TabularInline):
     model = MetricInstance
-    form = MetricInstanceForm
+    form = MetricInstanceFormRW
 
     def has_add_permission(self, request):
-        if request.user.has_perm('poem.groupown_profile'):
+        if request.user.has_perm('poem.groupown_profile') \
+                or request.user.is_superuser:
             return True
-        if request.user.has_perm('poem.readonly_profile') and \
-                not request.user.is_superuser:
+        else:
             self.form = MetricInstanceFormRO
             return False
-        else:
-            return True
 
     def has_delete_permission(self, request, obj=None):
-        if request.user.has_perm('poem.groupown_profile'):
+        if request.user.has_perm('poem.groupown_profile')\
+                or request.user.is_superuser:
             return True
-        if request.user.has_perm('poem.readonly_profile') and \
-                not request.user.is_superuser:
+        else:
             self.form = MetricInstanceFormRO
             return False
-        else:
-            return True
 
     def has_change_permission(self, request, obj=None):
         return True
@@ -103,11 +99,6 @@ class GroupOfProfilesInlineChangeForm(ModelForm):
             raise ValidationError("You are not member of group %s." % (str(groupsel)))
         return groupsel
 
-class GroupOfProfilesInlineAddForm(ModelForm):
-    def __init__(self, *args, **kwargs):
-        super(GroupOfProfilesInlineAddForm, self).__init__(*args, **kwargs)
-        self.fields['group'].help_text = 'Select one of the groups you are member of'
-        self.fields['group'].empty_label = None
 
 class GroupOfProfilesInlineChange(admin.TabularInline):
     model = GroupOfProfiles.profiles.through
@@ -118,6 +109,7 @@ class GroupOfProfilesInlineChange(admin.TabularInline):
     extra = 1
     template = 'admin/edit_inline/stacked-group.html'
 
+
     def has_add_permission(self, request):
         return True
 
@@ -127,13 +119,19 @@ class GroupOfProfilesInlineChange(admin.TabularInline):
     def has_change_permission(self, request, obj=None):
         return True
 
-class GroupOfProfilesInlineAdd(GroupOfProfilesInlineChange):
-    form = GroupOfProfilesInlineAddForm
-
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        lgi = request.user.groupofprofiles.all().values_list('id', flat=True)
+        lgi = request.user.groupsofprofiles.all().values_list('id', flat=True)
         kwargs["queryset"] = GroupOfProfiles.objects.filter(pk__in=lgi)
         return super(GroupOfProfilesInlineChange, self).formfield_for_foreignkey(db_field, request, **kwargs)
+
+class GroupOfProfilesInlineAddForm(ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(GroupOfProfilesInlineAddForm, self).__init__(*args, **kwargs)
+        self.fields['groupofprofiles'].help_text = 'Select one of the groups you are member of'
+        self.fields['groupofprofiles'].empty_label = None
+
+class GroupOfProfilesInlineAdd(GroupOfProfilesInlineChange):
+    form = GroupOfProfilesInlineAddForm
 
 class ProfileForm(ModelForm):
     """
@@ -199,6 +197,7 @@ class ProfileAdmin(admin.ModelAdmin):
     form = ProfileForm
     actions = None
 
+
     def _groupown_turn(self, user, flag):
         perm_prdel = Permission.objects.get(codename='delete_profile')
         try:
@@ -218,17 +217,10 @@ class ProfileAdmin(admin.ModelAdmin):
     def get_form(self, request, obj=None, **kwargs):
         rquser = SharedInfo(request.user)
         if obj:
-            try:
-                gp = GroupOfProfiles.objects.get(profiles__id=obj.id)
-                ugis = request.user.groupsofprofiles.all().values_list('id', flat=True)
-                if ugis:
-                    for ugi in ugis:
-                        if ugi == gp.id:
-                            self._groupown_turn(request.user, 'add')
-                            break
-                        else:
-                            self._groupown_turn(request.user, 'del')
-            except GroupOfProfiles.DoesNotExist:
+            ugis = request.user.groupsofprofiles.all().values_list('name', flat=True)
+            if obj.groupname in ugis:
+                self._groupown_turn(request.user, 'add')
+            else:
                 self._groupown_turn(request.user, 'del')
         elif not request.user.is_superuser:
             self.inlines = (GroupOfProfilesInlineAdd, MetricInstanceInline,)
@@ -238,11 +230,8 @@ class ProfileAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         if change and obj.vo:
             obj.metric_instances.update(vo=obj.vo)
-        if request.user.has_perm('poem.groupown_profile'):
-            obj.save()
-            return
-        if not request.user.has_perm('poem.readonly_profile') or \
-                request.user.is_superuser:
+        if request.user.has_perm('poem.groupown_profile') \
+                or request.user.is_superuser:
             obj.save()
             return
         else:
@@ -262,13 +251,11 @@ class ProfileAdmin(admin.ModelAdmin):
             return False
 
     def has_delete_permission(self, request, obj=None):
-        if request.user.has_perm('poem.groupown_profile'):
+        if request.user.has_perm('poem.groupown_profile') \
+                or request.user.is_superuser:
             return True
-        if request.user.has_perm('poem.readonly_profile') and \
-                not request.user.is_superuser:
-            return False
         else:
-            return True
+            return False
 
     def has_change_permission(self, request, obj=None):
         return True

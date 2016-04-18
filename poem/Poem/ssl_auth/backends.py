@@ -82,14 +82,6 @@ class SSLBackend(ModelBackend):
         user.is_staff = settings.SSL_CREATE_STAFF
         user.save()
 
-        try:
-            perm = Permission.objects.get(codename='readonly_profile')
-        except Permission.DoesNotExist:
-            ct = ContentType.objects.get(app_label='poem', model='profile')
-            perm = Permission.objects.create(codename='readonly_profile',
-                                                content_type=ct,
-                                                name="Readonly profile")
-
         # user post save event ensures profile is created
         up, created = UserProfile.objects.get_or_create(user=user)
         if created:
@@ -98,9 +90,7 @@ class SSLBackend(ModelBackend):
         else:
             self.log.error('SSL - failed to set default permissions for %s' % str(up.subject))
 
-        # set default permissions (add/change metric instance, change profile)
         try:
-            user.user_permissions.add(perm)
             user.save()
         except Exception as e:
             self.log.error('SSL - failed to set default permissions for %s' % str(up.subject))
