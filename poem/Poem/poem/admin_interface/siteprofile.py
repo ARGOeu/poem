@@ -99,8 +99,13 @@ class GroupOfProfilesInlineChangeForm(ModelForm):
             raise ValidationError("You are not member of group %s." % (str(groupsel)))
         return groupsel
 
+class GroupOfProfilesInlineAddForm(ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(GroupOfProfilesInlineAddForm, self).__init__(*args, **kwargs)
+        self.fields['groupofprofiles'].help_text = 'Select one of the groups you are member of'
+        self.fields['groupofprofiles'].empty_label = None
 
-class GroupOfProfilesInlineChange(admin.TabularInline):
+class GroupOfProfilesInline(admin.TabularInline):
     model = GroupOfProfiles.profiles.through
     form = GroupOfProfilesInlineChangeForm
     verbose_name_plural = 'Group of profiles'
@@ -114,24 +119,20 @@ class GroupOfProfilesInlineChange(admin.TabularInline):
         return True
 
     def has_delete_permission(self, request, obj=None):
+        if not obj:
+            self.form = GroupOfProfilesInlineAddForm
         return True
 
     def has_change_permission(self, request, obj=None):
+        if not obj:
+            self.form = GroupOfProfilesInlineAddForm
         return True
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         lgi = request.user.groupsofprofiles.all().values_list('id', flat=True)
         kwargs["queryset"] = GroupOfProfiles.objects.filter(pk__in=lgi)
-        return super(GroupOfProfilesInlineChange, self).formfield_for_foreignkey(db_field, request, **kwargs)
+        return super(GroupOfProfilesInline, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
-class GroupOfProfilesInlineAddForm(ModelForm):
-    def __init__(self, *args, **kwargs):
-        super(GroupOfProfilesInlineAddForm, self).__init__(*args, **kwargs)
-        self.fields['groupofprofiles'].help_text = 'Select one of the groups you are member of'
-        self.fields['groupofprofiles'].empty_label = None
-
-class GroupOfProfilesInlineAdd(GroupOfProfilesInlineChange):
-    form = GroupOfProfilesInlineAddForm
 
 class ProfileForm(ModelForm):
     """
@@ -192,7 +193,7 @@ class ProfileAdmin(admin.ModelAdmin):
     list_filter = ('vo', GroupProfileListFilter, )
     search_fields = ('name', 'vo',)
     fields = ('name', 'vo', 'description')
-    inlines = (GroupOfProfilesInlineChange, MetricInstanceInline, )
+    inlines = (GroupOfProfilesInline, MetricInstanceInline, )
     exclude = ('version',)
     form = ProfileForm
     actions = None
@@ -223,7 +224,6 @@ class ProfileAdmin(admin.ModelAdmin):
             else:
                 self._groupown_turn(request.user, 'del')
         elif not request.user.is_superuser:
-            self.inlines = (GroupOfProfilesInlineAdd, MetricInstanceInline,)
             self._groupown_turn(request.user, 'add')
         return super(ProfileAdmin, self).get_form(request, obj=None, **kwargs)
 
