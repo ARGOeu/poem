@@ -10,23 +10,23 @@ from django.utils.translation import ugettext as _
 from Poem.poem import widgets
 from Poem.poem.lookups import check_cache
 from Poem.poem.admin_interface.formmodel import MyModelMultipleChoiceField, MyModelChoiceField, MySelect
-from Poem.poem.models import MetricsProbe, Probe, UserProfile, VO, ServiceFlavour, GroupOfProbes, CustUser, Tags, Metrics, GroupOfMetrics
+from Poem.poem.models import Metric, Probe, UserProfile, VO, ServiceFlavour, GroupOfProbes, CustUser, Tags, Metrics, GroupOfMetrics
 
 from ajax_select import make_ajax_field
 
 
-class MetricsProbeAddForm(ModelForm):
+class MetricAddForm(ModelForm):
     """
     Connects profile attributes to autocomplete widget (:py:mod:`poem.widgets`). Also
     adds media and does basic sanity checking for input.
     """
     def __init__(self, *args, **kwargs):
-        super(MetricsProbeAddForm, self).__init__(*args, **kwargs)
+        super(MetricAddForm, self).__init__(*args, **kwargs)
         self.fields['group'].widget.can_add_related = False
         self.fields['group'].empty_label = None
 
     class Meta:
-        model = MetricsProbe
+        model = Metric
         labels = {
             'group': _('Group of metrics'),
         }
@@ -56,13 +56,13 @@ class MetricsProbeAddForm(ModelForm):
         fetched = self.cleaned_data['probever']
         return Probe.objects.get(nameversion__exact=fetched)
 
-class MetricsProbeChangeRWForm(MetricsProbeAddForm):
+class MetricChangeRWForm(MetricAddForm):
     pass
 
-class MetricsProbeChangeROForm(MetricsProbeAddForm):
+class MetricChangeROForm(MetricAddForm):
     pass
 
-class MetricsProbeAdmin(admin.ModelAdmin):
+class MetricAdmin(admin.ModelAdmin):
     """
     POEM admin core class that customizes its look and feel.
     """
@@ -95,7 +95,7 @@ class MetricsProbeAdmin(admin.ModelAdmin):
         if db_field.name == 'group' and not request.user.is_superuser:
             lgi = request.user.groupsofmetrics.all().values_list('id', flat=True)
             kwargs["queryset"] = GroupOfMetrics.objects.filter(pk__in=lgi)
-        return super(MetricsProbeAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
+        return super(MetricAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
     def _groupown_turn(self, user, flag):
         perm_prdel = Permission.objects.get(codename='delete_metrics')
@@ -117,26 +117,26 @@ class MetricsProbeAdmin(admin.ModelAdmin):
         if obj:
             # TODO: fetch all see prefetch_related()
             if request.user.is_superuser:
-                self.form = MetricsProbeChangeRWForm
+                self.form = MetricChangeRWForm
                 self._groupown_turn(request.user, 'add')
             else:
                 ug = request.user.groupsofmetrics.all()
                 if ug and obj.group not in ug:
-                    self.form = MetricsProbeChangeROForm
+                    self.form = MetricChangeROForm
                     self._groupown_turn(request.user, 'del')
                 elif not ug:
-                    self.form = MetricsProbeChangeROForm
+                    self.form = MetricChangeROForm
                     self._groupown_turn(request.user, 'del')
                 else:
-                    self.form = MetricsProbeChangeRWForm
+                    self.form = MetricChangeRWForm
                     self._groupown_turn(request.user, 'add')
         else:
-            self.form = MetricsProbeAddForm
+            self.form = MetricAddForm
             if request.user.is_superuser or request.user.groupsofmetrics.count():
                 self._groupown_turn(request.user, 'add')
             else:
                 self._groupown_turn(request.user, 'del')
-        return super(MetricsProbeAdmin, self).get_form(request, obj=None, **kwargs)
+        return super(MetricAdmin, self).get_form(request, obj=None, **kwargs)
 
     def save_model(self, request, obj, form, change):
         if request.user.has_perm('poem.groupown_probe'):

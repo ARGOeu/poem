@@ -54,7 +54,7 @@ class GroupOfMetrics(models.Model):
     def natural_key(self):
         return (self.name,)
 
-class MetricsProbe(models.Model):
+class Metric(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=128)
     tag = models.ForeignKey(Tags)

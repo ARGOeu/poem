@@ -7,9 +7,9 @@
       {% if request.user.is_superuser %}
         <a href="{% url 'admin:app_list' app_label=cl.opts.app_label %}">{{ app_label|capfirst|escape }}</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
       {% endif %}
+      <a href="{% url 'admin:poem_profile_changelist' %}">Profiles</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
       {{ cl.opts.verbose_name_plural|capfirst }}
       &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
-      <a href="{% url 'admin:poem_probe_changelist' %}">Probes</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
       <a href="{% url 'admin:poem_metric_changelist' %}">Metrics</a>
     </div>
   {% endblock %}

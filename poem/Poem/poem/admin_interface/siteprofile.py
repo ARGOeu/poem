@@ -198,7 +198,6 @@ class ProfileAdmin(admin.ModelAdmin):
     form = ProfileForm
     actions = None
 
-
     def _groupown_turn(self, user, flag):
         perm_prdel = Permission.objects.get(codename='delete_profile')
         try:

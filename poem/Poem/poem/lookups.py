@@ -46,7 +46,7 @@ class PLookup(LookupChannel):
     model = Probe
 
     def get_query(self, q, request):
-        values = self.model.objects.filter(metricsprobe__id__isnull=True)
+        values = self.model.objects.filter(metric__id__isnull=True)
         return sorted(filter(lambda x: q.lower() in x.lower(), values.values_list('nameversion', flat=True)))
 
 class TLookup(LookupChannel):
