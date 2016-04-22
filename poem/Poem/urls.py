@@ -10,15 +10,14 @@ from django.conf.urls.static import static
 
 from ajax_select import urls as ajax_select_urls
 from Poem.settings import URL_DEBUG
+from Poem.poem.admin import myadmin
 
 django_logging()
 
-admin.autodiscover()
-
 urlpatterns = patterns('',
-                       (r'^$', lambda x: HttpResponseRedirect('/poem/admin/poem/profile')),
+                       (r'^$', lambda x: HttpResponseRedirect('/poem/admin')),
                        (r'^admin/lookups/', include(ajax_select_urls)),
-                       (r'^admin/', include(admin.site.urls)),
+                       (r'^admin/', include(myadmin.urls)),
                        (r'^api/', include('Poem.urls_api')),
 )
 
