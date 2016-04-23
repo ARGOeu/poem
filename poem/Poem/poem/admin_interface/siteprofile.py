@@ -1,4 +1,4 @@
-from django.forms import ModelForm, CharField, Textarea
+from django.forms import ModelForm, CharField, Textarea, ValidationError
 from django.forms.widgets import TextInput, Select
 from django.contrib import admin
 from django.contrib import auth
@@ -16,9 +16,20 @@ from ajax_select import make_ajax_field
 
 
 class SharedInfo:
-    def __init__(self, requser=None):
+    def __init__(self, requser=None, grname=None):
         if requser:
             self.__class__.user = requser
+        if grname:
+            self.__class__.group = grname
+
+    def getgroup(self):
+        if getattr(self.__class__, 'group', None):
+            return self.__class__.group
+        else:
+            return None
+
+    def delgroup(self):
+        self.__class__.group = None
 
     def getuser(self):
         if getattr(self.__class__, 'user', None):
@@ -79,8 +90,8 @@ class MetricInstanceInline(admin.TabularInline):
 
 class GroupOfProfilesInlineChangeForm(ModelForm):
     def __init__(self, *args, **kwargs):
-        rquser = SharedInfo()
-        self.user = rquser.getuser()
+        sh = SharedInfo()
+        self.user = sh.getuser()
         self.usergroups = self.user.groupsofprofiles.all()
         super(GroupOfProfilesInlineChangeForm, self).__init__(*args, **kwargs)
 
@@ -93,6 +104,7 @@ class GroupOfProfilesInlineChangeForm(ModelForm):
 
     def clean_groupofprofiles(self):
         groupsel = self.cleaned_data['groupofprofiles']
+        gr = SharedInfo(grname=groupsel)
         ugid = [f.id for f in self.usergroups]
         if groupsel.id not in ugid and not self.user.is_superuser:
             raise ValidationError("You are not member of group %s." % (str(groupsel)))
@@ -104,6 +116,11 @@ class GroupOfProfilesInlineAddForm(ModelForm):
         self.fields['groupofprofiles'].help_text = 'Select one of the groups you are member of'
         self.fields['groupofprofiles'].empty_label = None
         self.fields['groupofprofiles'].label = 'Group of profiles'
+
+    def clean_groupofprofiles(self):
+        groupsel = self.cleaned_data['groupofprofiles']
+        gr = SharedInfo(grname=groupsel)
+        return groupsel
 
 class GroupOfProfilesInline(admin.TabularInline):
     model = GroupOfProfiles.profiles.through
@@ -215,10 +232,10 @@ class ProfileAdmin(admin.ModelAdmin):
             user.user_permissions.remove(perm_prdel)
 
     def get_form(self, request, obj=None, **kwargs):
-        rquser = SharedInfo(request.user)
+        rquser = SharedInfo(requser=request.user)
         if obj:
-            ugis = request.user.groupsofprofiles.all().values_list('name', flat=True)
-            if obj.groupname in ugis:
+            ug = request.user.groupsofprofiles.all().values_list('name', flat=True)
+            if obj.groupname in ug:
                 self._groupown_turn(request.user, 'add')
             else:
                 self._groupown_turn(request.user, 'del')
@@ -227,6 +244,13 @@ class ProfileAdmin(admin.ModelAdmin):
         return super(ProfileAdmin, self).get_form(request, obj=None, **kwargs)
 
     def save_model(self, request, obj, form, change):
+        sh = SharedInfo()
+        if obj and sh.getgroup():
+            obj.groupname = sh.getgroup().name
+            sh.delgroup()
+        elif not obj and sh.getgroup():
+            obj.groupname = sh.getgroup()
+            sh.delgroup()
         if change and obj.vo:
             obj.metric_instances.update(vo=obj.vo)
         if request.user.has_perm('poem.groupown_profile') \
