@@ -104,6 +104,7 @@ class GroupOfProfilesInlineAddForm(ModelForm):
         super(GroupOfProfilesInlineAddForm, self).__init__(*args, **kwargs)
         self.fields['groupofprofiles'].help_text = 'Select one of the groups you are member of'
         self.fields['groupofprofiles'].empty_label = None
+        self.fields['groupofprofiles'].label = 'Group of profiles'
 
 class GroupOfProfilesInline(admin.TabularInline):
     model = GroupOfProfiles.profiles.through
