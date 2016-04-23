@@ -84,7 +84,6 @@ class GroupOfProfilesInlineChangeForm(ModelForm):
         self.usergroups = self.user.groupsofprofiles.all()
         super(GroupOfProfilesInlineChangeForm, self).__init__(*args, **kwargs)
 
-
     qs = GroupOfProfiles.objects.all()
     groupofprofiles = MyModelMultipleChoiceField(queryset=qs,
                                        widget=Select(),
@@ -92,7 +91,7 @@ class GroupOfProfilesInlineChangeForm(ModelForm):
     groupofprofiles.empty_label = '----------------'
     groupofprofiles.label = 'Group of profiles'
 
-    def clean_group(self):
+    def clean_groupofprofiles(self):
         groupsel = self.cleaned_data['groupofprofiles']
         ugid = [f.id for f in self.usergroups]
         if groupsel.id not in ugid and not self.user.is_superuser:

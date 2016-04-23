@@ -25,13 +25,12 @@ class SharedInfo:
         else:
             return None
 
-class GroupOfProbesInlineForm(ModelForm):
+class GroupOfProbesInlineChangeForm(ModelForm):
     def __init__(self, *args, **kwargs):
         rquser = SharedInfo()
         self.user = rquser.getuser()
         self.usergroups = self.user.groupsofprofiles.all()
-        super(GroupOfProbesInlineForm, self).__init__(*args, **kwargs)
-
+        super(GroupOfProbesInlineChangeForm, self).__init__(*args, **kwargs)
 
     qs = GroupOfProbes.objects.all()
     groupofprobes = MyModelMultipleChoiceField(queryset=qs,
@@ -47,15 +46,17 @@ class GroupOfProbesInlineForm(ModelForm):
             raise ValidationError("You are not member of group %s." % (str(groupsel)))
         return groupsel
 
-class GroupOfProbesInlineAdd(ModelForm):
+class GroupOfProbesInlineAddForm(ModelForm):
     def __init__(self, *args, **kwargs):
-        super(GroupOfProbesInlineAdd, self).__init__(*args, **kwargs)
-        self.fields['group'].help_text = 'Select one of the groups you are member of'
-        self.fields['group'].empty_label = None
+        super(GroupOfProbesInlineAddForm, self).__init__(*args, **kwargs)
+        self.fields['groupofprobes'].help_text = 'Select one of the groups you are member of'
+        self.fields['groupofprobes'].empty_label = None
+        self.fields['groupofprobes'].label = 'Group of probes'
+        self.fields['groupofprobes'].widget.can_add_related = False
 
 class GroupOfProbesInline(admin.TabularInline):
     model = GroupOfProbes.probes.through
-    form = GroupOfProbesInlineForm
+    form = GroupOfProbesInlineChangeForm
     verbose_name_plural = 'Group of probes'
     verbose_name = 'Group of probes'
     max_num = 1
@@ -66,18 +67,20 @@ class GroupOfProbesInline(admin.TabularInline):
         return True
 
     def has_delete_permission(self, request, obj=None):
+        if not obj:
+            self.form = GroupOfProbesInlineAddForm
         return True
 
     def has_change_permission(self, request, obj=None):
+        if not obj:
+            self.form = GroupOfProbesInlineAddForm
         return True
 
-class GroupOfProbesInlineAdd(GroupOfProbesInline):
-    form = GroupOfProbesInlineAdd
-
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        lgi = request.user.groupofprobes.all().values_list('id', flat=True)
+        lgi = request.user.groupsofprobes.all().values_list('id', flat=True)
         kwargs["queryset"] = GroupOfProbes.objects.filter(pk__in=lgi)
         return super(GroupOfProbesInline, self).formfield_for_foreignkey(db_field, request, **kwargs)
+
 
 class ProbeForm(ModelForm):
     """
@@ -155,29 +158,26 @@ class ProbeAdmin(admin.ModelAdmin):
     def get_form(self, request, obj=None, **kwargs):
         rquser = SharedInfo(request.user)
         if obj:
-            try:
-                gp = GroupOfProbes.objects.get(probes__nameversion=obj.nameversion)
-                ugis = request.user.groupsofprobes.all().values_list('id', flat=True)
-                if ugis:
-                    for ugi in ugis:
-                        if ugi == gp.id:
-                            self._groupown_turn(request.user, 'add')
-                            break
-                        else:
-                            self._groupown_turn(request.user, 'del')
-            except GroupOfProbes.DoesNotExist:
+            if request.user.is_superuser:
+                self._groupown_turn(request.user, 'add')
+            else:
+                ug = request.user.groupsofprobes.all()
+                if ug and obj.group not in ug:
+                    self._groupown_turn(request.user, 'del')
+                elif not ug:
+                    self._groupown_turn(request.user, 'del')
+                else:
+                    self._groupown_turn(request.user, 'add')
+        else:
+            if request.user.is_superuser or request.user.groupsofprobes.count():
+                self._groupown_turn(request.user, 'add')
+            else:
                 self._groupown_turn(request.user, 'del')
-        elif not request.user.is_superuser:
-            self.inlines = (GroupOfProbesInlineAdd, )
-            self._groupown_turn(request.user, 'add')
         return super(ProbeAdmin, self).get_form(request, obj=None, **kwargs)
 
     def save_model(self, request, obj, form, change):
-        if request.user.has_perm('poem.groupown_probe'):
-            obj.save()
-            return
-        if not request.user.has_perm('poem.readonly_probe') or \
-                request.user.is_superuser:
+        if request.user.has_perm('poem.groupown_probe') \
+                or request.user.is_superuser:
             obj.save()
             return
         else:
@@ -191,19 +191,17 @@ class ProbeAdmin(admin.ModelAdmin):
     def has_add_permission(self, request):
         if request.user.is_superuser:
             return True
-        if request.user.groupsofprofiles.count():
+        if request.user.groupsofprobes.count():
             return True
         else:
             return False
 
     def has_delete_permission(self, request, obj=None):
-        if request.user.has_perm('poem.groupown_probe'):
+        if request.user.has_perm('poem.groupown_probe') \
+                or request.user.is_superuser:
             return True
-        if request.user.has_perm('poem.readonly_probe') and \
-                not request.user.is_superuser:
-            return False
         else:
-            return True
+            return False
 
     def has_change_permission(self, request, obj=None):
         return True

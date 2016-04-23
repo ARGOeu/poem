@@ -139,11 +139,8 @@ class MetricAdmin(admin.ModelAdmin):
         return super(MetricAdmin, self).get_form(request, obj=None, **kwargs)
 
     def save_model(self, request, obj, form, change):
-        if request.user.has_perm('poem.groupown_probe'):
-            obj.save()
-            return
-        if not request.user.has_perm('poem.readonly_probe') or \
-                request.user.is_superuser:
+        if request.user.has_perm('poem.groupown_metrics') \
+                or request.user.is_superuser:
             obj.save()
             return
         else:
@@ -163,13 +160,11 @@ class MetricAdmin(admin.ModelAdmin):
             return False
 
     def has_delete_permission(self, request, obj=None):
-        if request.user.has_perm('poem.groupown_probe'):
+        if request.user.has_perm('poem.groupown_metrics') \
+                or request.user.is_superuser:
             return True
-        if request.user.has_perm('poem.readonly_probe') and \
-                not request.user.is_superuser:
-            return False
         else:
-            return True
+            return False
 
     def has_change_permission(self, request, obj=None):
         return True
