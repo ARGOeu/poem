@@ -256,7 +256,6 @@ class ProfileAdmin(admin.ModelAdmin):
         if request.user.has_perm('poem.groupown_profile') \
                 or request.user.is_superuser:
             obj.save()
-            return
         else:
             raise PermissionDenied()
 

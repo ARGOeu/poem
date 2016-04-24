@@ -56,11 +56,16 @@ class MetricAddForm(ModelForm):
         fetched = self.cleaned_data['probever']
         return Probe.objects.get(nameversion__exact=fetched)
 
-class MetricChangeRWForm(MetricAddForm):
-    pass
+class MetricChangeForm(MetricAddForm):
+    def __init__(self, *args, **kwargs):
+        super(MetricAddForm, self).__init__(*args, **kwargs)
 
-class MetricChangeROForm(MetricAddForm):
-    pass
+    qs = GroupOfMetrics.objects.all()
+    group = MyModelMultipleChoiceField(queryset=qs,
+                                       widget=Select(),
+                                       help_text='(Metric, Probe Version) is a member of given group')
+    group.empty_label = '----------------'
+    group.label = 'Group of metrics'
 
 class MetricAdmin(admin.ModelAdmin):
     """
@@ -98,12 +103,12 @@ class MetricAdmin(admin.ModelAdmin):
         return super(MetricAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
     def _groupown_turn(self, user, flag):
-        perm_prdel = Permission.objects.get(codename='delete_metrics')
+        perm_prdel = Permission.objects.get(codename='delete_metric')
         try:
-            perm_grpown = Permission.objects.get(codename='groupown_metrics')
+            perm_grpown = Permission.objects.get(codename='groupown_metric')
         except Permission.DoesNotExist:
-            ct = ContentType.objects.get(app_label='poem', model='metrics')
-            perm_grpown = Permission.objects.create(codename='groupown_metrics',
+            ct = ContentType.objects.get(app_label='poem', model='metric')
+            perm_grpown = Permission.objects.create(codename='groupown_metric',
                                                    content_type=ct,
                                                    name="Group of metric owners")
         if flag == 'add':
@@ -115,31 +120,22 @@ class MetricAdmin(admin.ModelAdmin):
 
     def get_form(self, request, obj=None, **kwargs):
         if obj:
-            # TODO: fetch all see prefetch_related()
-            if request.user.is_superuser:
-                self.form = MetricChangeRWForm
+            self.form = MetricChangeForm
+            ug = request.user.groupsofmetrics.all().values_list('name', flat=True)
+            if obj.group.name in ug:
                 self._groupown_turn(request.user, 'add')
             else:
-                ug = request.user.groupsofmetrics.all()
-                if ug and obj.group not in ug:
-                    self.form = MetricChangeROForm
-                    self._groupown_turn(request.user, 'del')
-                elif not ug:
-                    self.form = MetricChangeROForm
-                    self._groupown_turn(request.user, 'del')
-                else:
-                    self.form = MetricChangeRWForm
-                    self._groupown_turn(request.user, 'add')
+                self._groupown_turn(request.user, 'del')
         else:
             self.form = MetricAddForm
-            if request.user.is_superuser or request.user.groupsofmetrics.count():
+            if request.user.groupsofmetrics.count():
                 self._groupown_turn(request.user, 'add')
             else:
                 self._groupown_turn(request.user, 'del')
         return super(MetricAdmin, self).get_form(request, obj=None, **kwargs)
 
     def save_model(self, request, obj, form, change):
-        if request.user.has_perm('poem.groupown_metrics') \
+        if request.user.has_perm('poem.groupown_metric') \
                 or request.user.is_superuser:
             obj.save()
             return
@@ -160,7 +156,7 @@ class MetricAdmin(admin.ModelAdmin):
             return False
 
     def has_delete_permission(self, request, obj=None):
-        if request.user.has_perm('poem.groupown_metrics') \
+        if request.user.has_perm('poem.groupown_metric') \
                 or request.user.is_superuser:
             return True
         else:

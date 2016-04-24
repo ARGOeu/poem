@@ -146,7 +146,7 @@ class ProbeAdmin(admin.ModelAdmin):
             else:
                 return queryset
 
-    list_display = ('name', 'version', groupname, 'description')
+    list_display = ('name', 'version', 'description', groupname)
     fields = ('name', 'version', 'description')
     list_filter= (GroupProbesListFilter, )
     search_fields = ('name',)
