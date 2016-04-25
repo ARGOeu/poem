@@ -4,9 +4,7 @@
 {% if not is_popup %}
 {% block breadcrumbs %}
   <div class="breadcrumbs">
-    {% for app in app_list %}
-      {% blocktrans with app.name as name %}{{ name }}{% endblocktrans %}&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
-    {% endfor %}
+    {% blocktrans %}Admin{% endblocktrans %}&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
     <a href="{% url 'admin:poem_profile_changelist' %}">Profiles</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
     <a href="{% url 'admin:poem_probe_changelist' %}">Probes</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
     <a href="{% url 'admin:poem_metric_changelist' %}">Metrics</a>
