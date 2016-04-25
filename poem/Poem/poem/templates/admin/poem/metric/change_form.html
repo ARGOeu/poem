@@ -5,7 +5,7 @@
   {% block breadcrumbs %}
   <div class="breadcrumbs">
     {% if request.user.is_superuser %}
-        <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ app_label|capfirst|escape }}</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
+        <a href="{% url 'admin:app_list' app_label=opts.app_label %}">Admin</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
     {% endif %}
     <a href="{% url 'admin:poem_profile_changelist' %}">Profiles</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
     <a href="{% url 'admin:poem_probe_changelist' %}">Probes</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
