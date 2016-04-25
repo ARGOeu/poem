@@ -153,7 +153,8 @@ AJAX_LOOKUP_CHANNELS = {
     'hintsvo' : ('Poem.poem.lookups', 'VOLookup'),
     'hintstags' : ('Poem.poem.lookups', 'TLookup'),
     'hintsprobes' : ('Poem.poem.lookups', 'PLookup'),
-    'hintsmetrics' : ('Poem.poem.lookups', 'MLookup'),
+    'hintsmetricsfilt' : ('Poem.poem.lookups', 'MFiltLookup'),
+    'hintsmetricsall' : ('Poem.poem.lookups', 'MAllLookup'),
     'hintsmetricinstances' : ('Poem.poem.lookups', 'MILookup'),
     'hintsserviceflavours' : ('Poem.poem.lookups', 'SFLookup'),
 }

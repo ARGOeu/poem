@@ -31,16 +31,27 @@ class MILookup(LookupChannel):
         values = check_cache(request, self.model, 'name')
         return sorted(filter(lambda x: q.lower() in x.lower(), values))
 
-class MLookup(LookupChannel):
+class MFiltLookup(LookupChannel):
     model = Metrics
     relmodel = model.groupofmetrics_set.related.model
 
     def get_query(self, q, request):
         meting = []
-        ugs = request.user.groupsofmetrics.values_list('name', flat=True)
-        for u in ugs:
-            meting += self.relmodel.objects.get(name=u).metrics.all().values_list('name', flat=True)
+        if request.user.is_superuser:
+            meting = self.model.objects.all().values_list('name', flat=True)
+        else:
+            ugs = request.user.groupsofmetrics.values_list('name', flat=True)
+            for u in ugs:
+                meting += self.relmodel.objects.get(name=u).metrics.all().values_list('name', flat=True)
         return sorted(filter(lambda x: q.lower() in x.lower(), meting))
+
+class MAllLookup(LookupChannel):
+    model = Metrics
+    relmodel = model.groupofmetrics_set.related.model
+
+    def get_query(self, q, request):
+        mets = self.model.objects.all().values_list('name', flat=True)
+        return sorted(filter(lambda x: q.lower() in x.lower(), mets))
 
 class PLookup(LookupChannel):
     model = Probe

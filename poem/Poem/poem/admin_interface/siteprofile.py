@@ -45,7 +45,7 @@ class MetricInstanceFormRW(ModelForm):
         model = MetricInstance
         exclude = ('vo',)
 
-    metric = make_ajax_field(MetricInstance, 'metric', 'hintsmetrics', \
+    metric = make_ajax_field(MetricInstance, 'metric', 'hintsmetricsall', \
                              plugin_options = {'minLength' : 2})
     service_flavour = make_ajax_field(ServiceFlavour, 'name', 'hintsserviceflavours', \
                                       plugin_options = {'minLength' : 2})

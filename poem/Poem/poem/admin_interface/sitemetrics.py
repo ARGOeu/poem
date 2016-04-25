@@ -37,7 +37,7 @@ class MetricAddForm(ModelForm):
     qs = Tags.objects.all()
     tag = MyModelChoiceField(queryset=qs, label='Tags', help_text='Select one of the tags available.')
     tag.empty_label = None
-    name = make_ajax_field(Metrics, 'name', 'hintsmetrics',
+    name = make_ajax_field(Metrics, 'name', 'hintsmetricsfilt',
                            plugin_options={'minLength': 2}, label='Metrics', help_text='Metric name')
     probever = make_ajax_field(Probe, 'nameversion', 'hintsprobes', label='Probes')
     config = CharField(help_text='List of key, value pairs that configure the metric.',
