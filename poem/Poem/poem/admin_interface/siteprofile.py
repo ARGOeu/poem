@@ -96,9 +96,8 @@ class GroupOfProfilesInlineChangeForm(ModelForm):
         super(GroupOfProfilesInlineChangeForm, self).__init__(*args, **kwargs)
 
     qs = GroupOfProfiles.objects.all()
-    groupofprofiles = MyModelMultipleChoiceField(queryset=qs,
-                                       widget=Select(),
-                                       help_text='Profile is a member of given group')
+    groupofprofiles = MyModelMultipleChoiceField(queryset=qs, widget=Select(),
+                                         help_text='Profile is a member of given group')
     groupofprofiles.empty_label = '----------------'
     groupofprofiles.label = 'Group of profiles'
 
@@ -115,12 +114,9 @@ class GroupOfProfilesInlineAddForm(ModelForm):
         super(GroupOfProfilesInlineAddForm, self).__init__(*args, **kwargs)
         self.fields['groupofprofiles'].help_text = 'Select one of the groups you are member of'
         self.fields['groupofprofiles'].empty_label = None
+        self.fields['groupofprofiles'].widget.can_add_related = False
         self.fields['groupofprofiles'].label = 'Group of profiles'
 
-    def clean_groupofprofiles(self):
-        groupsel = self.cleaned_data['groupofprofiles']
-        gr = SharedInfo(grname=groupsel)
-        return groupsel
 
 class GroupOfProfilesInline(admin.TabularInline):
     model = GroupOfProfiles.profiles.through
@@ -146,8 +142,9 @@ class GroupOfProfilesInline(admin.TabularInline):
         return True
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        lgi = request.user.groupsofprofiles.all().values_list('id', flat=True)
-        kwargs["queryset"] = GroupOfProfiles.objects.filter(pk__in=lgi)
+        if not request.user.is_superuser:
+            lgi = request.user.groupsofprofiles.all().values_list('id', flat=True)
+            kwargs["queryset"] = GroupOfProfiles.objects.filter(pk__in=lgi)
         return super(GroupOfProfilesInline, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
 
@@ -214,6 +211,7 @@ class ProfileAdmin(admin.ModelAdmin):
     exclude = ('version',)
     form = ProfileForm
     actions = None
+
 
     def _groupown_turn(self, user, flag):
         perm_prdel = Permission.objects.get(codename='delete_profile')

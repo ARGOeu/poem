@@ -95,8 +95,9 @@ class GroupOfProbesInline(admin.TabularInline):
         return True
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        lgi = request.user.groupsofprobes.all().values_list('id', flat=True)
-        kwargs["queryset"] = GroupOfProbes.objects.filter(pk__in=lgi)
+        if not request.user.is_superuser:
+            lgi = request.user.groupsofprobes.all().values_list('id', flat=True)
+            kwargs["queryset"] = GroupOfProbes.objects.filter(pk__in=lgi)
         return super(GroupOfProbesInline, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
 
