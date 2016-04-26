@@ -148,7 +148,7 @@ class MetricAdmin(admin.ModelAdmin):
         return ''
 
     def has_add_permission(self, request):
-        if request.user.is_superuser:
+        if request.user.is_superuser and GroupOfMetrics.objects.count():
             return True
         if request.user.groupsofmetrics.count():
             return True

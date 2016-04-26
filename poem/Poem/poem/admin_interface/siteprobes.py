@@ -204,7 +204,7 @@ class ProbeAdmin(admin.ModelAdmin):
         return ''
 
     def has_add_permission(self, request):
-        if request.user.is_superuser:
+        if request.user.is_superuser and GroupOfProbes.objects.count():
             return True
         if request.user.groupsofprobes.count():
             return True
