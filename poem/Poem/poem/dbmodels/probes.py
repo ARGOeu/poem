@@ -20,7 +20,7 @@ class Probe(models.Model):
         app_label = 'poem'
 
     def __unicode__(self):
-        return u'%s %s' % (self.name, self.version)
+        return u'%s (%s)' % (self.name, self.version)
 
 @receiver(pre_save, sender=Probe)
 def probe_handler(sender, instance, **kwargs):

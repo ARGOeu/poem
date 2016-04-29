@@ -17,3 +17,17 @@ tbody tr td:last-of-type {
   float: left;
   width: 1000px;
 }
+
+fieldset.tagging label {
+  width: 50px;
+}
+
+.aligned label {
+  display: block;
+  padding: 2px 10px 0px 0px;
+}
+
+fieldset.tagging > div > div > p.help {
+  padding-left: 50px;
+  margin-left: 10px;
+}

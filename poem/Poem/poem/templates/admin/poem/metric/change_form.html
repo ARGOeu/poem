@@ -75,6 +75,20 @@
    <script type="text/javascript">document.getElementById("{{ adminform.first_field.id_for_label }}").focus();</script>
 {% endif %}
 
+<script type="text/javascript">
+  $(document).ready(function() {
+    $('.metricautocomplete').on('click', function() {
+      var gr = $('#id_group :selected').text();
+      var json_metrics_group = '/poem/api/0.2/json/metrics_in_group?group=' + gr;
+      $.getJSON(json_metrics_group).done(function(json) {
+        $('.metricautocomplete').autocomplete();
+        $('.metricautocomplete').autocomplete({minLength: 0, source: json['result']});
+        $('.metricautocomplete').autocomplete("search", "");
+      });
+    });
+  });
+</script>
+
 {# JavaScript for prepopulated fields #}
 {% prepopulated_fields_js %}
 

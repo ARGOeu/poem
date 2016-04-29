@@ -28,7 +28,7 @@ class MetricAddForm(ModelForm):
     class Meta:
         model = Metric
         labels = {
-            'group': _('Group of metrics'),
+            'group': _('Group'),
         }
         help_texts = {
             'group': _('(Metric, Probe Version) is member of given group'),
@@ -37,8 +37,11 @@ class MetricAddForm(ModelForm):
     qs = Tags.objects.all()
     tag = MyModelChoiceField(queryset=qs, label='Tags', help_text='Select one of the tags available.')
     tag.empty_label = None
-    name = make_ajax_field(Metrics, 'name', 'hintsmetricsfilt',
-                           plugin_options={'minLength': 2}, label='Metrics', help_text='Metric name')
+    name = CharField(max_length=255, label='Metrics', help_text='Metric name',
+                     widget=TextInput(attrs={'class': 'metricautocomplete'}))
+    #name = make_ajax_field(Metrics, 'name', 'hintsmetricsfilt',
+    #                       plugin_options={'minLength': 2, 'source': '/poem/admin/lookups/ajax_lookup/hintsmetricsfilt?group='},
+    #                       label='Metrics', help_text='Metric name',)
     probever = make_ajax_field(Probe, 'nameversion', 'hintsprobes', label='Probes')
     config = CharField(help_text='List of key, value pairs that configure the metric.',
                        max_length=100,
@@ -65,7 +68,7 @@ class MetricChangeForm(MetricAddForm):
                                        widget=Select(),
                                        help_text='(Metric, Probe Version) is a member of given group')
     group.empty_label = '----------------'
-    group.label = 'Group of metrics'
+    group.label = 'Group'
 
 class MetricAdmin(admin.ModelAdmin):
     """
@@ -90,7 +93,8 @@ class MetricAdmin(admin.ModelAdmin):
                 return queryset
 
     list_display = ('name', 'tag', 'probever', 'docurl', 'config', 'group')
-    fields = ('name', 'tag', 'probever', 'docurl', 'config', 'group')
+    fieldsets = ((None, {'classes' : ['tagging'], 'fields' : (('name', 'probever', 'tag'),'group')}),
+                 ('NCG JSON information', {'fields' : ('docurl', 'config',)}))
     list_filter = ('tag', GroupMetricsListFilter,)
     search_fields = ('name',)
     actions = None
