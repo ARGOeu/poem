@@ -51,6 +51,17 @@ class MetricAddForm(ModelForm):
                        widget=TextInput(attrs={'maxlenght': 128, 'size': 45}),
                        label='Documentation URL')
 
+    def clean(self):
+        metric = self.cleaned_data['name']
+        group = self.cleaned_data['group']
+        try:
+            Metrics.objects.get(name=metric)
+        except Metrics.DoesNotExist:
+            new = Metrics.objects.create(name=metric)
+            GroupOfMetrics.objects.get(name=group).metrics.add(new)
+        super(MetricAddForm, self).clean()
+        return self.cleaned_data
+
     def clean_tag(self):
         fetched = self.cleaned_data['tag']
         return Tags.objects.get(id=fetched.id)
