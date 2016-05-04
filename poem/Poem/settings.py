@@ -110,6 +110,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 )
 
 MIDDLEWARE_CLASSES = (
+    'reversion.middleware.RevisionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -138,8 +139,12 @@ TEMPLATE_DIRS = (
     os_path.join(APP_PATH, 'poem/templates'),
 )
 
+ADD_REVERSION_ADMIN=True
+
 INSTALLED_APPS = (
     'flat',
+    'reversion',
+    'reversion_compare',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

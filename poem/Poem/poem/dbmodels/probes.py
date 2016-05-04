@@ -11,7 +11,7 @@ class Probe(models.Model):
     name = models.CharField(max_length=128, null=False,
                             help_text='Name of the probe.')
     version = models.CharField(max_length=128, null=False, help_text='Version of the probe.')
-    nameversion = models.CharField(max_length=128, null=False, help_text='Name, version tuple.', primary_key=True)
+    nameversion = models.CharField(max_length=128, null=False, help_text='Name, version tuple.')
     description = models.CharField(max_length=1024, blank=True)
     group = models.CharField(max_length=1024, blank=True)
 
@@ -24,7 +24,7 @@ class Probe(models.Model):
 
 @receiver(pre_save, sender=Probe)
 def probe_handler(sender, instance, **kwargs):
-    instance.nameversion = u'%s %s' % (str(instance.name), str(instance.version))
+    instance.nameversion = u'%s (%s)' % (str(instance.name), str(instance.version))
 
 class GroupOfProbes(models.Model):
     name = models.CharField(_('name'), max_length=80, unique=True)

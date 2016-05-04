@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.forms import ModelForm, CharField, Textarea, ValidationError
 from django.forms.widgets import TextInput, Select
 from django.contrib import admin
@@ -12,7 +13,8 @@ from Poem.poem.admin_interface.formmodel import MyModelMultipleChoiceField
 from Poem.poem.models import MetricInstance, Probe, UserProfile, VO, ServiceFlavour, GroupOfProbes, CustUser
 
 from ajax_select import make_ajax_field
-
+from reversion_compare.admin import CompareVersionAdmin
+import reversion
 
 class SharedInfo:
     def __init__(self, requser=None, grname=None):
@@ -121,7 +123,7 @@ class ProbeForm(ModelForm):
                             max_length=100,
                             widget=Textarea(attrs={'style':'width:480px;height:100px'}))
 
-class ProbeAdmin(admin.ModelAdmin):
+class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
     """
     POEM admin core class that customizes its look and feel.
     """
@@ -155,6 +157,11 @@ class ProbeAdmin(admin.ModelAdmin):
     form = ProbeForm
     actions = None
 
+    history_latest_first = True
+    change_list_template = ''
+    object_history_template = ''
+    compare_template = ''
+
     def _groupown_turn(self, user, flag):
         perm_prdel = Permission.objects.get(codename='delete_probe')
         try:
@@ -185,6 +192,7 @@ class ProbeAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         sh = SharedInfo()
+
         if obj and sh.getgroup():
             obj.group = sh.getgroup().name
             sh.delgroup()
@@ -220,3 +228,14 @@ class ProbeAdmin(admin.ModelAdmin):
 
     def has_change_permission(self, request, obj=None):
         return True
+
+    def revision_view(self, request, object_id, version_id, extra_context=None):
+        currev = reversion.models.Version.objects.get(pk=version_id).object_repr
+        if extra_context:
+            extra_context.update({'cursel': currev})
+        else:
+            extra_context = {'cursel': currev}
+        return super(ProbeAdmin, self).revision_view(request, object_id, version_id, extra_context)
+
+
+reversion.register(Probe, exclude=["nameversion"])
