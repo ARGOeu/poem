@@ -237,5 +237,4 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
             extra_context = {'cursel': currev}
         return super(ProbeAdmin, self).revision_view(request, object_id, version_id, extra_context)
 
-
 reversion.register(Probe, exclude=["nameversion"])
