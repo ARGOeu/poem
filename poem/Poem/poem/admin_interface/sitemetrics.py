@@ -1,4 +1,4 @@
-from django.forms import ModelForm, CharField, Textarea, ModelChoiceField
+from django.forms import ModelForm, CharField, Textarea, ModelChoiceField, ValidationError
 from django.forms.widgets import TextInput, Select
 from django.contrib import admin
 from django.contrib import auth
@@ -16,15 +16,38 @@ from ajax_select import make_ajax_field
 
 from reversion.models import Version
 
+class SharedInfo:
+    def __init__(self, requser=None, grname=None):
+        if requser:
+            self.__class__.user = requser
+        if grname:
+            self.__class__.group = grname
+
+    def getgroup(self):
+        if getattr(self.__class__, 'group', None):
+            return self.__class__.group
+        else:
+            return None
+
+    def delgroup(self):
+        self.__class__.group = None
+
+    def getuser(self):
+        if getattr(self.__class__, 'user', None):
+            return self.__class__.user
+        else:
+            return None
+
+
 class MetricAddForm(ModelForm):
     """
     Connects profile attributes to autocomplete widget (:py:mod:`poem.widgets`). Also
     adds media and does basic sanity checking for input.
     """
     def __init__(self, *args, **kwargs):
-        super(MetricAddForm, self).__init__(*args, **kwargs)
         self.fields['group'].widget.can_add_related = False
         self.fields['group'].empty_label = None
+        super(MetricAddForm, self).__init__(*args, **kwargs)
 
     class Meta:
         model = Metric
@@ -49,15 +72,17 @@ class MetricAddForm(ModelForm):
                        widget=TextInput(attrs={'maxlenght': 128, 'size': 45}),
                        label='Documentation URL')
 
+
     def clean(self):
         metric = self.cleaned_data['name']
-        group = self.cleaned_data['group']
-        try:
-            Metrics.objects.get(name=metric)
-        except Metrics.DoesNotExist:
-            new = Metrics.objects.create(name=metric)
-            GroupOfMetrics.objects.get(name=group).metrics.add(new)
-        super(MetricAddForm, self).clean()
+        group = self.cleaned_data.get('group')
+        if group:
+            try:
+                Metrics.objects.get(name=metric)
+            except Metrics.DoesNotExist:
+                new = Metrics.objects.create(name=metric)
+                GroupOfMetrics.objects.get(name=group).metrics.add(new)
+            super(MetricAddForm, self).clean()
         return self.cleaned_data
 
     def clean_tag(self):
@@ -67,6 +92,9 @@ class MetricAddForm(ModelForm):
 
 class MetricChangeForm(MetricAddForm):
     def __init__(self, *args, **kwargs):
+        sh = SharedInfo()
+        self.user = sh.getuser()
+        self.usergroups = self.user.groupsofmetrics.all()
         super(MetricAddForm, self).__init__(*args, **kwargs)
 
     qs = GroupOfMetrics.objects.all()
@@ -75,6 +103,14 @@ class MetricChangeForm(MetricAddForm):
                                        help_text='(Metric, Probe Version) is a member of given group')
     group.empty_label = '----------------'
     group.label = 'Group'
+
+    def clean_group(self):
+        groupsel = self.cleaned_data['group']
+        gr = SharedInfo(grname=groupsel)
+        ugid = [f.id for f in self.usergroups]
+        if groupsel.id not in ugid and not self.user.is_superuser:
+            raise ValidationError("You are not member of group %s." % (str(groupsel)))
+        return groupsel
 
 class MetricAdmin(admin.ModelAdmin):
     """
@@ -130,6 +166,7 @@ class MetricAdmin(admin.ModelAdmin):
             user.user_permissions.remove(perm_prdel)
 
     def get_form(self, request, obj=None, **kwargs):
+        rquser = SharedInfo(requser=request.user)
         if obj:
             self.form = MetricChangeForm
             ug = request.user.groupsofmetrics.all().values_list('name', flat=True)
