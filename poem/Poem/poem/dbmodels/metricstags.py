@@ -15,6 +15,8 @@ from django.utils.translation import ugettext_lazy as _
 import re
 import copy
 
+from reversion.models import Version
+
 class Metrics(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=128)
@@ -58,7 +60,8 @@ class Metric(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=128)
     tag = models.ForeignKey(Tags)
-    probever = models.ForeignKey(Probe)
+    probever = models.CharField(max_length=128)
+    probekey = models.ForeignKey(Version)
     config = models.CharField(max_length=128)
     docurl = models.CharField(max_length=128)
     group = models.ForeignKey(GroupOfMetrics)

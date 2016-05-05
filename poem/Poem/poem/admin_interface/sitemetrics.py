@@ -14,6 +14,7 @@ from Poem.poem.models import Metric, Probe, UserProfile, VO, ServiceFlavour, Gro
 
 from ajax_select import make_ajax_field
 
+from reversion.models import Version
 
 class MetricAddForm(ModelForm):
     """
@@ -39,10 +40,7 @@ class MetricAddForm(ModelForm):
     tag.empty_label = None
     name = CharField(max_length=255, label='Metrics', help_text='Metric name',
                      widget=TextInput(attrs={'class': 'metricautocomplete'}))
-    #name = make_ajax_field(Metrics, 'name', 'hintsmetricsfilt',
-    #                       plugin_options={'minLength': 2, 'source': '/poem/admin/lookups/ajax_lookup/hintsmetricsfilt?group='},
-    #                       label='Metrics', help_text='Metric name',)
-    probever = make_ajax_field(Probe, 'nameversion', 'hintsprobes', label='Probes')
+    probever = make_ajax_field(Metric, 'probever', 'hintsprobes', label='Probes', help_text='Probe name')
     config = CharField(help_text='List of key, value pairs that configure the metric.',
                        max_length=100,
                        widget=Textarea(attrs={'style':'width:480px;height:100px'}))
@@ -66,9 +64,6 @@ class MetricAddForm(ModelForm):
         fetched = self.cleaned_data['tag']
         return Tags.objects.get(id=fetched.id)
 
-    def clean_probever(self):
-        fetched = self.cleaned_data['probever']
-        return Probe.objects.get(nameversion__exact=fetched)
 
 class MetricChangeForm(MetricAddForm):
     def __init__(self, *args, **kwargs):
@@ -87,6 +82,7 @@ class MetricAdmin(admin.ModelAdmin):
     """
     class Media:
         css = { "all" : ("/poem_media/css/sitemetrics.css",) }
+
 
     class GroupMetricsListFilter(admin.SimpleListFilter):
         title = 'metrics group'
@@ -150,6 +146,7 @@ class MetricAdmin(admin.ModelAdmin):
         return super(MetricAdmin, self).get_form(request, obj=None, **kwargs)
 
     def save_model(self, request, obj, form, change):
+        obj.probekey = Version.objects.get(object_repr__exact=obj.probever)
         if request.user.has_perm('poem.groupown_metric') \
                 or request.user.is_superuser:
             obj.save()
