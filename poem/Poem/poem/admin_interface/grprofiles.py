@@ -21,7 +21,7 @@ class GroupOfProfilesAdminForm(ModelForm):
 
 class GroupOfProfilesAdmin(GroupAdmin):
     class Media:
-        css = { "all" : ("/poem_media/css/poem_profile.custom.css",) }
+        css = { "all" : ("/poem_media/css/grprofiles.css",) }
 
     form = GroupOfProfilesAdminForm
     search_field = ()

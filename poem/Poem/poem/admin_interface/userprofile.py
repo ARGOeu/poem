@@ -21,7 +21,7 @@ class UserProfileAdmin(UserAdmin):
     add_form = MyUserCreationForm
 
     class Media:
-        css = { "all" : ("/poem_media/css/poem_profile.custom.css",) }
+        css = { "all" : ("/poem_media/css/siteuser.css",) }
 
     fieldsets = [(None, {'fields': ['username', 'password']}),
                  ('Personal info', {'fields': ['first_name', 'last_name', 'email']}),
