@@ -10,7 +10,7 @@ from django.core.exceptions import PermissionDenied
 from Poem.poem import widgets
 from Poem.poem.lookups import check_cache
 from Poem.poem.admin_interface.formmodel import MyModelMultipleChoiceField
-from Poem.poem.models import MetricInstance, Probe, UserProfile, VO, ServiceFlavour, GroupOfProbes, CustUser
+from Poem.poem.models import MetricInstance, Probe, UserProfile, VO, ServiceFlavour, GroupOfProbes, CustUser, ExtRevision
 
 from ajax_select import make_ajax_field
 from reversion_compare.admin import CompareVersionAdmin
@@ -157,7 +157,6 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
     form = ProbeForm
     actions = None
 
-    history_latest_first = True
     change_list_template = ''
     object_history_template = ''
     compare_template = ''

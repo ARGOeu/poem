@@ -139,8 +139,6 @@ TEMPLATE_DIRS = (
     os_path.join(APP_PATH, 'poem/templates'),
 )
 
-ADD_REVERSION_ADMIN=True
-
 INSTALLED_APPS = (
     'flat',
     'reversion',

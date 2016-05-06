@@ -45,9 +45,9 @@ class MetricAddForm(ModelForm):
     adds media and does basic sanity checking for input.
     """
     def __init__(self, *args, **kwargs):
+        super(MetricAddForm, self).__init__(*args, **kwargs)
         self.fields['group'].widget.can_add_related = False
         self.fields['group'].empty_label = None
-        super(MetricAddForm, self).__init__(*args, **kwargs)
 
     class Meta:
         model = Metric

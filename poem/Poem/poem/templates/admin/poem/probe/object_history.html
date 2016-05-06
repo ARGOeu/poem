@@ -40,6 +40,7 @@
                                     {% endif %}
                                 </th>
                             {% endif %}
+                            <th scope="col">{% trans 'Version' %}</th>
                             <th scope="col">{% trans 'Date/time' %}</th>
                             <th scope="col">{% trans 'User' %}</th>
                             <th scope="col">{% trans 'Comment' %}</th>
@@ -58,7 +59,8 @@
                                     {% endif %}
                                 </td>
                                 {% endif %}
-                                <th scope="row"><a href="{{action.url}}">{{action.revision.date_created|date:_("DATETIME_FORMAT")}}</a></th>
+                                <th scope="row"><a href="{{ action.url }}">{{ action.revision.extrevision.version }}</a></th>
+                                <th scope="row">{{action.revision.date_created|date:_("DATETIME_FORMAT")}}</th>
                                 <td>
                                     {% if action.revision.user %}
                                         {{action.revision.user.username}}
