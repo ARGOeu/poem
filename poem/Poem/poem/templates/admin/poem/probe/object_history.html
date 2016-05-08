@@ -1,5 +1,5 @@
 {% extends "admin/object_history.html" %}
-{% load i18n admin_urls %}
+{% load i18n admin_urls staticfiles %}
 
 {% block usertools %}
   <div id="user-tools">
@@ -37,9 +37,10 @@
 
 
 {% block content %}
+    <link rel="stylesheet" type="text/css" href="/poem_media/css/siteprobes.css">
     <div id="content-main">
     
-        <p>{% blocktrans %}Choose a date from the list below to revert to a previous version of this object.{% endblocktrans %}</p>
+        <p>{% blocktrans %}Choose a version from the list below to see a previous version of this probe.{% endblocktrans %}</p>
     
         <div class="module">
             {% if action_list %}

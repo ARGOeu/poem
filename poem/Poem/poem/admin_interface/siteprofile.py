@@ -181,7 +181,7 @@ class ProfileAdmin(admin.ModelAdmin):
     POEM admin core class that customizes its look and feel.
     """
     class Media:
-        css = { "all" : ("/poem_media/css/siteprofile.css",) }
+        css = { "all" : ("/poem_media/css/siteprofiles.css",) }
 
     def groupname(obj):
         return obj.groupname
