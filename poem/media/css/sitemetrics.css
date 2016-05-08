@@ -18,8 +18,24 @@ tbody tr td:last-of-type {
   width: 1000px;
 }
 
+fieldset.tagging input#id_name {
+  width: 250px;
+}
+
+fieldset.tagging input#id_probeversion {
+  width: 200px;
+}
+
 fieldset.tagging label {
   width: 50px;
+}
+
+fieldset.docurl label {
+  width: 130px;
+}
+
+fieldset.docurl input {
+  width: 780px;
 }
 
 .aligned label {
@@ -27,7 +43,33 @@ fieldset.tagging label {
   padding: 2px 10px 0px 0px;
 }
 
+fieldset.docurl > div > div > p.help {
+  padding-left: 130px;
+  margin-left: 10px;
+}
+
 fieldset.tagging > div > div > p.help {
   padding-left: 50px;
   margin-left: 10px;
 }
+
+
+.inline-group .tabular tr.has_original td {
+    padding: 2px;
+}
+td.field-key, td.field-value {
+    padding: 2px;
+}
+
+td.field-key  input {
+    width: 400px;
+}
+
+td.field-value input {
+    width: 400px;
+}
+
+select {
+  background: #F6F6F6;
+}
+

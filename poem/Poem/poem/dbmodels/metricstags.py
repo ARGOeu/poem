@@ -60,14 +60,54 @@ class Metric(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=128)
     tag = models.ForeignKey(Tags)
-    probever = models.CharField(max_length=128)
+    probeversion = models.CharField(max_length=128)
     probekey = models.ForeignKey(Version)
-    config = models.CharField(max_length=128)
     docurl = models.CharField(max_length=128)
     group = models.ForeignKey(GroupOfMetrics)
 
     class Meta:
         app_label = 'poem'
-        unique_together = (('name', 'probever'),)
+        unique_together = (('name', 'probeversion'),)
     def __unicode__(self):
         return u'%s (%s)' % (self.name, self.tag)
+
+class MetricDependancy(models.Model):
+    key = models.CharField(max_length=128)
+    value = models.CharField(max_length=128)
+    metric = models.ForeignKey(Metric)
+
+    class Meta:
+        app_label = 'poem'
+
+class MetricFlags(models.Model):
+    key = models.CharField(max_length=128)
+    value = models.CharField(max_length=128)
+    metric = models.ForeignKey(Metric)
+
+    class Meta:
+        app_label = 'poem'
+
+class MetricParameter(models.Model):
+    key = models.CharField(max_length=128)
+    value = models.CharField(max_length=128)
+    metric = models.ForeignKey(Metric)
+
+    class Meta:
+        app_label = 'poem'
+
+class MetricAttribute(models.Model):
+    key = models.CharField(max_length=128)
+    value = models.CharField(max_length=128)
+    metric = models.ForeignKey(Metric)
+
+    class Meta:
+        app_label = 'poem'
+
+class MetricConfig(models.Model):
+    key = models.CharField(max_length=128)
+    value = models.CharField(max_length=128)
+    metric = models.ForeignKey(Metric, blank=False, null=False)
+
+    class Meta:
+        app_label = 'poem'
+

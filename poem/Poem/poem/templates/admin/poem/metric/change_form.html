@@ -70,7 +70,10 @@
 {% endfor %}
 {% endblock %}
 
-{% block after_field_sets %}{% endblock %}
+{% block after_field_sets %}
+<h2 style="font-weight: 400; padding:8px; color:white; font-size:12px; letter-spacing:0.5px; text-transform:uppercase; background:#79AEC8;">NCG JSON settings</h2>
+</br>
+{% endblock %}
 
 {% block inline_field_sets %}
 {% for inline_admin_formset in inline_admin_formsets %}

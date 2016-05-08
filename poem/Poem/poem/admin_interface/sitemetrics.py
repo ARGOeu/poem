@@ -10,7 +10,9 @@ from django.utils.translation import ugettext as _
 from Poem.poem import widgets
 from Poem.poem.lookups import check_cache
 from Poem.poem.admin_interface.formmodel import MyModelMultipleChoiceField, MyModelChoiceField, MySelect
-from Poem.poem.models import Metric, Probe, UserProfile, VO, ServiceFlavour, GroupOfProbes, CustUser, Tags, Metrics, GroupOfMetrics
+from Poem.poem.models import Metric, Probe, UserProfile, VO, ServiceFlavour,GroupOfProbes,\
+                             CustUser, Tags, Metrics, GroupOfMetrics, MetricAttribute, MetricConfig, MetricParameter,\
+                             MetricFlags, MetricDependancy
 
 from ajax_select import make_ajax_field
 
@@ -55,7 +57,7 @@ class MetricAddForm(ModelForm):
             'group': _('Group'),
         }
         help_texts = {
-            'group': _('(Metric, Probe Version) is member of given group'),
+            'group': _('Metric is member of selected group'),
         }
 
     qs = Tags.objects.all()
@@ -63,10 +65,7 @@ class MetricAddForm(ModelForm):
     tag.empty_label = None
     name = CharField(max_length=255, label='Metrics', help_text='Metric name',
                      widget=TextInput(attrs={'class': 'metricautocomplete'}))
-    probever = make_ajax_field(Metric, 'probever', 'hintsprobes', label='Probes', help_text='Probe name')
-    config = CharField(help_text='List of key, value pairs that configure the metric.',
-                       max_length=100,
-                       widget=Textarea(attrs={'style':'width:480px;height:100px'}))
+    probeversion = make_ajax_field(Metric, 'probeversion', 'hintsprobes', label='Probes', help_text='Probe name and version')
     docurl = CharField(help_text='Location of metric documentation.',
                        max_length=128,
                        widget=TextInput(attrs={'maxlenght': 128, 'size': 45}),
@@ -100,7 +99,7 @@ class MetricChangeForm(MetricAddForm):
     qs = GroupOfMetrics.objects.all()
     group = MyModelMultipleChoiceField(queryset=qs,
                                        widget=Select(),
-                                       help_text='(Metric, Probe Version) is a member of given group')
+                                       help_text='Metric is a member of selected group')
     group.empty_label = '----------------'
     group.label = 'Group'
 
@@ -111,6 +110,132 @@ class MetricChangeForm(MetricAddForm):
         if groupsel.id not in ugid and not self.user.is_superuser:
             raise ValidationError("You are not member of group %s." % (str(groupsel)))
         return groupsel
+
+class MetricAttributeForm(ModelForm):
+    key = CharField(label='key')
+    value = CharField(label='value')
+
+class MetricAttributeInline(admin.TabularInline):
+    model = MetricAttribute
+    verbose_name = 'Attribute'
+    verbose_name_plural = 'Attributes'
+    form = MetricAttributeForm
+    template = 'admin/edit_inline/tabular-attrs.html'
+    extra = 1
+
+    def has_add_permission(self, request):
+        if request.user.has_perm('poem.groupown_metric') \
+                or request.user.is_superuser:
+            return True
+        else:
+            return False
+
+    def has_delete_permission(self, request, obj=None):
+        return True
+
+    def has_change_permission(self, request, obj=None):
+        return True
+
+class MetricParameterForm(ModelForm):
+    key = CharField(label='key')
+    value = CharField(label='value')
+
+class MetricParameterInline(admin.TabularInline):
+    model = MetricParameter
+    verbose_name = 'Parameter'
+    verbose_name_plural = 'Parameter'
+    form = MetricParameterForm
+    template = 'admin/edit_inline/tabular-attrs.html'
+    extra = 1
+
+    def has_add_permission(self, request):
+        if request.user.has_perm('poem.groupown_metric') \
+                or request.user.is_superuser:
+            return True
+        else:
+            return False
+
+    def has_delete_permission(self, request, obj=None):
+        return True
+
+    def has_change_permission(self, request, obj=None):
+        return True
+
+class MetricFlagsForm(ModelForm):
+    key = CharField(label='key')
+    value = CharField(label='value')
+
+class MetricFlagsInline(admin.TabularInline):
+    model = MetricFlags
+    verbose_name = 'Flags'
+    verbose_name_plural = 'Flags'
+    form = MetricFlagsForm
+    template = 'admin/edit_inline/tabular-attrs.html'
+    extra = 1
+
+    def has_add_permission(self, request):
+        if request.user.has_perm('poem.groupown_metric') \
+                or request.user.is_superuser:
+            return True
+        else:
+            return False
+
+    def has_delete_permission(self, request, obj=None):
+        return True
+
+    def has_change_permission(self, request, obj=None):
+        return True
+
+class MetricDependancyForm(ModelForm):
+    key = CharField(label='key')
+    value = CharField(label='value')
+
+class MetricDependancyInline(admin.TabularInline):
+    model = MetricConfig
+    verbose_name = 'Dependancy'
+    verbose_name_plural = 'Dependancy'
+    form = MetricDependancyForm
+    template = 'admin/edit_inline/tabular-attrs.html'
+    extra = 1
+
+    def has_add_permission(self, request):
+        if request.user.has_perm('poem.groupown_metric') \
+                or request.user.is_superuser:
+            return True
+        else:
+            return False
+
+    def has_delete_permission(self, request, obj=None):
+        return True
+
+    def has_change_permission(self, request, obj=None):
+        return True
+
+
+class MetricConfigForm(ModelForm):
+    key = CharField(label='key')
+    value = CharField(label='value')
+
+class MetricConfigInline(admin.TabularInline):
+    model = MetricConfig
+    verbose_name = 'Config'
+    verbose_name_plural = 'Config'
+    form = MetricConfigForm
+    template = 'admin/edit_inline/tabular-attrs.html'
+    extra = 1
+
+    def has_add_permission(self, request):
+        if request.user.has_perm('poem.groupown_metric') \
+                or request.user.is_superuser:
+            return True
+        else:
+            return False
+
+    def has_delete_permission(self, request, obj=None):
+        return True
+
+    def has_change_permission(self, request, obj=None):
+        return True
 
 class MetricAdmin(admin.ModelAdmin):
     """
@@ -135,10 +260,11 @@ class MetricAdmin(admin.ModelAdmin):
             else:
                 return queryset
 
-    list_display = ('name', 'tag', 'probever', 'docurl', 'config', 'group')
-    fieldsets = ((None, {'classes' : ['tagging'], 'fields' : (('name', 'probever', 'tag'),'group')}),
-                 ('NCG JSON information', {'fields' : ('docurl', 'config',)}))
+    list_display = ('name', 'tag', 'probeversion', 'docurl', 'group')
+    fieldsets = ((None, {'classes' : ['tagging'], 'fields' : (('name', 'probeversion', 'tag'), 'group', )}),
+                 (None, {'classes': ['docurl'], 'fields': ('docurl',)}),)
     list_filter = ('tag', GroupMetricsListFilter,)
+    inlines = (MetricConfigInline, MetricAttributeInline, MetricDependancyInline, MetricParameterInline, MetricFlagsInline, )
     search_fields = ('name',)
     actions = None
     ordering = ('name',)
@@ -183,7 +309,7 @@ class MetricAdmin(admin.ModelAdmin):
         return super(MetricAdmin, self).get_form(request, obj=None, **kwargs)
 
     def save_model(self, request, obj, form, change):
-        obj.probekey = Version.objects.get(object_repr__exact=obj.probever)
+        obj.probekey = Version.objects.get(object_repr__exact=obj.probeversion)
         if request.user.has_perm('poem.groupown_metric') \
                 or request.user.is_superuser:
             obj.save()
