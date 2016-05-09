@@ -1,12 +1,13 @@
-from django.forms import ModelForm, CharField, Textarea, ModelChoiceField, ValidationError
-from django.forms.widgets import TextInput, Select
 from django.contrib import admin
 from django.contrib import auth
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied
+from django.core.urlresolvers import reverse
+from django.forms import ModelForm, CharField, Textarea, ModelChoiceField, ValidationError
+from django.forms.widgets import TextInput, Select
+from django.utils.html import format_html
 from django.utils.translation import ugettext as _
-
 from Poem.poem import widgets
 from Poem.poem.lookups import check_cache
 from Poem.poem.admin_interface.formmodel import MyModelMultipleChoiceField, MyModelChoiceField, MySelect
@@ -260,7 +261,11 @@ class MetricAdmin(admin.ModelAdmin):
             else:
                 return queryset
 
-    list_display = ('name', 'tag', 'probeversion', 'docurl', 'group')
+    def probeversion_url(self, obj):
+        return format_html('<a href="{0}">{1}</a>',reverse('admin:poem_probe_revision', args=(obj.id, obj.probekey.revision_id)), obj.probeversion)
+    probeversion_url.short_description = 'Probeversion'
+
+    list_display = ('name', 'tag', 'probeversion_url', 'docurl', 'group')
     fieldsets = ((None, {'classes' : ['tagging'], 'fields' : (('name', 'probeversion', 'tag'), 'group', )}),
                  (None, {'classes': ['docurl'], 'fields': ('docurl',)}),)
     list_filter = ('tag', GroupMetricsListFilter,)
