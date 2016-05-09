@@ -6,6 +6,8 @@ from django.contrib import auth
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied
+from django.core.urlresolvers import reverse
+from django.utils.html import format_html
 
 from Poem.poem import widgets
 from Poem.poem.lookups import check_cache
@@ -149,7 +151,13 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
             else:
                 return queryset
 
-    list_display = ('name', 'version', 'description', groupname)
+    def num_versions(self, obj):
+        num = reversion.models.Version.objects.filter(object_id=obj.id).count()
+        return format_html('<a href="{0}">{1}</a>', reverse('admin:poem_probe_history', args=(obj.id,)), num)
+    num_versions.short_description = '# versions'
+
+
+    list_display = ('name', 'num_versions', 'description', groupname)
     fields = ('name', 'version', 'description')
     list_filter= (GroupProbesListFilter, )
     search_fields = ('name',)
