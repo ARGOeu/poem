@@ -2,3 +2,7 @@
   float: left;
   width: 1000px;
 }
+
+th, td {
+  font-size: 14px;
+}

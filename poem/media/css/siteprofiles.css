@@ -28,11 +28,8 @@ td.field-fqan input {
 }
 
 #changelist-filter {
-    width: 200px;
-}
-
-.filtered #toolbar {
-    margin-right: 50px;
+    width: 150px;
+    text-align: left;
 }
 
 .namespace {
@@ -40,5 +37,13 @@ td.field-fqan input {
     color: #666666;
     font-size: 12px;
     font-weight: bold !important;
+}
+
+.change-list tbody th a, td {
+  font-size: 14px;
+}
+
+.change-list .filtered .results, .change-list .filtered .paginator, .filtered #toolbar, .filtered div.xfull {
+  margin-right: 180px;
 }
 

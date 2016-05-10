@@ -2,6 +2,10 @@
     background: none repeat scroll 0 0 #ffa0a0;
 }
 
+th, td {
+  font-size: 14px;
+}
+
 //td.field-service_flavour {
 //  width: 209px;
 //}
@@ -41,3 +45,14 @@ td.field-fqan input {
   font-size: 12px;
   font-weight: bold !important;
 }
+
+.change-list .filtered .results, .change-list .filtered .paginator, .filtered #toolbar, .filtered div.xfull {
+  margin-right: 180px;
+}
+
+
+#changelist-filter {
+  width: 150px;
+  text-align: left;
+}
+
