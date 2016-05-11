@@ -262,7 +262,7 @@ class MetricAdmin(admin.ModelAdmin):
                 return queryset
 
     def probeversion_url(self, obj):
-        return format_html('<a href="{0}">{1}</a>',reverse('admin:poem_probe_revision', args=(obj.id, obj.probekey.revision_id)), obj.probeversion)
+        return format_html('<a href="{0}">{1}</a>',reverse('admin:poem_probe_revision', args=(obj.probekey.object_id, obj.probekey.revision_id)), obj.probeversion)
     probeversion_url.short_description = 'Probeversion'
 
     list_display = ('name', 'tag', 'probeversion_url', 'docurl', 'group')
