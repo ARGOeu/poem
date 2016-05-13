@@ -53,7 +53,7 @@ class GroupOfProbesInlineChangeForm(ModelForm):
                                        widget=Select(),
                                        help_text='Probe is a member of given group')
     groupofprobes.empty_label = '----------------'
-    groupofprobes.label = 'Group of probes'
+    groupofprobes.label = 'Group'
 
     def clean_groupofprobes(self):
         groupsel = self.cleaned_data['groupofprobes']
@@ -68,7 +68,7 @@ class GroupOfProbesInlineAddForm(ModelForm):
         super(GroupOfProbesInlineAddForm, self).__init__(*args, **kwargs)
         self.fields['groupofprobes'].help_text = 'Select one of the groups you are member of'
         self.fields['groupofprobes'].empty_label = None
-        self.fields['groupofprobes'].label = 'Group of probes'
+        self.fields['groupofprobes'].label = 'Group'
         self.fields['groupofprobes'].widget.can_add_related = False
 
     def clean_groupofprobes(self):
@@ -114,15 +114,21 @@ class ProbeForm(ModelForm):
         model = Probe
 
     name = CharField(help_text='Name of this probe.',
-                     max_length=128,
-                     widget=TextInput(attrs={'maxlength': 128, 'size': 45}),
-                     label='Probe name')
+                     max_length=100,
+                     widget=TextInput(attrs={'maxlength': 100, 'size': 45}),
+                     label='Name')
+    docurl = CharField(help_text='Documentation URL',
+                     max_length=100,
+                     widget=TextInput(attrs={'maxlength': 100, 'size': 45}),
+                     label='Documentation')
+    comment = CharField(help_text='Short comment about this version.',
+                     widget=Textarea(attrs={'style':'width:480px;height:100px'}),
+                     label='Comment')
     version = CharField(help_text='Version of the probe.',
-                        max_length=128,
-                        widget=TextInput(attrs={'maxlength': 128, 'size': 45}),
-                        label='Probe version')
+                        max_length=28,
+                        widget=TextInput(attrs={'maxlength': 28, 'size': 45}),
+                        label='Version')
     description = CharField(help_text='Free text description outlining the purpose of this probe.',
-                            max_length=100,
                             widget=Textarea(attrs={'style':'width:480px;height:100px'}))
 
 class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
@@ -152,13 +158,13 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
                 return queryset
 
     def num_versions(self, obj):
-        num = reversion.models.Version.objects.filter(object_id=obj.id).count()
+        num = ExtRevision.objects.filter(probeid=obj.id).count()
         return format_html('<a href="{0}">{1}</a>', reverse('admin:poem_probe_history', args=(obj.id,)), num)
     num_versions.short_description = '# versions'
 
 
     list_display = ('name', 'num_versions', 'description', groupname)
-    fields = ('name', 'version', 'description')
+    fieldsets = ((None, {'classes': ['infoone'], 'fields': (('name', 'version',),)}), (None, {'classes': ['infotwo'], 'fields': ('docurl', 'description','comment', )}),)
     list_filter= (GroupProbesListFilter, )
     search_fields = ('name',)
     inlines = (GroupOfProbesInline, )

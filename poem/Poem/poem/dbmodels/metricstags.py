@@ -62,7 +62,6 @@ class Metric(models.Model):
     tag = models.ForeignKey(Tags)
     probeversion = models.CharField(max_length=128)
     probekey = models.ForeignKey(Version)
-    docurl = models.CharField(max_length=128)
     group = models.ForeignKey(GroupOfMetrics)
 
     class Meta:
@@ -110,4 +109,3 @@ class MetricConfig(models.Model):
 
     class Meta:
         app_label = 'poem'
-

@@ -10,3 +10,12 @@
 #user-tools {
   font-size: 12px;
 }
+
+div.breadcrumbs {
+  padding: 10px 40px;
+  border: medium none;
+  font-size: 14px;
+  color: #C4DCE8;
+  text-align: left;
+  background: #76ABC3 none repeat scroll 0% 0%;
+}

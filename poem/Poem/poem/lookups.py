@@ -1,7 +1,7 @@
 from ajax_select import LookupChannel
 from Poem.poem.models import VO, ServiceFlavour, Metrics, MetricInstance, Tags, Probe
 from django.core.cache import cache
-
+import json
 from reversion.models import Version
 
 def check_cache(request, model, attr):
@@ -59,8 +59,9 @@ class PLookup(LookupChannel):
     model = Version
 
     def get_query(self, q, request):
-        values = self.model.objects.filter(metric__id__isnull=True)
-        return sorted(filter(lambda x: q.lower() in x.lower(), values.values_list('object_repr', flat=True)))
+        values = [val for val in self.model.objects.filter(metric__id__isnull=True)\
+                  if json.loads(val.serialized_data)[0]['model'] == 'poem.probe']
+        return sorted(filter(lambda x: q.lower() in x.object_repr.lower(), values))
 
 class TLookup(LookupChannel):
     model = Tags

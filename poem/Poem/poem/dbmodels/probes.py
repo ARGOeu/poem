@@ -10,10 +10,12 @@ YESNO_CHOICE=((u'Y', u'Yes'), (u'N', u'No'), )
 class Probe(models.Model):
     name = models.CharField(max_length=128, null=False,
                             help_text='Name of the probe.')
-    version = models.CharField(max_length=128, null=False, help_text='Version of the probe.')
+    version = models.CharField(max_length=28, help_text='Version of the probe.')
     nameversion = models.CharField(max_length=128, null=False, help_text='Name, version tuple.')
-    description = models.CharField(max_length=1024, blank=True)
-    group = models.CharField(max_length=1024, blank=True)
+    description = models.CharField(max_length=1024)
+    comment = models.CharField(max_length=512)
+    docurl = models.CharField(max_length=512)
+    group = models.CharField(max_length=1024)
 
     class Meta:
         permissions = (('probesown', 'Read/Write/Modify'),)

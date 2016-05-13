@@ -16,8 +16,9 @@ from Poem.poem.models import Metric, Probe, UserProfile, VO, ServiceFlavour,Grou
                              MetricFlags, MetricDependancy
 
 from ajax_select import make_ajax_field
-
+from reversion_compare.admin import CompareVersionAdmin
 from reversion.models import Version
+import reversion
 
 class SharedInfo:
     def __init__(self, requser=None, grname=None):
@@ -67,10 +68,6 @@ class MetricAddForm(ModelForm):
     name = CharField(max_length=255, label='Metrics', help_text='Metric name',
                      widget=TextInput(attrs={'class': 'metricautocomplete'}))
     probeversion = make_ajax_field(Metric, 'probeversion', 'hintsprobes', label='Probes', help_text='Probe name and version')
-    docurl = CharField(help_text='Location of metric documentation.',
-                       max_length=128,
-                       widget=TextInput(attrs={'maxlenght': 128, 'size': 45}),
-                       label='Documentation URL')
 
 
     def clean(self):
@@ -238,7 +235,7 @@ class MetricConfigInline(admin.TabularInline):
     def has_change_permission(self, request, obj=None):
         return True
 
-class MetricAdmin(admin.ModelAdmin):
+class MetricAdmin(CompareVersionAdmin, admin.ModelAdmin):
     """
     POEM admin core class that customizes its look and feel.
     """
@@ -265,14 +262,17 @@ class MetricAdmin(admin.ModelAdmin):
         return format_html('<a href="{0}">{1}</a>',reverse('admin:poem_probe_revision', args=(obj.probekey.object_id, obj.probekey.revision_id)), obj.probeversion)
     probeversion_url.short_description = 'Probeversion'
 
-    list_display = ('name', 'tag', 'probeversion_url', 'docurl', 'group')
-    fieldsets = ((None, {'classes' : ['tagging'], 'fields' : (('name', 'probeversion', 'tag'), 'group', )}),
-                 (None, {'classes': ['docurl'], 'fields': ('docurl',)}),)
+    list_display = ('name', 'tag', 'probeversion_url', 'group')
+    fieldsets = ((None, {'classes' : ['tagging'], 'fields' : (('name', 'probeversion', 'tag'), 'group')}),)
     list_filter = ('tag', GroupMetricsListFilter,)
     inlines = (MetricConfigInline, MetricAttributeInline, MetricDependancyInline, MetricParameterInline, MetricFlagsInline, )
     search_fields = ('name',)
     actions = None
     ordering = ('name',)
+
+    change_list_template = ''
+    object_history_template = ''
+    compare_template = ''
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'group' and not request.user.is_superuser:
@@ -342,5 +342,24 @@ class MetricAdmin(admin.ModelAdmin):
         else:
             return False
 
+    def revision_view(self, request, object_id, version_id, extra_context=None):
+        currev = Version.objects.get(pk=version_id).revision.date_created
+        if extra_context:
+            extra_context.update({'cursel': currev})
+        else:
+            extra_context = {'cursel': currev}
+        return super(MetricAdmin, self).revision_view(request, object_id, version_id, extra_context)
+
     def has_change_permission(self, request, obj=None):
         return True
+
+reversion.register(Metric, exclude=["probekey"], follow=['metricconfig_set',
+                                                         'metricparameter_set',
+                                                         'metricattribute_set',
+                                                         'metricflags_set',
+                                                         'metricdependancy_set'])
+reversion.register(MetricDependancy)
+reversion.register(MetricParameter)
+reversion.register(MetricAttribute)
+reversion.register(MetricFlags)
+reversion.register(MetricConfig)
