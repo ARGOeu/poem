@@ -50,6 +50,9 @@ td.field-fqan input {
   margin-right: 180px;
 }
 
+select {
+  width: 200px;
+}
 
 #changelist-filter {
   width: 150px;
