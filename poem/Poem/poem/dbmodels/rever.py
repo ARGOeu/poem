@@ -13,4 +13,6 @@ class ExtRevision(models.Model):
 def on_revision_commit(instances, **kwargs):
     if isinstance(instances[0], Probe):
         ExtRevision.objects.create(probeid=instances[0].id, version=instances[0].version, revision=kwargs['revision'])
+        instances[0].datetime = kwargs['revision'].date_created
+        instances[0].save()
 reversion.post_revision_commit.connect(on_revision_commit)

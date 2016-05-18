@@ -16,6 +16,8 @@ class Probe(models.Model):
     comment = models.CharField(max_length=512)
     docurl = models.CharField(max_length=512)
     group = models.CharField(max_length=1024)
+    user = models.CharField(max_length=32, blank=True)
+    datetime = models.DateTimeField(blank=True, max_length=32, null=True)
 
     class Meta:
         permissions = (('probesown', 'Read/Write/Modify'),)

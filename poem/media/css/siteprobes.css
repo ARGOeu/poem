@@ -10,6 +10,31 @@ fieldset.infoone input#id_version {
     width: 50px;
 }
 
+fieldset.infoone div.field-box.field-datetime {
+    width: 220px;
+}
+
+div.field-datetime > div > label {
+    width: 70px;
+}
+
+div.field-user > div > label {
+    width: 70px;
+}
+
+div.field-datetime > div > p {
+    margin-left: 30px;
+}
+
+div.field-user > div > p {
+    margin-left: 30px;
+}
+
+fieldset.infoone .field-box.field-user p {
+    width: 350px;
+    margin-left: 10px;
+}
+
 fieldset.infoone > div > div > p.help {
     padding-left: 30px;
     margin-left: 30px;

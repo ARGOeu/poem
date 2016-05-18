@@ -63,11 +63,11 @@ class MetricAddForm(ModelForm):
         }
 
     qs = Tags.objects.all()
-    tag = MyModelChoiceField(queryset=qs, label='Tags', help_text='Select one of the tags available.')
+    tag = MyModelChoiceField(queryset=qs, label='Tag', help_text='Select one of the tags available.')
     tag.empty_label = None
-    name = CharField(max_length=255, label='Metrics', help_text='Metric name',
+    name = CharField(max_length=255, label='Name', help_text='Metric name',
                      widget=TextInput(attrs={'class': 'metricautocomplete'}))
-    probeversion = make_ajax_field(Metric, 'probeversion', 'hintsprobes', label='Probes', help_text='Probe name and version')
+    probeversion = make_ajax_field(Metric, 'probeversion', 'hintsprobes', label='Probe', help_text='Probe name and version')
 
 
     def clean(self):

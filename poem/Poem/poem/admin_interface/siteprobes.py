@@ -131,6 +131,9 @@ class ProbeForm(ModelForm):
     description = CharField(help_text='Free text description outlining the purpose of this probe.',
                             widget=Textarea(attrs={'style':'width:480px;height:100px'}))
 
+    user = CharField(help_text='User that added the probe', max_length=64, required=False)
+    datetime = CharField(help_text='Time when probe is added', max_length=64, required=False)
+
 class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
     """
     POEM admin core class that customizes its look and feel.
@@ -164,7 +167,6 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
 
 
     list_display = ('name', 'num_versions', 'description', groupname)
-    fieldsets = ((None, {'classes': ['infoone'], 'fields': (('name', 'version',),)}), (None, {'classes': ['infotwo'], 'fields': ('docurl', 'description','comment', )}),)
     list_filter= (GroupProbesListFilter, )
     search_fields = ('name',)
     inlines = (GroupOfProbesInline, )
@@ -193,14 +195,20 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
 
     def get_form(self, request, obj=None, **kwargs):
         rquser = SharedInfo(requser=request.user)
-        if obj:
+        if not request.user.is_superuser:
             ug = request.user.groupsofprobes.all().values_list('name', flat=True)
             if obj.group in ug:
                 self._groupown_turn(request.user, 'add')
             else:
                 self._groupown_turn(request.user, 'del')
-        elif not request.user.is_superuser:
-            self._groupown_turn(request.user, 'add')
+        if obj:
+            self.fieldsets = ((None, {'classes': ['infoone'], 'fields': (('name', 'version',), 'datetime', 'user', )}),
+                              (None, {'classes': ['infotwo'], 'fields': ('docurl', 'description','comment',)}),)
+            self.readonly_fields = ('user', 'datetime',)
+        else:
+            self.fieldsets = ((None, {'classes': ['infoone'], 'fields': (('name', 'version',),)}),
+                              (None, {'classes': ['infotwo'], 'fields': ('docurl', 'description','comment', )}),)
+            self.readonly_fields = ()
         return super(ProbeAdmin, self).get_form(request, obj=None, **kwargs)
 
     def save_model(self, request, obj, form, change):
@@ -214,6 +222,7 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
             sh.delgroup()
         if request.user.has_perm('poem.groupown_probe') \
                 or request.user.is_superuser:
+            obj.user = request.user.username
             obj.save()
             return
         else:
