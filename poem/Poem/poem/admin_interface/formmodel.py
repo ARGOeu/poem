@@ -98,6 +98,12 @@ class MySelect(SelectMultiple):
         return u'\n'.join(output)
 
 class MyUserChangeForm(UserChangeForm):
+    def __init__(self, *args, **kwargs):
+        super(MyUserChangeForm, self).__init__(*args, **kwargs)
+        self.fields['groupsofmetrics'].widget.can_add_related = False
+        self.fields['groupsofprobes'].widget.can_add_related = False
+        self.fields['groupsofprofiles'].widget.can_add_related = False
+
     class Meta:
         model = get_user_model()
         fields = '__all__'
