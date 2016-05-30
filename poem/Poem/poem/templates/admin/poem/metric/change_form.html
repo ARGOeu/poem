@@ -1,5 +1,5 @@
 {% extends "admin/change_form.html" %}
-{% load i18n admin_urls admin_static admin_list admin_modify %}
+{% load i18n admin_urls admin_static admin_list admin_modify ssl %}
 
 {% block usertools %}
   <div id="user-tools">
@@ -10,7 +10,11 @@
         {% endif %}
       </strong>.
       {% block userlinks %}
-          <a href="{% url 'admin:logout' %}">{% trans 'Log out' %}</a>
+          {% url 'admin:logout' as logout_url %}
+          {% if logout_url %}
+            <a href="{% to_http request.build_absolute_uri logout_url %}">
+          {% endif %}
+          {% trans 'Log out' %}</a>
       {% endblock %}
   </div>
 {% endblock %}
