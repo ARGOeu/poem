@@ -70,6 +70,14 @@ rm -rf $RPM_BUILD_ROOT
 %changelog
 * Tue Jun 7 2016 Daniel Vrcic <dvrcic@srce.hr> - 0.12.0-1%{?dist}
 - probe management pilot
+- moved to Django 1.6
+- changed UI look to flat theme
+- introduced two additonal groups for authorization
+- custom adminsite object model
+- custom user and permission models
+- django-reversion package dependancies for versioning
+- collected static admin data 
+- changed apache configuration to serve static data 
 * Tue Dec 29 2015 Daniel Vrcic <dvrcic@srce.hr> - 0.11.1-1%{?dist}
 - fix column uniqueness error while syncing service types
   https://github.com/ARGOeu/ARGO/issues/177
