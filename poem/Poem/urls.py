@@ -21,5 +21,6 @@ urlpatterns = patterns('',
                        (r'^api/', include('Poem.urls_api')),
 )
 
-if URL_DEBUG:
-    urlpatterns = patterns('', url(r'^poem/', include(urlpatterns)),) + static('/poem_media/', document_root='/usr/share/poem/media/')
+# needed with django internal webserver
+# if URL_DEBUG:
+#   urlpatterns = patterns('', url(r'^poem/', include(urlpatterns)),) + static('/poem_media/', document_root='/usr/share/poem/media/')
