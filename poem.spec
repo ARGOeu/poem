@@ -59,6 +59,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %{_datadir}/%{name}/apache/poem.wsgi
 %{_datadir}/%{name}/media/*
+%{_datadir}/%{name}/static/*
 
 
 %defattr(-,apache,apache,-)

@@ -24,7 +24,7 @@ def get_ver():
         print "Make sure that %s is in directory"  % (NAME+'.spec')
         sys.exit(1)
 
-poem_media_files = get_files("/usr/share", "poem/media")
+poem_media_files = get_files("/usr/share", "poem/media") + get_files("/usr/share/", "poem/static")
 
 setup(name=NAME,
     version=get_ver(),
@@ -44,13 +44,19 @@ setup(name=NAME,
         ('/usr/share/poem/apache', ['poem/apache/poem.wsgi']),
     ] + poem_media_files,
     package_dir = {'Poem': 'poem/Poem'},
-    packages = ['Poem', 'Poem.poem', 'Poem.poem.management',
+    packages = ['Poem', 'Poem.poem', 'Poem.poem.management', 'Poem.poem.dbmodels', 'Poem.poem.fixtures',
                 'Poem.poem.management.commands', 'Poem.ssl_auth', 'Poem.sync', 'Poem.cust_auth',
-                'Poem.poem.templatetags'],
+                'Poem.poem.admin_interface', 'Poem.poem.templatetags'],
     package_data = {'Poem' : ['poem/templates/admin/*.html', 'poem/templates/poem/*.html',
                               'poem/templates/admin/poem/profile/*.html', 'poem/templates/hints_*',
+                              'poem/templates/reversion/poem/metric/*.html', 'poem/templates/reversion/poem/probe/*.html',
                               'poem/templates/metrics_in_profiles', 'poem/templates/profiles',
-                              'poem/templates/admin/edit_inline/*.html', 'poem/templates/admin/includes/*.html']
+                              'poem/templates/admin/edit_inline/*.html', 'poem/templates/admin/includes/*.html',
+                              'poem/templates/admin/auth/user/*.html', 'poem/templates/admin/poem/custuser/*.html',
+                              'poem/templates/admin/poem/groupofmetrics/*.html', 'poem/templates/admin/poem/groupofprobes/*.html',
+                              'poem/templates/admin/poem/groupofprofiles/*.html', 'poem/templates/admin/poem/metric/*.html',
+                              'poem/templates/admin/poem/probe/*.html', 'poem/templates/admin/poem/profile/*.html',
+                              ]
                     },
 )
 
