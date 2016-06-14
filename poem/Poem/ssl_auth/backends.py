@@ -3,11 +3,10 @@ import logging
 
 from django.conf import settings
 from django.contrib.auth.backends import ModelBackend
-from django.contrib.auth.models import User, Permission
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 
-from Poem.poem.models import UserProfile
+from Poem.poem.models import UserProfile, CustUser
 import Poem.django_logging
 
 class SSLBackend(ModelBackend):
@@ -33,13 +32,11 @@ class SSLBackend(ModelBackend):
 
         if not username or not dn:
             return
-        # certificate validation should be done by apache
-        userprof = get_user_model().objects.filter(userprofile__subject=dn)
-        # all other cases mean that there was a constraint violation
-        # since dn should be unique across all profiles
-        assert len(userprof) == 0 or len(userprof) == 1
 
-        if not userprof:
+        try:
+            userprof = get_user_model().objects.get(userprofile__subject=dn)
+
+        except CustUser.DoesNotExist:
             # user is new
             # try to generate username from CN
             username = self.clean_username(request.META.get(settings.SSL_USERNAME))
@@ -57,17 +54,18 @@ class SSLBackend(ModelBackend):
                 self.log.error('SSL - failed to generate username from CN for %s' % str(dn))
                 username = request.META.get(settings.SSL_SERIAL)[:30]
                 user, created = get_user_model().objects.get_or_create(username=username)
+                if not created:
+                    # didn't work as well, wtf
+                    # fail as there is no way to generate unique username
+                    # multiple DNs from the same CA with same CNs ?
+                    self.log.error('SSL - authentication failure for %s' % str(dn))
+                    return
 
-            if not created:
-                # didn't work as well, wtf
-                # fail as there is no way to generate unique username
-                # multiple DNs from the same CA with same CNs ?
-                self.log.error('SSL - authentication failure for %s' % str(dn))
-                return
             # configure new user
             self.configure_user(user, request)
+            return user
 
-        return userprof[0]
+        return userprof
 
     def clean_username(self, username):
         # replace spaces with _ and remove all non-word characters
