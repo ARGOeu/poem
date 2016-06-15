@@ -5,7 +5,8 @@ register = template.Library()
 
 @register.filter(name='to_https')
 def to_https(value):
-    return value.replace('http', 'https')
+    if not value.endswith('s'):
+        return value.replace('http', 'https')
 
 @register.simple_tag
 def to_http(abs_url, path):
