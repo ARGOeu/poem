@@ -11,16 +11,20 @@ usage()
 	printf "Usage: %s [-i] [-s] [-p <POEM server>] PROFILE1 PROFILE2 ...\n" $(basename $0) >&2
 	printf "       [-i] - Only import profiles if POEM database is empty\n" >&2
 	printf "       [-s] - Secure HTTP\n" >&2
+	printf "       [-l] - append slash on the end of PI method\n" >&2
 	printf "       [-p <POEM server>] - Hostname of POEM server\n" >&2
 	printf "       PROFILE1 PROFILE2 - Space separated list of profiles\n" >&2
 	exit 2
 }
 
-while getopts 'isp:' OPTION
+while getopts 'lisp:' OPTION
 do
 	case $OPTION in
 		i)
 			initial="--initial"
+			;;
+		l)
+			url=$(echo ${url}\/)
 			;;
 		s)
 			url=$(echo "$url" | sed "s/http/https/")
