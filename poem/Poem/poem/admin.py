@@ -17,16 +17,18 @@ from Poem.poem.admin_interface.sitemetrics import *
 class MyAdminSite(AdminSite):
     @never_cache
     def index(self, request, extra_context=None):
-        if request.user.is_superuser:
-            return HttpResponseRedirect(request.path + 'poem')
-        else:
-            return HttpResponseRedirect(request.path + 'poem/profile')
+        if request.user.is_authenticated():
+            if request.user.is_superuser:
+                return HttpResponseRedirect(request.path + 'poem')
+            else:
+                return HttpResponseRedirect(request.path + 'poem/profile')
 
     def app_index(self, request, app_label, extra_context=None):
-        if request.user.is_superuser:
-            return super(MyAdminSite, self).app_index(request, app_label, extra_context)
-        else:
-            return HttpResponseRedirect(request.path + 'profile')
+        if request.user.is_authenticated():
+            if request.user.is_superuser:
+                return super(MyAdminSite, self).app_index(request, app_label, extra_context)
+            else:
+                return HttpResponseRedirect(request.path + 'profile')
 
 
 myadmin = MyAdminSite()
