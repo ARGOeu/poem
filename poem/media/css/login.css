@@ -7,8 +7,8 @@ body.login {
 .login #container {
     background: white;
     border: 1px solid #ccc;
-    width: 28em;
     min-width: 300px;
+    width: 392px;
     margin-left: auto;
     margin-right: auto;
     margin-top: 100px;
@@ -46,13 +46,13 @@ body.login {
 }
 
 .login span.help {
-    font-size: 10px;
-    display: block;
+ font-size: 10px;
+ display: block;
 }
 
 .login .submit-row {
-    clear: both;
-    padding: 1em 0 0 0;
+ clear: both;
+ padding: 1em 0 0 0;
 }
 
 .submit-row input {
@@ -73,5 +73,10 @@ a.certlog:hover {
 }
 
 .login .password-reset-link {
-    text-align: center;
+ text-align: center;
+}
+
+.egiack {
+  border-top-color: white;
+  width: 372px;
 }

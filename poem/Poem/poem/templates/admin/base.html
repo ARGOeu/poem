@@ -54,9 +54,31 @@
     </div>
     <!-- END Content -->
 
-    {% block footer %}<div id="footer"></div>{% endblock %}
+    {% block footer %}
+      <div id="footer">
+      </div>
+    {% endblock %}
 </div>
 <!-- END Container -->
 
 </body>
+
+<div class="egiack">
+  {% block egiack %}
+    <a href="http://www.europa.eu" title="European Union">
+      <img src="/poem_media/img/eu.png"></img>
+    </a>
+    <a href="http://www.egi.eu" title="European Grid Infrastructure">
+      <img src="/poem_media/img/egi_logo_white.png"></img>
+    </a>
+    </br>
+    POEM is an EGI service provided by <a href="http://www.cnrs.fr/" title="Centre national de la recherche scientifique">CNRS</a>, 
+                                       <a href="https://grnet.gr/" title="Greek Research and Technology Network">GRNET</a>,
+                                       <a href="http://www.srce.unizg.hr/" title="University computing centre">SRCE</a>
+                                       </br>
+    co-founded by <a href="http://www.egi.eu/" title="EGI.eu">EGI.eu</a> and
+    <a href="http://www.egi.eu/about/egi-engage/index.html" title="EGI-Engage">EGI-Engage<a/>
+  {% endblock %}
+</div>
+
 </html>
