@@ -197,7 +197,9 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
         rquser = SharedInfo(requser=request.user)
         if not request.user.is_superuser:
             ug = request.user.groupsofprobes.all().values_list('name', flat=True)
-            if obj.group in ug:
+            if obj and obj.group in ug:
+                self._groupown_turn(request.user, 'add')
+            elif not obj and ug:
                 self._groupown_turn(request.user, 'add')
             else:
                 self._groupown_turn(request.user, 'del')
