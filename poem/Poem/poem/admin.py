@@ -1,4 +1,5 @@
 from django.http import HttpResponseRedirect
+from django.core.urlresolvers import reverse
 from django.contrib import admin
 from django.contrib.auth.models import Group
 from django.contrib.admin.sites import AdminSite
@@ -29,6 +30,11 @@ class MyAdminSite(AdminSite):
                 return super(MyAdminSite, self).app_index(request, app_label, extra_context)
             else:
                 return HttpResponseRedirect(request.path + 'profile')
+
+    @never_cache
+    def logout(self, request, extra_context=None):
+        super(MyAdminSite,self).logout(request, extra_context=extra_context)
+        return HttpResponseRedirect(reverse('admin:index'))
 
 
 myadmin = MyAdminSite()
