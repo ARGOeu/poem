@@ -2,7 +2,7 @@
 %{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name:           poem
-Version:        0.11.1
+Version:        0.12.0
 Release:        1%{?dist}
 Summary:        Profile Management (POEM) system for Service Availability Monitoring (SAM).
 Group:          Web application
@@ -12,8 +12,11 @@ URL:            https://tomtools.cern.ch/confluence/display/SAM/POEM
 Source0:        poem-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch:      noarch
-Requires:       Django >= 1.1
+Requires:       python-django >= 1.6
 Requires:       django-ajax-selects
+Requires:       django-reversion
+Requires:       django-flat-theme
+Requires:       django-reversion-compare
 Requires:       mod_wsgi
 Requires:       mod_ssl 
 
@@ -56,6 +59,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %{_datadir}/%{name}/apache/poem.wsgi
 %{_datadir}/%{name}/media/*
+%{_datadir}/%{name}/static/*
 
 
 %defattr(-,apache,apache,-)
@@ -65,6 +69,16 @@ rm -rf $RPM_BUILD_ROOT
 %pre 
 
 %changelog
+* Tue Jun 7 2016 Daniel Vrcic <dvrcic@srce.hr> - 0.12.0-1%{?dist}
+- probe management pilot
+- moved to Django 1.6
+- changed UI look to flat theme
+- introduced two additonal groups for authorization
+- custom adminsite object model
+- custom user and permission models
+- django-reversion package dependancies for versioning
+- collected static admin data 
+- changed apache configuration to serve static data 
 * Tue Dec 29 2015 Daniel Vrcic <dvrcic@srce.hr> - 0.11.1-1%{?dist}
 - fix column uniqueness error while syncing service types
   https://github.com/ARGOeu/ARGO/issues/177
@@ -144,7 +158,7 @@ rm -rf $RPM_BUILD_ROOT
 - SAM-2596 poem_sync: check if configuration is sane after initial yaim
 * Tue Jan 29 2013 Marian Babik <marian.babik@cern.ch> - 0.9.71-1
 - SAM-3187 poem: Add emi.wn.WN metrics to the poem NV fixture
-* Thu Jan 25 2013 Marian Babik <marian.babik@cern.ch> - 0.9.70-1
+* Fri Jan 25 2013 Marian Babik <marian.babik@cern.ch> - 0.9.70-1
 - SAM-3173 Change metric namespaces in all profiles for NV
 - SAM-2544  Restore POEM web config when web is enabled
 - POEM synchronizer will now fail with status 2 if it ends up with no profiles 
@@ -198,7 +212,7 @@ rm -rf $RPM_BUILD_ROOT
 - SAM-2431 poem_sync: Fix poem_sync behavior when namespace is removed
 - SAM-2417 poem_sync: config_poem_sync should fail yaim if unable to boostrap empty database
 - SAM-2310 poem_sync: Fix poem_sync output redirection in yaim
-* Fri Feb 22 2012 Marian Babik <marian.babik@cern.ch> - 0.8.13-1
+* Wed Feb 22 2012 Marian Babik <marian.babik@cern.ch> - 0.8.13-1
 - SAM-2218 poem_sync errors shown during fresh install of sam-gridmon
 - SAM-2369  poem_sync: restricted synchronization can ignore profiles with lowercase letters
 - SAM-2370  poem: default debug level should be set to false
@@ -212,10 +226,10 @@ rm -rf $RPM_BUILD_ROOT
 - POEM_SYNC: Web API won't list deleted profiles by default
 * Fri Dec 23 2011 Marian Babik <marian.babik@cern.ch> - 0.8.10-1
 - Fixing bug in import profiles from poem instance
-* Wed Dec 20 2011 Marian Babik <marian.babik@cern.ch> - 0.8.9-1
+* Tue Dec 20 2011 Marian Babik <marian.babik@cern.ch> - 0.8.9-1
 - SAM-2280 invalid db objects for metric_obj and profile_obj
 - Service poem_sync installed with incorrect permissions
-* Tue Dec 19 2011 Marian Babik <marian.babik@cern.ch> - 0.8.8-1
+* Mon Dec 19 2011 Marian Babik <marian.babik@cern.ch> - 0.8.8-1
 - SAM-2273  missing (/)s in install/update oracle sql for db 1.2 in poem-sync-0.8.7
 - SAM-2266  SAM-2218 MySQL: Upgrade of POEM fails on nightly validation
 - Fixing missing commits in poem-sync MySQL schemas
@@ -321,7 +335,7 @@ rm -rf $RPM_BUILD_ROOT
 * Wed Apr 27 2011 Marian Babik <marian.babik@cern.ch> - 0.2-2
 - SAM-1445  Fix httpd configuration for poem
 - SAM-1446  Add admin media files to poem package
-* Tue Mar 26 2011 Marian Babik <marian.babik@cern.ch> - 0.2-1
+* Sat Mar 26 2011 Marian Babik <marian.babik@cern.ch> - 0.2-1
 - SAM-1109  Change field 'metrics' to 'metricinstances' in 'profile' model of POEM
 - SAM-1046  POEM synchronizer crashes over vo names
 - SAM-1043  Packaging Errors in POEM Packages

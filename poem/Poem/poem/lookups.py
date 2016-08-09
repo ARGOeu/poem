@@ -1,6 +1,8 @@
 from ajax_select import LookupChannel
-from Poem.poem.models import VO, ServiceFlavour, MetricInstance
+from Poem.poem.models import VO, ServiceFlavour, Metrics, MetricInstance, Tags, Probe
 from django.core.cache import cache
+import json
+from reversion.models import Version
 
 def check_cache(request, model, attr):
     if not cache.get(request):
@@ -28,5 +30,42 @@ class MILookup(LookupChannel):
     model = MetricInstance
 
     def get_query(self, q, request):
-        values = check_cache(request, self.model, 'metric')
+        values = check_cache(request, self.model, 'name')
+        return sorted(filter(lambda x: q.lower() in x.lower(), values))
+
+class MFiltLookup(LookupChannel):
+    model = Metrics
+    relmodel = model.groupofmetrics_set.related.model
+
+    def get_query(self, q, request):
+        meting = []
+        if request.user.is_superuser:
+            meting = self.model.objects.all().values_list('name', flat=True)
+        else:
+            ugs = request.user.groupsofmetrics.values_list('name', flat=True)
+            for u in ugs:
+                meting += self.relmodel.objects.get(name=u).metrics.all().values_list('name', flat=True)
+        return sorted(filter(lambda x: q.lower() in x.lower(), meting))
+
+class MAllLookup(LookupChannel):
+    model = Metrics
+    relmodel = model.groupofmetrics_set.related.model
+
+    def get_query(self, q, request):
+        mets = self.model.objects.all().values_list('name', flat=True)
+        return sorted(filter(lambda x: q.lower() in x.lower(), mets))
+
+class PLookup(LookupChannel):
+    model = Version
+
+    def get_query(self, q, request):
+        values = [val for val in self.model.objects.filter(metric__id__isnull=True)\
+                  if json.loads(val.serialized_data)[0]['model'] == 'poem.probe']
+        return sorted(filter(lambda x: q.lower() in x.object_repr.lower(), values))
+
+class TLookup(LookupChannel):
+    model = Tags
+
+    def get_query(self, q, request):
+        values = check_cache(request, self.model, 'name')
         return sorted(filter(lambda x: q.lower() in x.lower(), values))
