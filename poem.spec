@@ -3,7 +3,7 @@
 
 Name:           poem
 Version:        0.12.0
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Profile Management (POEM) system for Service Availability Monitoring (SAM).
 Group:          Web application
 License:        ASL 2.0
@@ -69,6 +69,8 @@ rm -rf $RPM_BUILD_ROOT
 %pre 
 
 %changelog
+* Thu Aug 11 2016 Daniel Vrcic <dvrcic@srce.hr> - 0.12.0-2%{?dist}
+- removed logout page; redirect to login
 * Tue Jun 7 2016 Daniel Vrcic <dvrcic@srce.hr> - 0.12.0-1%{?dist}
 - probe management pilot
 - moved to Django 1.6
