@@ -1,0 +1,14 @@
+th {
+  font-size: 14px;
+  width: 100%;
+}
+
+.dashboard #content {
+  width: 700px;
+}
+
+#content-related {
+  width: 200px;
+  margin-right: -250px;
+
+}
