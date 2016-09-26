@@ -1,26 +1,21 @@
 import os
 
-from django.conf.urls import patterns, include, url
+from django.conf.urls.defaults import patterns, include
 from django.contrib import admin
 from django.conf import settings
 from django.http import HttpResponseRedirect
 from django.core import urlresolvers
 from django_logging import django_logging
-from django.conf.urls.static import static
 
 from ajax_select import urls as ajax_select_urls
-from Poem.settings import URL_DEBUG
-from Poem.poem.admin import myadmin
 
 django_logging()
 
+admin.autodiscover()
+
 urlpatterns = patterns('',
-                       (r'^$', lambda x: HttpResponseRedirect('/poem/admin')),
+                       (r'^$', lambda x: HttpResponseRedirect('/poem/admin/poem/profile')),
                        (r'^admin/lookups/', include(ajax_select_urls)),
-                       (r'^admin/', include(myadmin.urls)),
+                       (r'^admin/', include(admin.site.urls)),
                        (r'^api/', include('Poem.urls_api')),
 )
-
-# needed with django internal webserver
-# if URL_DEBUG:
-#   urlpatterns = patterns('', url(r'^poem/', include(urlpatterns)),) + static('/poem_media/', document_root='/usr/share/poem/media/')
