@@ -27,9 +27,9 @@ try:
     CACHES = {
         'default': {
             'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-            'TIMEOUT': 7200,
+            'TIMEOUT': 3600,
             'OPTIONS': {
-                'MAX_ENTRIES': 8192
+                'MAX_ENTRIES': 400
             }
         }
     }
@@ -47,8 +47,6 @@ try:
 
 except NoSectionError, e:
     raise ImproperlyConfigured(e)
-
-URL_DEBUG = True
 
 TEMPLATE_DEBUG = DEBUG
 
@@ -84,20 +82,18 @@ MEDIA_ROOT = ''
 # trailing slash if there is a path component (optional in other cases).
 # Examples: "http://media.lawrence.com", "http://example.com/media/"
 STATIC_URL = '/'
-STATIC_ROOT = '/usr/share/poem/static/'
+STATIC_ROOT = get_python_lib() + '/django/contrib/admin/static/admin/'
+
 
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = 'gjrm%pqd!)3l^)x%5)nb1r%x6_2c1lo@j#)1*sh9hwwzfji8dw'
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
-    ('django.template.loaders.cached.Loader', (
-        'django.template.loaders.filesystem.Loader',
-        'django.template.loaders.app_directories.Loader',
-        'django.template.loaders.eggs.Loader',
-    )),
+    'django.template.loaders.filesystem.Loader',
+    'django.template.loaders.app_directories.Loader',
+    #'django.template.loaders.eggs.Loader',
 )
-
 
 TEMPLATE_CONTEXT_PROCESSORS = (
     'django.contrib.auth.context_processors.auth',
@@ -111,7 +107,6 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 )
 
 MIDDLEWARE_CLASSES = (
-    'reversion.middleware.RevisionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -121,8 +116,7 @@ MIDDLEWARE_CLASSES = (
 )
 
 AUTHENTICATION_BACKENDS = (
-    #'django.contrib.auth.backends.ModelBackend',
-    'Poem.cust_auth.backends.CustModelBackend',
+    'django.contrib.auth.backends.ModelBackend',
     'Poem.ssl_auth.backends.SSLBackend',
 )
 
@@ -132,18 +126,15 @@ SSL_CREATE_ACTIVE = True
 SSL_CREATE_STAFF = True
 SSL_SERIAL = 'SSL_CLIENT_M_SERIAL'
 
+AUTH_PROFILE_MODULE = 'poem.UserProfile'
 
-AUTH_USER_MODEL = 'poem.CustUser'
 ROOT_URLCONF = 'Poem.urls'
 
 TEMPLATE_DIRS = (
-    os_path.join(APP_PATH, 'poem/templates'),
+    os_path.join(APP_PATH, 'poem/templates')
 )
 
 INSTALLED_APPS = (
-    'flat',
-    'reversion',
-    'reversion_compare',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -155,10 +146,6 @@ INSTALLED_APPS = (
 
 AJAX_LOOKUP_CHANNELS = {
     'hintsvo' : ('Poem.poem.lookups', 'VOLookup'),
-    'hintstags' : ('Poem.poem.lookups', 'TLookup'),
-    'hintsprobes' : ('Poem.poem.lookups', 'PLookup'),
-    'hintsmetricsfilt' : ('Poem.poem.lookups', 'MFiltLookup'),
-    'hintsmetricsall' : ('Poem.poem.lookups', 'MAllLookup'),
-    'hintsmetricinstances' : ('Poem.poem.lookups', 'MILookup'),
+    'hintsmetrics' : ('Poem.poem.lookups', 'MILookup'),
     'hintsserviceflavours' : ('Poem.poem.lookups', 'SFLookup'),
 }

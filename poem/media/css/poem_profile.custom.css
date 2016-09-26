@@ -1,0 +1,12 @@
+td.original p {
+  visibility: hidden
+}
+
+.inline-group .tabular tr.has_original td {
+    padding: 2px;
+}
+
+#content-main {
+    float: left;
+    width: 900px;
+}

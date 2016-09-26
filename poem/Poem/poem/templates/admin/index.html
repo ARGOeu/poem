@@ -1,58 +1,57 @@
 {% extends "admin/base_site.html" %}
-{% load i18n admin_static %}
-
-{% block extrastyle %}
-  {{ block.super }}
-  <link rel="stylesheet" type="text/css" href="{% static "admin/css/dashboard.css" %}" />
-  <link rel="stylesheet" type="text/css" href="/poem_media/css/dashboard-ext.css"/>
+{% load i18n %}
+{% load staticfiles %}
+{% block extrastyle %}{{ block.super }}
+{% if not user.is_superuser %}
+<meta http-equiv="REFRESH" content="0;url=/poem/admin/poem/profile">
+{% endif %}
+<link rel="stylesheet" type="text/css" href="{% static "admin/css/dashboard.css" %}" />
 {% endblock %}
+
 
 {% block coltype %}colMS{% endblock %}
 
 {% block bodyclass %}dashboard{% endblock %}
 
+{% block content_title %}{% if title %}<h1 style="color:#1c3c78">Dashboard ({{ POEM_NAMESPACE|upper }})</h1>{% endif %}{% endblock %}
+
 {% block breadcrumbs %}{% endblock %}
 
 {% block content %}
 <div id="content-main">
+	{% if user.is_superuser %}
+	    {% for app in app_list %}
+	        <div class="module">
+	        <table summary="{% blocktrans with app.name as name %}Models available in the {{ name }} application.{% endblocktrans %}">
+	        <caption><a href="{{ app.app_url }}" class="section">{% blocktrans with app.name as name %}{{ name }}{% endblocktrans %}</a></caption>
+	        {% for model in app.models %}
+	            <tr>
+	            {% if model.perms.change %}
+	                <th scope="row"><a href="{{ model.admin_url }}">{{ model.name }}</a></th>
+	            {% else %}
+	                <th scope="row">{{ model.name }}</th>
+	            {% endif %}
+	
+	            {% if model.perms.add %}
+	                <td><a href="{{ model.admin_url }}add/" class="addlink">{% trans 'Add' %}</a></td>
+	            {% else %}
+	                <td>&nbsp;</td>
+	            {% endif %}
+	
+	            {% if model.perms.change %}
+	                <td><a href="{{ model.admin_url }}" class="changelink">{% trans 'Change' %}</a></td>
+	            {% else %}
+	                <td>&nbsp;</td>
+	            {% endif %}
+	            </tr>
+	        {% endfor %}
+	        </table>
+	        </div>
+	    {% endfor %}
+	{% endif %}
 
-{% if app_list %}
-    {% for app in app_list %}
-        <div class="app-{{ app.app_label }} module">
-        <table>
-        <caption>
-            <a href="{{ app.app_url }}" class="section" title="{% blocktrans with name=app.name %}Models in the {{ name }} application{% endblocktrans %}">
-                {% blocktrans with name=app.name %}{{ name }}{% endblocktrans %}
-            </a>
-        </caption>
-        {% for model in app.models %}
-            <tr class="model-{{ model.object_name|lower }}">
-            {% if model.admin_url %}
-                <th scope="row"><a href="{{ model.admin_url }}">{{ model.name }}</a></th>
-            {% else %}
-                <th scope="row">{{ model.name }}</th>
-            {% endif %}
-
-            {% if model.add_url %}
-                <td><a href="{{ model.add_url }}" class="addlink">{% trans 'Add' %}</a></td>
-            {% else %}
-                <td>&nbsp;</td>
-            {% endif %}
-
-            {% if model.admin_url %}
-                <td><a href="{{ model.admin_url }}" class="changelink">{% trans 'Change' %}</a></td>
-            {% else %}
-                <td>&nbsp;</td>
-            {% endif %}
-            </tr>
-        {% endfor %}
-        </table>
-        </div>
-    {% endfor %}
-{% else %}
-    <p>{% trans "You don't have permission to edit anything." %}</p>
-{% endif %}
 </div>
+
 {% endblock %}
 
 {% block sidebar %}
