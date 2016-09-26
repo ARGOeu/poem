@@ -2,13 +2,13 @@
     background: none repeat scroll 0 0 #ffa0a0;
 }
 
-td.field-service_flavour {
-  width: 209px;
-}
+//td.field-service_flavour {
+//  width: 209px;
+//}
 
-td.field-service_flavour input {
-  width: 181px;
-}
+//td.field-service_flavour input {
+//  width: 181px;
+//}
 
 td.field-metric {
   width: 415px;

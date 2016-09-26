@@ -1,7 +1,9 @@
 from django.shortcuts import render_to_response
 from django.conf import settings
-
+from django.http import HttpResponse
+from django.views.generic import View
 from Poem.poem import models
+import json
 
 def profiles(request):
     """
@@ -88,3 +90,9 @@ def metrics_in_profiles(request):
                                   mimetype='application/json')
     else:
         return "Need the name of VO"
+
+class MetricsInGroup(View):
+    def get(self, request):
+        gr = request.GET['group']
+        metrics = models.Metrics.objects.filter(groupofmetrics__name__exact=gr).values_list('name', flat=True)
+        return HttpResponse(json.dumps({'result': [met for met in metrics]}))

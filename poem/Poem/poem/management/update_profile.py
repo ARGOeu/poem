@@ -3,9 +3,10 @@ import logging, urllib
 import httplib
 
 from django.utils import simplejson
-from Poem.poem.models import Profile, MetricInstance
+from Poem.poem.models import Profile, MetricInstance, Metrics
 from urlparse import urlparse
 from Poem import settings
+from django.core.cache import cache
 
 LOG_INSTANCE = logging.getLogger('POEMIMPORTPROFILES')
 
@@ -45,6 +46,18 @@ class PoemSync(object):
                     service_flavour=mins_dict['atp_service_type_flavour'],
                     vo=mins_dict['vo'], fqan=mins_dict['fqan'])
 
+    def sync_metrics(self, objs):
+        metricsindb = []
+        newmetrics = set([t['metric'] for t in objs])
+        if not cache.get('metrics'):
+            metricsindb = set([e['name'] for e in Metrics.objects.values('name')])
+            cache.set('metrics', metricsindb)
+        else:
+            metricsindb = set(cache.get('metrics'))
+        diff = newmetrics.difference(metricsindb)
+        if diff:
+            cache.set('metrics', metricsindb | diff)
+            Metrics.objects.bulk_create([Metrics(name=m) for m in diff])
 
     def sync_profile(self, p_dict):
         """ Sync A profile Object and all its components """
@@ -55,10 +68,9 @@ class PoemSync(object):
             try: p_dict[key]
             except KeyError: key='atp_vo'
             pobj1 = Profile(name=p_dict['name'],
-                    version=p_dict['version'],
-                    vo=p_dict[key],
-                    description=p_dict['description']
-                    )
+                        version=p_dict['version'],
+                        vo=p_dict[key],
+                        description=p_dict['description'])
             try:
                 pobj = Profile.objects.get(name=p_dict['name'], version=p_dict['version'])
                 self._profile_exist_list.append(pobj)
@@ -83,10 +95,11 @@ class PoemSync(object):
 
         try:
             pobj.save()
-        except Exception, (ex):
-            return self._raise_error('Saving Profile: %s %s' % (pobj, ex))
+        except Exception as e:
+            return self._raise_error('Saving Profile: %s' % e)
 
         self.sync_metricinstances(p_dict['metric_instances'], pobj)
+        self.sync_metrics(p_dict['metric_instances'])
 
         pobj.save()
         LOG_INSTANCE.info('Synchronized profile %s' % (pobj))
