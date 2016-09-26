@@ -69,6 +69,8 @@ rm -rf $RPM_BUILD_ROOT
 %pre 
 
 %changelog
+* Mon Sep 25 2016 Themis Zamani <themiszamani@gmail.com> - 1.0.1-1%{?dist}
+- New RPM package release
 * Sat Sep 24 2016 Themis Zamani <themiszamani@gmail.com> - 1.0.0-1%{?dist}
 - New RPM package release
 * Thu Aug 11 2016 Daniel Vrcic <dvrcic@srce.hr> - 0.12.0-2%{?dist}
