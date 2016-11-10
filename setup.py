@@ -29,8 +29,8 @@ poem_media_files = get_files("/usr/share", "poem/media") + get_files("/usr/share
 setup(name=NAME,
     version=get_ver(),
     description='Profile Management (POEM) for ARGO.',
-    author='CERN',
-    author_email='tom-developers@cern.ch',
+    author='SRCE',
+    author_email='dvrcic@srce.hr',
     license='GPL',
     long_description='''The Profile Management (POEM) system couples metrics
                         and services and enables profile-based configuration of SAM/Nagios.''',
