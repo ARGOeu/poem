@@ -38,7 +38,8 @@ def main():
     try:
         if o.scheme.startswith('https'):
             conn = httplib.HTTPSConnection(host=o.netloc, \
-                                            key_file=settings.HOST_KEY, cert_file=settings.HOST_CERT)
+                                           key_file=settings.HOST_KEY, cert_file=settings.HOST_CERT, \
+                                           timeout=60)
         else:
             conn = httplib.HTTPSConnection(host=o.netloc)
         conn.putrequest('GET', o.path+'?'+o.query)
