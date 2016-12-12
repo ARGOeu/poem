@@ -18,7 +18,7 @@ def main():
     "Parses VO list provided by CIC portal"
 
     try:
-        ret = urllib2.urlopen(settings.CIC_VO_URL).read()
+        ret = urllib2.urlopen(settings.CIC_VO_URL, timeout=60).read()
     except Exception as e:
         logger.error('VO card - '+'%s' % (e))
         sys.exit(1)

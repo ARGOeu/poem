@@ -2,7 +2,7 @@
 %{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name:           poem
-Version:        1.0.0
+Version:        1.0.2
 Release:        1%{?dist}
 Summary:        Profile Management (POEM) system for Service Availability Monitoring (SAM).
 Group:          Web application
@@ -69,6 +69,8 @@ rm -rf $RPM_BUILD_ROOT
 %pre 
 
 %changelog
+* Thu Nov 10 2016 Daniel Vrcic <dvrcic@srce.hr> - 1.0.2-1%{?dist}
+- added timeouts in sync scripts
 * Mon Sep 25 2016 Themis Zamani <themiszamani@gmail.com> - 1.0.1-1%{?dist}
 - New RPM package release
 * Sat Sep 24 2016 Themis Zamani <themiszamani@gmail.com> - 1.0.0-1%{?dist}
