@@ -88,18 +88,12 @@ class MetricInstanceInline(admin.TabularInline):
     def has_change_permission(self, request, obj=None):
         return True
 
-class GroupOfProfilesInlineChangeForm(ModelForm):
+class GroupOfProfilesInlineForms(ModelForm):
     def __init__(self, *args, **kwargs):
         sh = SharedInfo()
         self.user = sh.getuser()
         self.usergroups = self.user.groupsofprofiles.all()
-        super(GroupOfProfilesInlineChangeForm, self).__init__(*args, **kwargs)
-
-    qs = GroupOfProfiles.objects.all()
-    groupofprofiles = MyModelMultipleChoiceField(queryset=qs, widget=Select(),
-                                         help_text='Profile is a member of given group')
-    groupofprofiles.empty_label = '----------------'
-    groupofprofiles.label = 'Group of profiles'
+        super(GroupOfProfilesInlineForms, self).__init__(*args, **kwargs)
 
     def clean_groupofprofiles(self):
         groupsel = self.cleaned_data['groupofprofiles']
@@ -109,7 +103,14 @@ class GroupOfProfilesInlineChangeForm(ModelForm):
             raise ValidationError("You are not member of group %s." % (str(groupsel)))
         return groupsel
 
-class GroupOfProfilesInlineAddForm(ModelForm):
+class GroupOfProfilesInlineChangeForm(GroupOfProfilesInlineForms):
+    qs = GroupOfProfiles.objects.all()
+    groupofprofiles = MyModelMultipleChoiceField(queryset=qs, widget=Select(),
+                                         help_text='Profile is a member of given group')
+    groupofprofiles.empty_label = '----------------'
+    groupofprofiles.label = 'Group of profiles'
+
+class GroupOfProfilesInlineAddForm(GroupOfProfilesInlineForms):
     def __init__(self, *args, **kwargs):
         super(GroupOfProfilesInlineAddForm, self).__init__(*args, **kwargs)
         self.fields['groupofprofiles'].help_text = 'Select one of the groups you are member of'
