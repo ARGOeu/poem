@@ -2,7 +2,7 @@
 %{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name:           poem
-Version:        1.0.3
+Version:        1.0.4
 Release:        1%{?dist}
 Summary:        Profile Management (POEM) system for Service Availability Monitoring (SAM).
 Group:          Web application
@@ -69,6 +69,8 @@ rm -rf $RPM_BUILD_ROOT
 %pre 
 
 %changelog
+* Wed Mar 29 2017 Daniel Vrcic <dvrcic@srce.hr> - 1.0.4-1%{?dist}
+- ARGO-766 Remove SRMv2 service type mapping
 * Thu Dec 15 2016 Daniel Vrcic <dvrcic@srce.hr> - 1.0.3-1%{?dist}
 - ARGO-641 fixed group membership of newly created profiles
 - add missing copy module in group of profiles association code

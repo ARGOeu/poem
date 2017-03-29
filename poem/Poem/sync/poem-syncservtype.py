@@ -73,7 +73,6 @@ def main():
     if len(sfindb) != len(Feed_List) + 1:
         sfs = set([(feed['service_type_name'], feed['service_type_desc']) \
                 for feed in Feed_List])
-        sfs.add(('SRMv2', '[Site service] Storage Resource Manager. Mandatory for all sites running an SRM enabled storage element.'))
         cur = connection.cursor()
         try:
             if len(sfindb) < len(Feed_List) + 1:
