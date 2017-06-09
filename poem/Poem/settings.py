@@ -35,20 +35,24 @@ try:
     }
     # Others
     # Make these unique, and don't share it with anybody.
-    POEM_NAMESPACE = config.get('others', 'POEM_NAMESPACE')
-    LOG_CONFIG = config.get('log', 'LOG_CONFIG')
-    SECRET_KEY = config.get('others','SECRET_KEY')
+    ALLOWED_HOSTS = config.get('others', 'ALLOWED_HOSTS')
+    CIC_VO_URL = config.get('others', 'CIC_VO_URL')
     DEBUG = bool(config.get('others','DEBUG') == 'True')
     GOCDB_SERVICETYPE_URL = config.get('others', 'GOCDB_SERVICETYPE_URL')
-    CIC_VO_URL = config.get('others', 'CIC_VO_URL')
     HOST_CERT = config.get('others', 'HOST_CERT')
     HOST_KEY = config.get('others', 'HOST_KEY')
+    LOG_CONFIG = config.get('log', 'LOG_CONFIG')
+    POEM_NAMESPACE = config.get('others', 'POEM_NAMESPACE')
+    SECRET_KEY = config.get('others','SECRET_KEY')
     TIME_ZONE = config.get('others', 'TIME_ZONE')
 
 except NoSectionError, e:
     raise ImproperlyConfigured(e)
 
 URL_DEBUG = True
+
+if ',' in ALLOWED_HOSTS:
+    ALLOWED_HOSTS = [h.strip() for h in ALLOWED_HOSTS.split(',')]
 
 TEMPLATE_DEBUG = DEBUG
 
