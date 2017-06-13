@@ -53,6 +53,8 @@ URL_DEBUG = True
 
 if ',' in ALLOWED_HOSTS:
     ALLOWED_HOSTS = [h.strip() for h in ALLOWED_HOSTS.split(',')]
+else:
+    ALLOWED_HOSTS = [ALLOWED_HOSTS]
 
 TEMPLATE_DEBUG = DEBUG
 
