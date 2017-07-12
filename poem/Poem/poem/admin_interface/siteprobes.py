@@ -255,10 +255,11 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
 
     def revision_view(self, request, object_id, version_id, extra_context=None):
         currev = reversion.models.Version.objects.get(pk=version_id).object_repr
+        datecreated = reversion.models.Revision.objects.get(pk=version_id).date_created
         if extra_context:
-            extra_context.update({'cursel': currev})
+            extra_context.update({'cursel': currev, 'datecreated': datecreated})
         else:
-            extra_context = {'cursel': currev}
+            extra_context = {'cursel': currev, 'datecreated': datecreated}
         return super(ProbeAdmin, self).revision_view(request, object_id, version_id, extra_context)
 
 reversion.register(Probe, exclude=["nameversion", "datetime"])
