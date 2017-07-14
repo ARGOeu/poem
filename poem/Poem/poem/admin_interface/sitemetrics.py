@@ -19,6 +19,7 @@ from ajax_select import make_ajax_field
 from reversion_compare.admin import CompareVersionAdmin
 from reversion.models import Version
 import reversion
+import json
 
 class SharedInfo:
     def __init__(self, requser=None, grname=None):
@@ -189,7 +190,7 @@ class MetricDependancyForm(ModelForm):
     value = CharField(label='value')
 
 class MetricDependancyInline(admin.TabularInline):
-    model = MetricConfig
+    model = MetricDependancy
     verbose_name = 'Dependancy'
     verbose_name_plural = 'Dependancy'
     form = MetricDependancyForm
@@ -213,6 +214,27 @@ class MetricDependancyInline(admin.TabularInline):
 class MetricConfigForm(ModelForm):
     key = CharField(label='key')
     value = CharField(label='value')
+
+    def clean(self):
+        cd = self.cleaned_data
+        newentry = '{0} {1}'.format(cd['key'], cd['value'])
+        metricconfigs = MetricConfig.objects.filter(metric__exact=cd['metric'])
+        nume = len(metricconfigs)
+        fielddata = None
+
+        if cd['metric'].config:
+            fielddata = json.loads(cd['metric'].config)
+            if cd['id']:
+                index = list(metricconfigs).index(cd['id'])
+                fielddata[index] = newentry
+            else:
+                fielddata.append(newentry)
+        else:
+            fielddata = list([newentry])
+
+        cd['metric'].config = json.dumps(fielddata)
+
+        return super(MetricConfigForm, self).clean()
 
 class MetricConfigInline(admin.TabularInline):
     model = MetricConfig
@@ -353,13 +375,4 @@ class MetricAdmin(CompareVersionAdmin, admin.ModelAdmin):
     def has_change_permission(self, request, obj=None):
         return True
 
-reversion.register(Metric, exclude=["probekey"], follow=['metricconfig_set',
-                                                         'metricparameter_set',
-                                                         'metricattribute_set',
-                                                         'metricflags_set',
-                                                         'metricdependancy_set'])
-reversion.register(MetricDependancy)
-reversion.register(MetricParameter)
-reversion.register(MetricAttribute)
-reversion.register(MetricFlags)
-reversion.register(MetricConfig)
+reversion.register(Metric)
