@@ -210,29 +210,12 @@ class MetricDependancyInline(admin.TabularInline):
     def has_change_permission(self, request, obj=None):
         return True
 
-
 class MetricConfigForm(ModelForm):
     key = CharField(label='key')
     value = CharField(label='value')
 
     def clean(self):
-        cd = self.cleaned_data
-        newentry = '{0} {1}'.format(cd['key'], cd['value'])
-        metricconfigs = MetricConfig.objects.filter(metric__exact=cd['metric'])
-        nume = len(metricconfigs)
-        fielddata = None
-
-        if cd['metric'].config:
-            fielddata = json.loads(cd['metric'].config)
-            if cd['id']:
-                index = list(metricconfigs).index(cd['id'])
-                fielddata[index] = newentry
-            else:
-                fielddata.append(newentry)
-        else:
-            fielddata = list([newentry])
-
-        cd['metric'].config = json.dumps(fielddata)
+        update_field('config', self.cleaned_data, MetricConfig)
 
         return super(MetricConfigForm, self).clean()
 
@@ -374,5 +357,25 @@ class MetricAdmin(CompareVersionAdmin, admin.ModelAdmin):
 
     def has_change_permission(self, request, obj=None):
         return True
+
+def update_field(field, formdata, model):
+        newentry = '{0} {1}'.format(formdata['key'], formdata['value'])
+        objs = model.objects.filter(metric__exact=formdata['metric'])
+        fielddata = None
+
+        objfield = eval("formdata['metric'].%s" % field)
+
+        if objfield:
+            fielddata = json.loads(objfield)
+            if formdata['id']:
+                index = list(objs).index(formdata['id'])
+                fielddata[index] = newentry
+            else:
+                fielddata.append(newentry)
+        else:
+            fielddata = list([newentry])
+
+        codestr = """formdata['metric'].%s = json.dumps(fielddata)""" % field
+        exec codestr
 
 reversion.register(Metric)
