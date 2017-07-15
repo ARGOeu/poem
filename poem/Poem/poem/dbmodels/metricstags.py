@@ -119,9 +119,11 @@ class MetricConfig(models.Model):
 def delete_entryfield(*args, **kwargs):
     i = kwargs['instance']
     deletedentry = '{0} {1}'.format(i.key, i.value)
-    fielddata = json.loads(i.metric.config)
+    field = i.__class__.__name__.split('Metric')[1].lower()
+    fielddata = json.loads(eval('i.metric.%s' % field))
     if deletedentry in fielddata:
         fielddata.remove(deletedentry)
-        i.metric.config = json.dumps(fielddata)
+        codestr = """i.metric.%s = json.dumps(fielddata)""" % field
+        exec codestr
         i.metric.save()
 post_delete.connect(delete_entryfield, sender=MetricConfig)
