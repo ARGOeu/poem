@@ -19,6 +19,7 @@ from ajax_select import make_ajax_field
 from reversion_compare.admin import CompareVersionAdmin
 from reversion.models import Version
 import reversion
+import json
 
 class SharedInfo:
     def __init__(self, requser=None, grname=None):
@@ -113,6 +114,11 @@ class MetricAttributeForm(ModelForm):
     key = CharField(label='key')
     value = CharField(label='value')
 
+    def clean(self):
+        update_field('attribute', self.cleaned_data, MetricAttribute)
+
+        return super(MetricAttributeForm, self).clean()
+
 class MetricAttributeInline(admin.TabularInline):
     model = MetricAttribute
     verbose_name = 'Attribute'
@@ -137,6 +143,11 @@ class MetricAttributeInline(admin.TabularInline):
 class MetricParameterForm(ModelForm):
     key = CharField(label='key')
     value = CharField(label='value')
+
+    def clean(self):
+        update_field('parameter', self.cleaned_data, MetricParameter)
+
+        return super(MetricParameterForm, self).clean()
 
 class MetricParameterInline(admin.TabularInline):
     model = MetricParameter
@@ -163,6 +174,11 @@ class MetricFlagsForm(ModelForm):
     key = CharField(label='key')
     value = CharField(label='value')
 
+    def clean(self):
+        update_field('flags', self.cleaned_data, MetricFlags)
+
+        return super(MetricFlagsForm, self).clean()
+
 class MetricFlagsInline(admin.TabularInline):
     model = MetricFlags
     verbose_name = 'Flags'
@@ -188,8 +204,13 @@ class MetricDependancyForm(ModelForm):
     key = CharField(label='key')
     value = CharField(label='value')
 
+    def clean(self):
+        update_field('dependancy', self.cleaned_data, MetricDependancy)
+
+        return super(MetricDependancyForm, self).clean()
+
 class MetricDependancyInline(admin.TabularInline):
-    model = MetricConfig
+    model = MetricDependancy
     verbose_name = 'Dependancy'
     verbose_name_plural = 'Dependancy'
     form = MetricDependancyForm
@@ -209,10 +230,14 @@ class MetricDependancyInline(admin.TabularInline):
     def has_change_permission(self, request, obj=None):
         return True
 
-
 class MetricConfigForm(ModelForm):
     key = CharField(label='key')
     value = CharField(label='value')
+
+    def clean(self):
+        update_field('config', self.cleaned_data, MetricConfig)
+
+        return super(MetricConfigForm, self).clean()
 
 class MetricConfigInline(admin.TabularInline):
     model = MetricConfig
@@ -353,13 +378,24 @@ class MetricAdmin(CompareVersionAdmin, admin.ModelAdmin):
     def has_change_permission(self, request, obj=None):
         return True
 
-reversion.register(Metric, exclude=["probekey"], follow=['metricconfig_set',
-                                                         'metricparameter_set',
-                                                         'metricattribute_set',
-                                                         'metricflags_set',
-                                                         'metricdependancy_set'])
-reversion.register(MetricDependancy)
-reversion.register(MetricParameter)
-reversion.register(MetricAttribute)
-reversion.register(MetricFlags)
-reversion.register(MetricConfig)
+def update_field(field, formdata, model):
+    newentry = '{0} {1}'.format(formdata['key'], formdata['value'])
+    objs = model.objects.filter(metric__exact=formdata['metric'])
+    fielddata = None
+
+    objfield = eval("formdata['metric'].%s" % field)
+
+    if objfield:
+        fielddata = json.loads(objfield)
+        if formdata['id']:
+            index = list(objs).index(formdata['id'])
+            fielddata[index] = newentry
+        else:
+            fielddata.append(newentry)
+    else:
+        fielddata = list([newentry])
+
+    codestr = """formdata['metric'].%s = json.dumps(fielddata)""" % field
+    exec codestr
+
+reversion.register(Metric)

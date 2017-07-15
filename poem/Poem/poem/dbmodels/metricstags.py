@@ -8,12 +8,13 @@ from django.contrib.auth.models import UserManager, GroupManager, Permission, Pe
 from django.core import validators
 from django.core.mail import send_mail
 from django.db import models
-from django.db.models.signals import m2m_changed, pre_save, post_save
+from django.db.models.signals import post_delete
 from django.utils import timezone
 from django.utils.http import urlquote
 from django.utils.translation import ugettext_lazy as _
 import re
 import copy
+import json
 
 from reversion.models import Version
 
@@ -63,6 +64,11 @@ class Metric(models.Model):
     probeversion = models.CharField(max_length=128)
     probekey = models.ForeignKey(Version)
     group = models.ForeignKey(GroupOfMetrics)
+    config = models.CharField(max_length=1024)
+    attribute = models.CharField(max_length=1024)
+    dependancy = models.CharField(max_length=1024)
+    flags = models.CharField(max_length=1024)
+    parameter = models.CharField(max_length=1024)
 
     class Meta:
         app_label = 'poem'
@@ -109,3 +115,19 @@ class MetricConfig(models.Model):
 
     class Meta:
         app_label = 'poem'
+
+def delete_entryfield(*args, **kwargs):
+    i = kwargs['instance']
+    deletedentry = '{0} {1}'.format(i.key, i.value)
+    field = i.__class__.__name__.split('Metric')[1].lower()
+    fielddata = json.loads(eval('i.metric.%s' % field))
+    if deletedentry in fielddata:
+        fielddata.remove(deletedentry)
+        codestr = """i.metric.%s = json.dumps(fielddata)""" % field
+        exec codestr
+        i.metric.save()
+post_delete.connect(delete_entryfield, sender=MetricAttribute)
+post_delete.connect(delete_entryfield, sender=MetricConfig)
+post_delete.connect(delete_entryfield, sender=MetricDependancy)
+post_delete.connect(delete_entryfield, sender=MetricFlags)
+post_delete.connect(delete_entryfield, sender=MetricParameter)
