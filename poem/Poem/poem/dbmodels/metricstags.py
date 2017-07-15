@@ -126,4 +126,8 @@ def delete_entryfield(*args, **kwargs):
         codestr = """i.metric.%s = json.dumps(fielddata)""" % field
         exec codestr
         i.metric.save()
+post_delete.connect(delete_entryfield, sender=MetricAttribute)
 post_delete.connect(delete_entryfield, sender=MetricConfig)
+post_delete.connect(delete_entryfield, sender=MetricDependancy)
+post_delete.connect(delete_entryfield, sender=MetricFlags)
+post_delete.connect(delete_entryfield, sender=MetricParameter)
