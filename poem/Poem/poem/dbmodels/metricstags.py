@@ -109,8 +109,8 @@ class MetricAttribute(models.Model):
         app_label = 'poem'
 
 class MetricConfig(models.Model):
-    key = models.CharField(max_length=128)
-    value = models.CharField(max_length=128)
+    key = models.CharField(max_length=128, blank=False, null=False)
+    value = models.CharField(max_length=128, blank=False, null=False)
     metric = models.ForeignKey(Metric, blank=False, null=False)
 
     class Meta:
