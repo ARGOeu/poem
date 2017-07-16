@@ -5,7 +5,9 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse
 from django.forms import ModelForm, CharField, Textarea, ModelChoiceField, ValidationError
+from django.forms.models import BaseInlineFormSet
 from django.forms.widgets import TextInput, Select
+from django.http import HttpResponse
 from django.utils.html import format_html
 from django.utils.translation import ugettext as _
 from Poem.poem import widgets
@@ -43,6 +45,19 @@ class SharedInfo:
         else:
             return None
 
+class RequiredMetricConfig(BaseInlineFormSet):
+    """
+    Generates an inline formset that is required
+    """
+
+    def _construct_form(self, i, **kwargs):
+        """
+        Override the method to change the form attribute empty_permitted
+        """
+        form = super(RequiredMetricConfig, self)._construct_form(i, **kwargs)
+        form.empty_permitted = False
+        return form
+
 
 class MetricAddForm(ModelForm):
     """
@@ -70,23 +85,25 @@ class MetricAddForm(ModelForm):
                      widget=TextInput(attrs={'class': 'metricautocomplete'}))
     probeversion = make_ajax_field(Metric, 'probeversion', 'hintsprobes', label='Probe', help_text='Probe name and version')
 
-
     def clean(self):
-        metric = self.cleaned_data['name']
-        group = self.cleaned_data.get('group')
-        if group:
-            try:
-                Metrics.objects.get(name=metric)
-            except Metrics.DoesNotExist:
-                new = Metrics.objects.create(name=metric)
-                GroupOfMetrics.objects.get(name=group).metrics.add(new)
-            super(MetricAddForm, self).clean()
-        return self.cleaned_data
+        try:
+            metric = self.cleaned_data['name']
+            group = self.cleaned_data.get('group')
+        except KeyError as e:
+            raise ValidationError('')
+        else:
+            if group:
+                try:
+                    Metrics.objects.get(name=metric)
+                except Metrics.DoesNotExist:
+                    new = Metrics.objects.create(name=metric)
+                    GroupOfMetrics.objects.get(name=group).metrics.add(new)
+                super(MetricAddForm, self).clean()
+            return self.cleaned_data
 
     def clean_tag(self):
         fetched = self.cleaned_data['tag']
         return Tags.objects.get(id=fetched.id)
-
 
 class MetricChangeForm(MetricAddForm):
     def __init__(self, *args, **kwargs):
@@ -239,12 +256,26 @@ class MetricConfigForm(ModelForm):
 
         return super(MetricConfigForm, self).clean()
 
+    def is_valid(self):
+        formdata = self.cleaned_data
+
+        if (not 'key' in formdata
+            or 'value' not in formdata):
+            n = MetricConfig.objects.filter(metric__exact=self.instance.metric).count()
+            if n > 0:
+                return True
+            else:
+                return False
+        else:
+            return True
+
 class MetricConfigInline(admin.TabularInline):
     model = MetricConfig
     verbose_name = 'Config'
     verbose_name_plural = 'Config'
     form = MetricConfigForm
     template = 'admin/edit_inline/tabular-attrs.html'
+    formset = RequiredMetricConfig
     extra = 1
 
     def has_add_permission(self, request):
@@ -379,23 +410,27 @@ class MetricAdmin(CompareVersionAdmin, admin.ModelAdmin):
         return True
 
 def update_field(field, formdata, model):
-    newentry = '{0} {1}'.format(formdata['key'], formdata['value'])
-    objs = model.objects.filter(metric__exact=formdata['metric'])
-    fielddata = None
+    try:
+        newentry = '{0} {1}'.format(formdata['key'], formdata['value'])
+        objs = model.objects.filter(metric__exact=formdata['metric'])
+        fielddata = None
 
-    objfield = eval("formdata['metric'].%s" % field)
+        objfield = eval("formdata['metric'].%s" % field)
 
-    if objfield:
-        fielddata = json.loads(objfield)
-        if formdata['id']:
-            index = list(objs).index(formdata['id'])
-            fielddata[index] = newentry
+        if objfield:
+            fielddata = json.loads(objfield)
+            if formdata['id']:
+                index = list(objs).index(formdata['id'])
+                fielddata[index] = newentry
+            else:
+                fielddata.append(newentry)
         else:
-            fielddata.append(newentry)
-    else:
-        fielddata = list([newentry])
+            fielddata = list([newentry])
 
-    codestr = """formdata['metric'].%s = json.dumps(fielddata)""" % field
-    exec codestr
+        codestr = """formdata['metric'].%s = json.dumps(fielddata)""" % field
+        exec codestr
+
+    except KeyError as e:
+        raise ValidationError('')
 
 reversion.register(Metric)
