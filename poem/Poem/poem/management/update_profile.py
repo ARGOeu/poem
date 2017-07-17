@@ -122,9 +122,10 @@ class PoemSync(object):
         if not url:
             url = self._base_url
         try:
+            import ipdb; ipdb.set_trace()  # XXX BREAKPOINT
             o = urlparse(url)
             if o.scheme.startswith('file'):
-                dcstr = simplejson.JSONDecoder().decode(open('/'+o.hostname+o.path).read())
+                dcstr = simplejson.JSONDecoder().decode(open('/'+o.path).read())
             else:
                 if o.scheme.startswith('https'):
                     conn = httplib.HTTPSConnection(host=o.netloc,
