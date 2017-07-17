@@ -50,6 +50,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/poem-syncvo
 %{_bindir}/poem-createdb
 %{_bindir}/poem-importprofiles
+%{_bindir}/poem-exportprofiles
 
 %config %{_sysconfdir}/%{name}/poem_logging.ini
 %config %{_sysconfdir}/httpd/conf.d/poem.conf

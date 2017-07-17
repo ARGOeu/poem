@@ -12,7 +12,7 @@ logging.basicConfig(format='poem-importprofiles[%(process)s]: %(levelname)s %(me
 logger = logging.getLogger('POEMIMPORTPROFILES')
 
 class Command(BaseCommand):
-    args = '<space separated list of profiles to import>'
+    args = '[<space separated list of profiles to import>]'
     help = 'Import profiles to POEM (from URL containing JSON encoded List)'
 
     option_list = BaseCommand.option_list + (
@@ -30,7 +30,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         if not options.get('url'):
-            raise CommandError('Usage is %s' % self.args)
+            raise CommandError('Usage is --url <url> %s' % self.args)
 
         logger.info( "Running synchronizer for POEM sync (%s)" % options.get('url'))
 
@@ -39,9 +39,8 @@ class Command(BaseCommand):
             sys.exit(0)
 
         try:
-            if args:
-                sync_ob = PoemSync(profile_list=args)
-                sync_ob.sync_profile_list_from_url(url=options.get('url'))
+            sync_ob = PoemSync(profile_list=args)
+            sync_ob.sync_profile_list_from_url(url=options.get('url'))
         except Exception, e:
             logger.error('Exception occured while trying to import profiles (%s)' % str(e))
             sys.exit(2)
