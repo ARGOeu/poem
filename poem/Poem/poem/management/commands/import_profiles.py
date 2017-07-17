@@ -39,9 +39,8 @@ class Command(BaseCommand):
             sys.exit(0)
 
         try:
-            if args:
-                sync_ob = PoemSync(profile_list=args)
-                sync_ob.sync_profile_list_from_url(url=options.get('url'))
+            sync_ob = PoemSync(profile_list=args)
+            sync_ob.sync_profile_list_from_url(url=options.get('url'))
         except Exception, e:
             logger.error('Exception occured while trying to import profiles (%s)' % str(e))
             sys.exit(2)

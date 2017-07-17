@@ -109,9 +109,13 @@ class PoemSync(object):
         ob_list = []
         res = self._raise_exception
         self._raise_exception = False
+        import ipdb; ipdb.set_trace()  # XXX BREAKPOINT
         for ob in object_list:
             # from poem instance import selectively
             if self._profile_list and ob['name'] in self._profile_list:
+                obj = function_name(ob)
+                ob_list.append(obj)
+            elif not self._profile_list:
                 obj = function_name(ob)
                 ob_list.append(obj)
         self._raise_exception = res
