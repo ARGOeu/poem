@@ -46,6 +46,24 @@ class SharedInfo:
             return None
 
 
+class RequiredProbeExecutable(BaseInlineFormSet):
+    """
+    Generates an inline formset that is required
+    """
+
+    def _construct_form(self, i, **kwargs):
+        """
+        Override the method to change the form attribute empty_permitted
+        """
+        form = super(RequiredProbeExecutable, self)._construct_form(i, **kwargs)
+        n = MetricProbeExecutable.objects.filter(metric__exact=self.instance).count()
+        if n == 0:
+            form.empty_permitted = False
+        else:
+            form.empty_permitted = True
+        return form
+
+
 class RequiredMetricConfig(BaseInlineFormSet):
     """
     Generates an inline formset that is required
@@ -312,6 +330,7 @@ class MetricProbeExecutableInline(admin.TabularInline):
     template = 'admin/edit_inline/tabular-attrs-exec.html'
     max_num = 1
     can_delete = False
+    formset = RequiredProbeExecutable
 
     def has_add_permission(self, request):
         if request.user.has_perm('poem.groupown_metric') \
