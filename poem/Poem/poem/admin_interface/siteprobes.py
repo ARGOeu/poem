@@ -117,6 +117,11 @@ class ProbeForm(ModelForm):
                      max_length=100,
                      widget=TextInput(attrs={'maxlength': 100, 'size': 45}),
                      label='Name')
+    repository = CharField(help_text='Probe repository URL',
+                           max_length=100,
+                           widget=TextInput(attrs={'maxlength': 100,
+                                                   'size': 45}),
+                           label='Repository')
     docurl = CharField(help_text='Documentation URL',
                      max_length=100,
                      widget=TextInput(attrs={'maxlength': 100, 'size': 45}),
@@ -205,11 +210,11 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
                 self._groupown_turn(request.user, 'del')
         if obj:
             self.fieldsets = ((None, {'classes': ['infoone'], 'fields': (('name', 'version',), 'datetime', 'user', )}),
-                              (None, {'classes': ['infotwo'], 'fields': ('docurl', 'description','comment',)}),)
+                              (None, {'classes': ['infotwo'], 'fields': ('repository', 'docurl', 'description','comment',)}),)
             self.readonly_fields = ('user', 'datetime',)
         else:
             self.fieldsets = ((None, {'classes': ['infoone'], 'fields': (('name', 'version',),)}),
-                              (None, {'classes': ['infotwo'], 'fields': ('docurl', 'description','comment', )}),)
+                              (None, {'classes': ['infotwo'], 'fields': ('repository', 'docurl', 'description','comment', )}),)
             self.readonly_fields = ()
         return super(ProbeAdmin, self).get_form(request, obj=None, **kwargs)
 

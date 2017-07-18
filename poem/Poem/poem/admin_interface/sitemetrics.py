@@ -15,7 +15,7 @@ from Poem.poem.lookups import check_cache
 from Poem.poem.admin_interface.formmodel import MyModelMultipleChoiceField, MyModelChoiceField, MySelect
 from Poem.poem.models import Metric, Probe, UserProfile, VO, ServiceFlavour,GroupOfProbes,\
                              CustUser, Tags, Metrics, GroupOfMetrics, MetricAttribute, MetricConfig, MetricParameter,\
-                             MetricFlags, MetricDependancy
+                             MetricFlags, MetricDependancy, MetricProbeExecutable
 
 from ajax_select import make_ajax_field
 from reversion_compare.admin import CompareVersionAdmin
@@ -45,6 +45,7 @@ class SharedInfo:
         else:
             return None
 
+
 class RequiredMetricConfig(BaseInlineFormSet):
     """
     Generates an inline formset that is required
@@ -55,7 +56,11 @@ class RequiredMetricConfig(BaseInlineFormSet):
         Override the method to change the form attribute empty_permitted
         """
         form = super(RequiredMetricConfig, self)._construct_form(i, **kwargs)
-        form.empty_permitted = False
+        n = MetricConfig.objects.filter(metric__exact=self.instance).count()
+        if n == 0:
+            form.empty_permitted = False
+        else:
+            form.empty_permitted = True
         return form
 
 
@@ -105,6 +110,7 @@ class MetricAddForm(ModelForm):
         fetched = self.cleaned_data['tag']
         return Tags.objects.get(id=fetched.id)
 
+
 class MetricChangeForm(MetricAddForm):
     def __init__(self, *args, **kwargs):
         sh = SharedInfo()
@@ -127,6 +133,7 @@ class MetricChangeForm(MetricAddForm):
             raise ValidationError("You are not member of group %s." % (str(groupsel)))
         return groupsel
 
+
 class MetricAttributeForm(ModelForm):
     key = CharField(label='key')
     value = CharField(label='value')
@@ -135,6 +142,7 @@ class MetricAttributeForm(ModelForm):
         update_field('attribute', self.cleaned_data, MetricAttribute)
 
         return super(MetricAttributeForm, self).clean()
+
 
 class MetricAttributeInline(admin.TabularInline):
     model = MetricAttribute
@@ -157,6 +165,7 @@ class MetricAttributeInline(admin.TabularInline):
     def has_change_permission(self, request, obj=None):
         return True
 
+
 class MetricParameterForm(ModelForm):
     key = CharField(label='key')
     value = CharField(label='value')
@@ -165,6 +174,7 @@ class MetricParameterForm(ModelForm):
         update_field('parameter', self.cleaned_data, MetricParameter)
 
         return super(MetricParameterForm, self).clean()
+
 
 class MetricParameterInline(admin.TabularInline):
     model = MetricParameter
@@ -187,6 +197,7 @@ class MetricParameterInline(admin.TabularInline):
     def has_change_permission(self, request, obj=None):
         return True
 
+
 class MetricFlagsForm(ModelForm):
     key = CharField(label='key')
     value = CharField(label='value')
@@ -195,6 +206,7 @@ class MetricFlagsForm(ModelForm):
         update_field('flags', self.cleaned_data, MetricFlags)
 
         return super(MetricFlagsForm, self).clean()
+
 
 class MetricFlagsInline(admin.TabularInline):
     model = MetricFlags
@@ -217,6 +229,7 @@ class MetricFlagsInline(admin.TabularInline):
     def has_change_permission(self, request, obj=None):
         return True
 
+
 class MetricDependancyForm(ModelForm):
     key = CharField(label='key')
     value = CharField(label='value')
@@ -225,6 +238,7 @@ class MetricDependancyForm(ModelForm):
         update_field('dependancy', self.cleaned_data, MetricDependancy)
 
         return super(MetricDependancyForm, self).clean()
+
 
 class MetricDependancyInline(admin.TabularInline):
     model = MetricDependancy
@@ -247,6 +261,7 @@ class MetricDependancyInline(admin.TabularInline):
     def has_change_permission(self, request, obj=None):
         return True
 
+
 class MetricConfigForm(ModelForm):
     key = CharField(label='key')
     value = CharField(label='value')
@@ -256,18 +271,6 @@ class MetricConfigForm(ModelForm):
 
         return super(MetricConfigForm, self).clean()
 
-    def is_valid(self):
-        formdata = self.cleaned_data
-
-        if (not 'key' in formdata
-            or 'value' not in formdata):
-            n = MetricConfig.objects.filter(metric__exact=self.instance.metric).count()
-            if n > 0:
-                return True
-            else:
-                return False
-        else:
-            return True
 
 class MetricConfigInline(admin.TabularInline):
     model = MetricConfig
@@ -290,6 +293,39 @@ class MetricConfigInline(admin.TabularInline):
 
     def has_change_permission(self, request, obj=None):
         return True
+
+
+class MetricProbeExecutableForm(ModelForm):
+    value = CharField(max_length=255)
+
+    def clean(self):
+        update_field('probeexecutable', self.cleaned_data, MetricProbeExecutable)
+
+        return super(MetricProbeExecutableForm, self).clean()
+
+
+class MetricProbeExecutableInline(admin.TabularInline):
+    model = MetricProbeExecutable
+    verbose_name = 'Probe executable'
+    verbose_name_plural = 'Probe executable'
+    form = MetricProbeExecutableForm
+    template = 'admin/edit_inline/tabular-attrs-exec.html'
+    max_num = 1
+    can_delete = False
+
+    def has_add_permission(self, request):
+        if request.user.has_perm('poem.groupown_metric') \
+                or request.user.is_superuser:
+            return True
+        else:
+            return False
+
+    def has_delete_permission(self, request, obj=None):
+        return True
+
+    def has_change_permission(self, request, obj=None):
+        return True
+
 
 class MetricAdmin(CompareVersionAdmin, admin.ModelAdmin):
     """
@@ -321,7 +357,9 @@ class MetricAdmin(CompareVersionAdmin, admin.ModelAdmin):
     list_display = ('name', 'tag', 'probeversion_url', 'group')
     fieldsets = ((None, {'classes' : ['tagging'], 'fields' : (('name', 'probeversion', 'tag'), 'group')}),)
     list_filter = ('tag', GroupMetricsListFilter,)
-    inlines = (MetricConfigInline, MetricAttributeInline, MetricDependancyInline, MetricParameterInline, MetricFlagsInline, )
+    inlines = (MetricProbeExecutableInline, MetricConfigInline,
+               MetricAttributeInline, MetricDependancyInline,
+               MetricParameterInline, MetricFlagsInline, )
     search_fields = ('name',)
     actions = None
     ordering = ('name',)
@@ -409,9 +447,14 @@ class MetricAdmin(CompareVersionAdmin, admin.ModelAdmin):
     def has_change_permission(self, request, obj=None):
         return True
 
+
 def update_field(field, formdata, model):
     try:
-        newentry = '{0} {1}'.format(formdata['key'], formdata['value'])
+        try:
+            newentry = '{0} {1}'.format(formdata['key'], formdata['value'])
+        except KeyError:
+            newentry = '{0}'.format(formdata['value'])
+
         objs = model.objects.filter(metric__exact=formdata['metric'])
         fielddata = None
 
