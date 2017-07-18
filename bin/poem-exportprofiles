@@ -12,14 +12,16 @@ usage()
 
 if [[ $# -gt 0 ]]
 then
-    for a in $*
-    do
-        args[${#args[@]}]=${a}
-    done
-    profiles="${args[@]:1:$#}"
-    su -s /bin/sh  -c \
-    "export DJANGO_SETTINGS_MODULE=Poem.settings && \
-    django-admin export_profiles --export $1 $profiles"
+	for a in $*
+	do
+		args[${#args[@]}]=${a}
+	done
+
+	profiles="${args[@]:1:$#}"
+
+	su -s /bin/sh  -c \
+	"export DJANGO_SETTINGS_MODULE=Poem.settings && \
+	django-admin export_profiles --export $1 $profiles"
 else
-    usage
+	usage
 fi
