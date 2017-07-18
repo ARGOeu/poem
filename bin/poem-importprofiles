@@ -32,8 +32,8 @@ do
 		s)
 			url=$(echo "$url" | sed "s/http/https/")
 			;;
-        f)
-            file="file://$OPTARG"
+		f)
+			file="file://$OPTARG"
 			;;
 		p)
 			if echo $OPTARG | grep -q '^http'
@@ -57,13 +57,19 @@ fi
 
 shift $(($OPTIND - 1))
 
-if [[ -e  "/${file##*//}" ]]
+echo $url, $file
+
+if [[ -f "/${file##*//}" ]]
 then
-    su -s /bin/sh -c \
-    "export DJANGO_SETTINGS_MODULE=Poem.settings && \
-    django-admin import_profiles --url \"$file\" $*"
+	su -s /bin/sh - $RUNASUSER -c \
+	"export DJANGO_SETTINGS_MODULE=Poem.settings && \
+	django-admin import_profiles --url \"$file\" $*"
+elif echo $url | grep -q '^http'
+then
+	su -s /bin/sh - $RUNASUSER -c \
+	"export DJANGO_SETTINGS_MODULE=Poem.settings && \
+	django-admin import_profiles $initial --url $url $*"
 else
-    su -s /bin/sh - $RUNASUSER -c \
-    "export DJANGO_SETTINGS_MODULE=Poem.settings && \
-    django-admin import_profiles $initial --url $url $*"
+	usage
+	exit 2
 fi
