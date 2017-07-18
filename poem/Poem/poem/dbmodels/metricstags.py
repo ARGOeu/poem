@@ -64,6 +64,7 @@ class Metric(models.Model):
     probeversion = models.CharField(max_length=128)
     probekey = models.ForeignKey(Version)
     group = models.ForeignKey(GroupOfMetrics)
+    probeexecutable = models.CharField(max_length=128)
     config = models.CharField(max_length=1024)
     attribute = models.CharField(max_length=1024)
     dependancy = models.CharField(max_length=1024)
@@ -115,6 +116,14 @@ class MetricConfig(models.Model):
 
     class Meta:
         app_label = 'poem'
+
+class MetricProbeExecutable(models.Model):
+    metric = models.ForeignKey(Metric, blank=False, null=False)
+    value = models.CharField(max_length=128, null=False,
+                            help_text='Probe executable')
+    class Meta:
+        app_label = 'poem'
+
 
 def delete_entryfield(*args, **kwargs):
     i = kwargs['instance']

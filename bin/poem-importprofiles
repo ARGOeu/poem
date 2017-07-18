@@ -57,8 +57,6 @@ fi
 
 shift $(($OPTIND - 1))
 
-echo $url, $file
-
 if [[ -f "/${file##*//}" ]]
 then
 	su -s /bin/sh - $RUNASUSER -c \
