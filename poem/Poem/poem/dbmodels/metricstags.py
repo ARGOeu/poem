@@ -73,7 +73,7 @@ class Metric(models.Model):
 
     class Meta:
         app_label = 'poem'
-        unique_together = (('name', 'probeversion'),)
+        unique_together = (('name', 'tag'),)
     def __unicode__(self):
         return u'%s (%s)' % (self.name, self.tag)
 
