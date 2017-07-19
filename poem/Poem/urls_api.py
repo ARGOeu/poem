@@ -8,5 +8,6 @@ admin.autodiscover()
 urlpatterns = patterns('Poem.poem.views',
     url(r'^0.2/json/profiles/?$', 'profiles'),
     url(r'^0.2/json/metrics_in_profiles/?$', 'metrics_in_profiles'),
-    url(r'^0.2/json/metrics_in_group/?$', views.MetricsInGroup.as_view())
+    url(r'^0.2/json/metrics_in_group/?$', views.MetricsInGroup.as_view()),
+    url(r'^0.2/json/metrics/?$', views.Metrics.as_view())
 )
