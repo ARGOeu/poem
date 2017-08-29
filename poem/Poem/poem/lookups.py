@@ -59,7 +59,7 @@ class PLookup(LookupChannel):
     model = Version
 
     def get_query(self, q, request):
-        values = [val for val in self.model.objects.filter(metric__id__isnull=True)\
+        values = [val for val in self.model.objects.all() \
                   if json.loads(val.serialized_data)[0]['model'] == 'poem.probe']
         return sorted(filter(lambda x: q.lower() in x.object_repr.lower(), values))
 
