@@ -95,7 +95,7 @@ class MetricsInGroup(View):
     def get(self, request):
         gr = request.GET.get('group')
         metrics = models.Metrics.objects.filter(groupofmetrics__name__exact=gr).values_list('name', flat=True)
-        return HttpResponse(json.dumps({'result': [met for met in metrics]}))
+        return HttpResponse(json.dumps({'result': [met for met in metrics]}), content_type='application/json')
 
 class Metrics(View):
     def get(self, request):
@@ -144,4 +144,4 @@ class Metrics(View):
             except models.Tags.DoesNotExist:
                 pass
 
-        return HttpResponse(json.dumps(api))
+        return HttpResponse(json.dumps(api), content_type='application/json')

@@ -56,7 +56,7 @@ class MetricInstanceFormRW(ModelForm):
                                    ServiceFlavour, 'name')
         form_flavour = self.cleaned_data['service_flavour']
         if form_flavour not in clean_values:
-            raise ValidationError("Unable to find flavour %s." % (str(form_flavour)))
+            ServiceFlavour.objects.create(name=form_flavour)
         return form_flavour
 
 class MetricInstanceFormRO(MetricInstanceFormRW):
