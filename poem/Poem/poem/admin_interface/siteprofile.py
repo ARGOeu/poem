@@ -56,7 +56,10 @@ class MetricInstanceFormRW(ModelForm):
                                    ServiceFlavour, 'name')
         form_flavour = self.cleaned_data['service_flavour']
         if form_flavour not in clean_values:
-            ServiceFlavour.objects.create(name=form_flavour)
+            try:
+                ServiceFlavour.objects.get(name=form_flavour)
+            except ServiceFlavour.DoesNotExist:
+                ServiceFlavour.objects.create(name=form_flavour, description='Manually added service type not defined in GOCDB')
         return form_flavour
 
 class MetricInstanceFormRO(MetricInstanceFormRW):
