@@ -260,8 +260,8 @@ class MetricDependancyForm(ModelForm):
 
 class MetricDependancyInline(admin.TabularInline):
     model = MetricDependancy
-    verbose_name = 'Dependancy'
-    verbose_name_plural = 'Dependancy'
+    verbose_name = 'Dependency'
+    verbose_name_plural = 'Dependency'
     form = MetricDependancyForm
     template = 'admin/edit_inline/tabular-attrs.html'
     extra = 1
