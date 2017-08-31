@@ -13,7 +13,7 @@ usage()
 	printf "       [-i] - Only import profiles if POEM database is empty\n" >&2
 	printf "       [-s] - Secure HTTP\n" >&2
 	printf "       [-l] - append slash on the end of PI method\n" >&2
-	printf "       [-f] - full pathname to file with JSON serialized POEM profiles\n" >&2
+	printf "       [-f] - filename in /tmp with JSON serialized POEM profiles\n" >&2
 	printf "       [-p <POEM server>] - Hostname of POEM server\n" >&2
 	printf "       [-h] - usage\n" >&2
 	printf "       [PROFILE1 PROFILE2] - Space separated list of profiles. If not specified,\n" >&2
@@ -34,7 +34,7 @@ do
 			url=$(echo "$url" | sed "s/http/https/")
 			;;
 		f)
-			file="file://$OPTARG"
+            file="file:///tmp/$(basename $OPTARG)"
 			;;
 		p)
 			if echo $OPTARG | grep -q '^http'
@@ -65,7 +65,7 @@ if [[ -f "/${file##*//}" ]]
 then
 	su -s /bin/sh - $RUNASUSER -c \
 	"export DJANGO_SETTINGS_MODULE=Poem.settings && \
-	django-admin import_profiles --url \"$file\" $*"
+    django-admin import_profiles --url \"$file\" $*"
 elif echo $url | grep -q '^http'
 then
 	su -s /bin/sh - $RUNASUSER -c \
