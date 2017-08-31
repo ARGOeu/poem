@@ -10,7 +10,7 @@ usage()
 	exit 2
 }
 
-if [[ $# -gt 0 ]]
+if [[ $# > 0 && "x$1" != "x-h" ]]
 then
 	for a in $*
 	do

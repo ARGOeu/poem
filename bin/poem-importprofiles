@@ -9,18 +9,19 @@ url=$DEFPOEM
 
 usage()
 {
-	printf "Usage: %s [-i] [-f] [-s] [-p <POEM server>] [PROFILE1 PROFILE2 ...]\n" $(basename $0) >&2
+	printf "Usage: %s [-i] [-f] [-s] [-p <POEM server>] [-h] [PROFILE1 PROFILE2 ...]\n" $(basename $0) >&2
 	printf "       [-i] - Only import profiles if POEM database is empty\n" >&2
 	printf "       [-s] - Secure HTTP\n" >&2
 	printf "       [-l] - append slash on the end of PI method\n" >&2
 	printf "       [-f] - full pathname to file with JSON serialized POEM profiles\n" >&2
 	printf "       [-p <POEM server>] - Hostname of POEM server\n" >&2
+	printf "       [-h] - usage\n" >&2
 	printf "       [PROFILE1 PROFILE2] - Space separated list of profiles. If not specified,\n" >&2
 	printf "                             all profiles will be imported\n" >&2
 	exit 2
 }
 
-while getopts 'lisp:f:' OPTION
+while getopts 'lishp:f:' OPTION
 do
 	case $OPTION in
 		i)
@@ -42,6 +43,9 @@ do
 				exit 2
 			fi
 			url=$(echo "$url" | sed "s/mon.egi.eu/$OPTARG/")
+			;;
+		h)
+			usage
 			;;
 		?)
 			usage
