@@ -22,7 +22,7 @@ then
 
 	su -s /bin/sh  -c \
 	"export DJANGO_SETTINGS_MODULE=Poem.settings && \
-    django-admin export_profiles --export /tmp/$(basename $1) $profiles"
+	django-admin export_profiles --export /tmp/$(basename $1) $profiles"
 else
 	usage
 fi
