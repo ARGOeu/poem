@@ -157,6 +157,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'ajax_select',
     'Poem.poem',
+    'south'
 )
 
 AJAX_LOOKUP_CHANNELS = {

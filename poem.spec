@@ -2,7 +2,7 @@
 %{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name:           poem
-Version:        1.0.5
+Version:        1.0.6
 Release:        1%{?dist}
 Summary:        Profile Management (POEM) system for Service Availability Monitoring (SAM).
 Group:          Web application
@@ -13,6 +13,7 @@ Source0:        poem-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch:      noarch
 Requires:       python-django >= 1.6
+Requires:       python-django-south
 Requires:       django-ajax-selects
 Requires:       django-reversion
 Requires:       django-flat-theme
