@@ -49,7 +49,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %{_bindir}/poem-syncservtype
 %{_bindir}/poem-syncvo
-%{_bindir}/poem-createdb
+%{_bindir}/poem-db
 %{_bindir}/poem-importprofiles
 %{_bindir}/poem-exportprofiles
 

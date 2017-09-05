@@ -36,7 +36,7 @@ setup(name=NAME,
                         and services and enables profile-based configuration of SAM/Nagios.''',
     url='https://tomtools.cern.ch/confluence/display/SAM/POEM',
     scripts = ['bin/poem-syncvo', 'bin/poem-syncservtype',
-               'bin/poem-createdb', 'bin/poem-importprofiles',
+               'bin/poem-db', 'bin/poem-importprofiles',
                'bin/poem-exportprofiles'],
     data_files = [
         ('/etc/poem', ['etc/poem.ini', 'etc/poem_logging.ini']),
