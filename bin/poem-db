@@ -1,0 +1,54 @@
+#!/bin/sh
+
+RUNASUSER="apache"
+SITEPACK=$(python -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")
+
+usage()
+{
+	printf "Usage: %s [-c] [-m] [-h]\n" $(basename $0) >&2
+	printf "       [-c] - create database\n" >&2
+	printf "       [-a] - apply new migration\n" >&2
+	printf "       [-m] - create new migration\n" >&2
+	printf "       [-l] - list migrations\n" >&2
+	printf "       [-h] - usage\n" >&2
+    exit 2
+}
+
+if [[ $# == 0 ]]
+then
+    usage
+fi
+
+while getopts 'camlh' OPTION
+do
+    case $OPTION in
+        c)
+            su -s /bin/sh - $RUNASUSER -c \
+            "export DJANGO_SETTINGS_MODULE=Poem.settings && \
+            python $SITEPACK/Poem/manage.py syncdb --all" && \
+            su -s /bin/sh - $RUNASUSER -c \
+            "export DJANGO_SETTINGS_MODULE=Poem.settings && \
+            python $SITEPACK/Poem/manage.py migrate poem --fake"
+            ;;
+        m)
+            export DJANGO_SETTINGS_MODULE=Poem.settings && \
+            python $SITEPACK/Poem/manage.py schemamigration poem --auto
+            ;;
+        a)
+            su -s /bin/sh - $RUNASUSER -c \
+            "export DJANGO_SETTINGS_MODULE=Poem.settings && \
+            python $SITEPACK/Poem/manage.py migrate poem"
+            ;;
+        l)
+            su -s /bin/sh - $RUNASUSER -c \
+            "export DJANGO_SETTINGS_MODULE=Poem.settings && \
+            python $SITEPACK/Poem/manage.py migrate poem --list"
+            ;;
+        h)
+            usage
+            ;;
+        ?)
+            usage
+            ;;
+    esac
+done

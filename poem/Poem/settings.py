@@ -9,15 +9,21 @@ APP_PATH = os_path.abspath(os_path.split(__file__)[0])
 PROJECT_PATH = os_path.abspath(os_path.join(APP_PATH, '..'))
 CONFIG_FILE = '/etc/poem/poem.ini'
 
-config = RawConfigParser()
-if not config.read([CONFIG_FILE]):
-    raise ImproperlyConfigured('Unable to parse config file %s' % CONFIG_FILE)
-
 try:
+
+    config = RawConfigParser()
+
+    if not config.read([CONFIG_FILE]):
+        raise ImproperlyConfigured('Unable to parse config file %s' % CONFIG_FILE)
+
     # General
     SUPERUSER_NAME = config.get('general', 'SUPERUSER_NAME')
     SUPERUSER_PASS = config.get('general', 'SUPERUSER_PASSWORD')
     SUPERUSER_EMAIL = config.get('general', 'SUPERUSER_EMAIL')
+
+    if not all([SUPERUSER_EMAIL, SUPERUSER_NAME, SUPERUSER_PASS]):
+        raise ImproperlyConfigured('Missing superuser value in config file %s' % CONFIG_FILE)
+
     DATABASES = {
         'default': {
             'NAME':  '/var/lib/poem/poemserv.db',
@@ -33,8 +39,7 @@ try:
             }
         }
     }
-    # Others
-    # Make these unique, and don't share it with anybody.
+
     ALLOWED_HOSTS = config.get('others', 'ALLOWED_HOSTS')
     CIC_VO_URL = config.get('others', 'CIC_VO_URL')
     DEBUG = bool(config.get('others','DEBUG') == 'True')
@@ -46,8 +51,13 @@ try:
     SECRET_KEY = config.get('others','SECRET_KEY')
     TIME_ZONE = config.get('others', 'TIME_ZONE')
 
-except NoSectionError, e:
-    raise ImproperlyConfigured(e)
+except NoSectionError as e:
+    print e
+    raise SystemExit(1)
+
+except ImproperlyConfigured as e:
+    print e
+    raise SystemExit(1)
 
 URL_DEBUG = True
 
@@ -157,6 +167,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'ajax_select',
     'Poem.poem',
+    'south'
 )
 
 AJAX_LOOKUP_CHANNELS = {
