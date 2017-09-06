@@ -31,9 +31,8 @@ do
             python $SITEPACK/Poem/manage.py migrate poem --fake"
             ;;
         m)
-            su -s /bin/sh - $RUNASUSER -c \
-            "export DJANGO_SETTINGS_MODULE=Poem.settings && \
-            python $SITEPACK/Poem/manage.py schemamigration poem --auto"
+            export DJANGO_SETTINGS_MODULE=Poem.settings && \
+            python $SITEPACK/Poem/manage.py schemamigration poem --auto
             ;;
         a)
             su -s /bin/sh - $RUNASUSER -c \
