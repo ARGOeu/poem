@@ -44,6 +44,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files 
 %defattr(-,root,root,-)
+%dir %{python_sitelib}/Poem
 %{python_sitelib}/Poem/*
 %{python_sitelib}/*egg-info
 
