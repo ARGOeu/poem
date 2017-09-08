@@ -258,6 +258,15 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
     def has_change_permission(self, request, obj=None):
         return True
 
+    def delete_model(self, request, obj):
+        ct = ContentType.objects.get_for_model(obj)
+        lver = reversion.models.Version.objects.filter(object_id_int=obj.id,
+                                                       content_type_id=ct.id)
+        for v in lver:
+            reversion.models.Revision.objects.get(pk=v.revision_id).delete()
+
+        return super(ProbeAdmin, self).delete_model(request, obj)
+
     def revision_view(self, request, object_id, version_id, extra_context=None):
         currev = reversion.models.Version.objects.get(pk=version_id).object_repr
         datecreated = reversion.models.Revision.objects.get(pk=version_id).date_created

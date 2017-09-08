@@ -10,7 +10,6 @@ PROJECT_PATH = os_path.abspath(os_path.join(APP_PATH, '..'))
 CONFIG_FILE = '/etc/poem/poem.ini'
 
 try:
-
     config = RawConfigParser()
 
     if not config.read([CONFIG_FILE]):
