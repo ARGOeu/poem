@@ -145,10 +145,13 @@ post_delete.connect(delete_entryfield, sender=MetricParameter)
 # on deletion of parent Metric record. such leftover revision
 # is created with empty comment.
 def delete_leftover_revision(instances, **kwargs):
-    rev = kwargs['revision']
-    if rev.comment:
-        pass
+    if len(instances) == 1 and isinstance(instances[0], Metric):
+        rev = kwargs['revision']
+        if rev.comment:
+            pass
+        else:
+            rev.delete()
     else:
-        rev.delete()
+        pass
 
 post_revision_commit.connect(delete_leftover_revision)
