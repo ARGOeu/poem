@@ -80,7 +80,7 @@ div.module table#change-history > tbody td:nth-of-type(1) {
   width: 150px;
   text-align: left;
 }
-.change-list tbody th a, td{
+.change-list tbody th a, td {
   font-size: 14px;
 }
 
@@ -92,3 +92,7 @@ select {
   background: #F6F6F6;
 }
 
+form .aligned ul {
+  margin-left: 0;
+  padding-left: 0;
+}
