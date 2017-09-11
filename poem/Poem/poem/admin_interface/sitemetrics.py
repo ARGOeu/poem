@@ -426,6 +426,15 @@ class MetricAdmin(CompareVersionAdmin, admin.ModelAdmin):
                 self._groupown_turn(request.user, 'del')
         return super(MetricAdmin, self).get_form(request, obj=None, **kwargs)
 
+    def delete_model(self, request, obj):
+        ct = ContentType.objects.get_for_model(obj)
+        lver = reversion.models.Version.objects.filter(object_id_int=obj.id,
+                                                       content_type_id=ct.id)
+        for v in lver:
+            reversion.models.Revision.objects.get(pk=v.revision_id).delete()
+
+        return super(MetricAdmin, self).delete_model(request, obj)
+
     def save_model(self, request, obj, form, change):
         obj.probekey = Version.objects.get(object_repr__exact=obj.probeversion)
         if request.user.has_perm('poem.groupown_metric') \

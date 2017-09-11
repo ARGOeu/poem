@@ -1,22 +1,11 @@
-from Poem import settings
-from Poem.poem.dbmodels.probes import Probe
-from django import forms
-from django.dispatch import receiver
-from django.contrib import auth
-from django.contrib.auth.hashers import (check_password, make_password, is_password_usable)
-from django.contrib.auth.models import UserManager, GroupManager, Permission, PermissionsMixin, AbstractBaseUser
-from django.core import validators
-from django.core.mail import send_mail
+from django.contrib.auth.models import GroupManager, Permission
 from django.db import models
 from django.db.models.signals import post_delete
-from django.utils import timezone
-from django.utils.http import urlquote
 from django.utils.translation import ugettext_lazy as _
-import re
-import copy
 import json
 
 from reversion.models import Version
+from reversion import post_revision_commit
 
 class Metrics(models.Model):
     id = models.AutoField(primary_key=True)
@@ -29,6 +18,7 @@ class Metrics(models.Model):
     def __unicode__(self):
         return u'%s' % self.name
 
+
 class Tags(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=128)
@@ -38,6 +28,7 @@ class Tags(models.Model):
 
     def __unicode__(self):
         return u'%s' % (self.name)
+
 
 class GroupOfMetrics(models.Model):
     name = models.CharField(_('name'), max_length=80, unique=True)
@@ -57,6 +48,7 @@ class GroupOfMetrics(models.Model):
     def natural_key(self):
         return (self.name,)
 
+
 class Metric(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=128)
@@ -74,8 +66,10 @@ class Metric(models.Model):
     class Meta:
         app_label = 'poem'
         unique_together = (('name', 'tag'),)
+
     def __unicode__(self):
         return u'%s (%s)' % (self.name, self.tag)
+
 
 class MetricDependancy(models.Model):
     key = models.CharField(max_length=128)
@@ -85,6 +79,7 @@ class MetricDependancy(models.Model):
     class Meta:
         app_label = 'poem'
 
+
 class MetricFlags(models.Model):
     key = models.CharField(max_length=128)
     value = models.CharField(max_length=128)
@@ -92,6 +87,7 @@ class MetricFlags(models.Model):
 
     class Meta:
         app_label = 'poem'
+
 
 class MetricParameter(models.Model):
     key = models.CharField(max_length=128)
@@ -101,6 +97,7 @@ class MetricParameter(models.Model):
     class Meta:
         app_label = 'poem'
 
+
 class MetricAttribute(models.Model):
     key = models.CharField(max_length=128)
     value = models.CharField(max_length=128)
@@ -109,6 +106,7 @@ class MetricAttribute(models.Model):
     class Meta:
         app_label = 'poem'
 
+
 class MetricConfig(models.Model):
     key = models.CharField(max_length=128, blank=False, null=False)
     value = models.CharField(max_length=128, blank=False, null=False)
@@ -116,6 +114,7 @@ class MetricConfig(models.Model):
 
     class Meta:
         app_label = 'poem'
+
 
 class MetricProbeExecutable(models.Model):
     metric = models.ForeignKey(Metric, blank=False, null=False)
@@ -135,8 +134,24 @@ def delete_entryfield(*args, **kwargs):
         codestr = """i.metric.%s = json.dumps(fielddata)""" % field
         exec codestr
         i.metric.save()
+
 post_delete.connect(delete_entryfield, sender=MetricAttribute)
 post_delete.connect(delete_entryfield, sender=MetricConfig)
 post_delete.connect(delete_entryfield, sender=MetricDependancy)
 post_delete.connect(delete_entryfield, sender=MetricFlags)
 post_delete.connect(delete_entryfield, sender=MetricParameter)
+
+# delete empty revision leftover created by delete_entryfield()
+# on deletion of parent Metric record. such leftover revision
+# is created with empty comment.
+def delete_leftover_revision(instances, **kwargs):
+    if len(instances) == 1 and isinstance(instances[0], Metric):
+        rev = kwargs['revision']
+        if rev.comment:
+            pass
+        else:
+            rev.delete()
+    else:
+        pass
+
+post_revision_commit.connect(delete_leftover_revision)
