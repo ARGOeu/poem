@@ -139,6 +139,16 @@ class ProbeForm(ModelForm):
     user = CharField(help_text='User that added the probe', max_length=64, required=False)
     datetime = CharField(help_text='Time when probe is added', max_length=64, required=False)
 
+    def clean_version(self):
+        ver = self.cleaned_data['version']
+        name = self.cleaned_data['name']
+
+        probe = Probe.objects.get(name=name)
+        if probe.version == ver:
+            raise ValidationError("Version number should be raised")
+        else:
+            return ver
+
 class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
     """
     POEM admin core class that customizes its look and feel.
