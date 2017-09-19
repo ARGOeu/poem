@@ -19,6 +19,8 @@ urlpatterns = patterns('',
                        (r'^admin/lookups/', include(ajax_select_urls)),
                        (r'^admin/', include(myadmin.urls)),
                        (r'^api/', include('Poem.urls_api')),
+                       (r'^saml2/', include('djangosaml2.urls')),
+                       (r'^test/', 'djangosaml2.views.echo_attributes'),
 )
 
 # needed with django internal webserver

@@ -3,11 +3,14 @@ from os import path as os_path
 from ConfigParser import RawConfigParser, NoSectionError
 from distutils.sysconfig import get_python_lib
 from django.core.exceptions import ImproperlyConfigured
+import saml2
 
 PROJECT_NAME = 'poem'
 APP_PATH = os_path.abspath(os_path.split(__file__)[0])
 PROJECT_PATH = os_path.abspath(os_path.join(APP_PATH, '..'))
-CONFIG_FILE = '/etc/poem/poem.ini'
+CONFIG_FILE = '/etc/poem/poem.conf'
+LOG_CONFIG = '/etc/poem/poem_logging.conf'
+SAML_CONFIG_FILE = '/etc/poem/saml.conf'
 
 try:
     config = RawConfigParser()
@@ -45,7 +48,6 @@ try:
     GOCDB_SERVICETYPE_URL = config.get('others', 'GOCDB_SERVICETYPE_URL')
     HOST_CERT = config.get('others', 'HOST_CERT')
     HOST_KEY = config.get('others', 'HOST_KEY')
-    LOG_CONFIG = config.get('log', 'LOG_CONFIG')
     POEM_NAMESPACE = config.get('others', 'POEM_NAMESPACE')
     SECRET_KEY = config.get('others','SECRET_KEY')
     TIME_ZONE = config.get('others', 'TIME_ZONE')
@@ -55,6 +57,21 @@ except NoSectionError as e:
     raise SystemExit(1)
 
 except ImproperlyConfigured as e:
+    print e
+    raise SystemExit(1)
+
+
+# load SAML settings
+try:
+    if os_path.exists(SAML_CONFIG_FILE):
+        buf = open(SAML_CONFIG_FILE).readlines()
+        buf = ''.join(buf)
+        exec buf
+    else:
+        print '%s does not exist' % SAML_CONFIG_FILE
+        raise SystemExit(1)
+
+except Exception as e:
     print e
     raise SystemExit(1)
 
@@ -139,6 +156,7 @@ AUTHENTICATION_BACKENDS = (
     #'django.contrib.auth.backends.ModelBackend',
     'Poem.cust_auth.backends.CustModelBackend',
     'Poem.ssl_auth.backends.SSLBackend',
+    'djangosaml2.backends.Saml2Backend'
 )
 
 SSL_USERNAME = 'SSL_CLIENT_S_DN_CN'
@@ -155,6 +173,8 @@ TEMPLATE_DIRS = (
     os_path.join(APP_PATH, 'poem/templates'),
 )
 
+APPEND_SLASH=True
+
 INSTALLED_APPS = (
     'flat',
     'reversion',
@@ -166,7 +186,8 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'ajax_select',
     'Poem.poem',
-    'south'
+    'south',
+    'djangosaml2'
 )
 
 AJAX_LOOKUP_CHANNELS = {
@@ -178,3 +199,4 @@ AJAX_LOOKUP_CHANNELS = {
     'hintsmetricinstances' : ('Poem.poem.lookups', 'MILookup'),
     'hintsserviceflavours' : ('Poem.poem.lookups', 'SFLookup'),
 }
+
