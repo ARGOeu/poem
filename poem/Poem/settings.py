@@ -19,9 +19,9 @@ try:
         raise ImproperlyConfigured('Unable to parse config file %s' % CONFIG_FILE)
 
     # General
-    SUPERUSER_NAME = config.get('general', 'SUPERUSER_NAME')
-    SUPERUSER_PASS = config.get('general', 'SUPERUSER_PASSWORD')
-    SUPERUSER_EMAIL = config.get('general', 'SUPERUSER_EMAIL')
+    SUPERUSER_NAME = config.get('SUPERUSER', 'name')
+    SUPERUSER_PASS = config.get('SUPERUSER', 'password')
+    SUPERUSER_EMAIL = config.get('SUPERUSER', 'email')
 
     if not all([SUPERUSER_EMAIL, SUPERUSER_NAME, SUPERUSER_PASS]):
         raise ImproperlyConfigured('Missing superuser value in config file %s' % CONFIG_FILE)
@@ -42,15 +42,17 @@ try:
         }
     }
 
-    ALLOWED_HOSTS = config.get('others', 'ALLOWED_HOSTS')
-    CIC_VO_URL = config.get('others', 'CIC_VO_URL')
-    DEBUG = bool(config.get('others','DEBUG') == 'True')
-    GOCDB_SERVICETYPE_URL = config.get('others', 'GOCDB_SERVICETYPE_URL')
-    HOST_CERT = config.get('others', 'HOST_CERT')
-    HOST_KEY = config.get('others', 'HOST_KEY')
-    POEM_NAMESPACE = config.get('others', 'POEM_NAMESPACE')
-    SECRET_KEY = config.get('others','SECRET_KEY')
-    TIME_ZONE = config.get('others', 'TIME_ZONE')
+    SERVICETYPE_URL = config.get('SYNC', 'servicetype')
+    VO_URL = config.get('SYNC', 'vo')
+
+    SECRET_KEY = config.get('SECURITY','SecretKey')
+    ALLOWED_HOSTS = config.get('SECURITY', 'AllowedHosts')
+    HOST_CERT = config.get('SECURITY', 'HostCert')
+    HOST_KEY = config.get('SECURITY', 'HostKey')
+
+    DEBUG = bool(config.get('GENERAL','debug') == 'True')
+    POEM_NAMESPACE = config.get('GENERAL', 'namespace')
+    TIME_ZONE = config.get('GENERAL', 'timezone')
 
 except NoSectionError as e:
     print e

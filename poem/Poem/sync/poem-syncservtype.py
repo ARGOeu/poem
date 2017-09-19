@@ -31,7 +31,7 @@ def main():
     for fo in fos:
         fo.close()
 
-    o = urlparse(settings.GOCDB_SERVICETYPE_URL)
+    o = urlparse(settings.SERVICETYPE_URL)
     try:
         if o.scheme.startswith('https'):
             conn = httplib.HTTPSConnection(host=o.netloc, \
