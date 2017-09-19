@@ -50,7 +50,7 @@ try:
     HOST_CERT = config.get('SECURITY', 'HostCert')
     HOST_KEY = config.get('SECURITY', 'HostKey')
 
-    DEBUG = bool(config.get('GENERAL','debug') == 'True')
+    DEBUG = bool(config.get('GENERAL','debug'))
     POEM_NAMESPACE = config.get('GENERAL', 'namespace')
     TIME_ZONE = config.get('GENERAL', 'timezone')
 
