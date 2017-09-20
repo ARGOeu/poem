@@ -53,6 +53,12 @@
   <div class="form-row">
   	<center><a class="certlog" href="{{ request.build_absolute_uri|to_https }}">Log in using your certificate</a></center>
   </div>
+  </br>
+  <label>&nbsp;</label>
+  </br>
+  <div class="form-row">
+    <center><a class="certlog" href="{% url 'saml2:saml2_login' %}">Log in using EGI CHECK-IN</a></center>
+  </div>
 </form>
 
 <script type="text/javascript">
