@@ -63,20 +63,6 @@ except ImproperlyConfigured as e:
     raise SystemExit(1)
 
 
-# load SAML settings
-try:
-    if os_path.exists(SAML_CONFIG_FILE):
-        buf = open(SAML_CONFIG_FILE).readlines()
-        buf = ''.join(buf)
-        exec buf
-    else:
-        print '%s does not exist' % SAML_CONFIG_FILE
-        raise SystemExit(1)
-
-except Exception as e:
-    print e
-    raise SystemExit(1)
-
 URL_DEBUG = True
 
 if ',' in ALLOWED_HOSTS:
@@ -85,15 +71,6 @@ else:
     ALLOWED_HOSTS = [ALLOWED_HOSTS]
 
 TEMPLATE_DEBUG = DEBUG
-
-# Local time zone for this installation. Choices can be found here:
-# http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
-# although not all choices may be available on all operating systems.
-# On Unix systems, a value of None will cause Django to use the same
-# timezone as the operating system.
-# If running in a Windows environment this must be set to the same as your
-# system time zone.
-#TIME_ZONE = 'Europe/Zagreb'
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
@@ -131,7 +108,6 @@ TEMPLATE_LOADERS = (
         'django.template.loaders.eggs.Loader',
     )),
 )
-
 
 TEMPLATE_CONTEXT_PROCESSORS = (
     'django.contrib.auth.context_processors.auth',
@@ -201,4 +177,18 @@ AJAX_LOOKUP_CHANNELS = {
     'hintsmetricinstances' : ('Poem.poem.lookups', 'MILookup'),
     'hintsserviceflavours' : ('Poem.poem.lookups', 'SFLookup'),
 }
+
+# load SAML settings
+try:
+    if os_path.exists(SAML_CONFIG_FILE):
+        buf = open(SAML_CONFIG_FILE).readlines()
+        buf = ''.join(buf)
+        exec buf
+    else:
+        print '%s does not exist' % SAML_CONFIG_FILE
+        raise SystemExit(1)
+
+except Exception as e:
+    print e
+    raise SystemExit(1)
 
