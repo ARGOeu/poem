@@ -10,7 +10,7 @@ APP_PATH = os_path.abspath(os_path.split(__file__)[0])
 PROJECT_PATH = os_path.abspath(os_path.join(APP_PATH, '..'))
 CONFIG_FILE = '/etc/poem/poem.conf'
 LOG_CONFIG = '/etc/poem/poem_logging.conf'
-SAML_CONFIG_FILE = '/etc/poem/saml.conf'
+SAML_CONFIG_FILE = '/etc/poem/saml2.conf'
 
 try:
     config = RawConfigParser()

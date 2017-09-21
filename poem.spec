@@ -57,10 +57,11 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/poem-importprofiles
 %{_bindir}/poem-exportprofiles
 
-%config %{_sysconfdir}/%{name}/poem_logging.ini
+%config %{_sysconfdir}/%{name}/poem_logging.conf
 %config %{_sysconfdir}/httpd/conf.d/poem.conf
 %attr(0640,root,apache)
-%config(noreplace) %{_sysconfdir}/%{name}/poem.ini
+%config(noreplace) %{_sysconfdir}/%{name}/poem.conf
+%config(noreplace) %{_sysconfdir}/%{name}/saml2.conf
 %attr(0644,root,root) %{_sysconfdir}/cron.d/poem-syncvosf
 
 %{_datadir}/%{name}/apache/poem.wsgi
