@@ -15,8 +15,8 @@ from Poem.poem.admin import myadmin
 django_logging()
 
 urlpatterns = patterns('',
+                       (r'^$', lambda x: HttpResponseRedirect('/poem/admin')),
                        (r'^admin/', include(myadmin.urls)),
-                       (r'^$', lambda x: HttpResponseRedirect(urlresolvers.reverse('admin:index'))),
                        (r'^admin/lookups/', include(ajax_select_urls)),
                        (r'^api/', include('Poem.urls_api')),
                        (r'^saml2/', include('djangosaml2.urls', namespace='saml2')),
