@@ -71,7 +71,6 @@ class SSLBackend(ModelBackend):
         # replace spaces with _ and remove all non-word characters
         # auth.User username field is 30 chars
         username = re.sub(r"\s+", '_', username)
-        username = re.sub(r"\W", '', username)
         return username[:30]
 
     def configure_user(self, user, request):
