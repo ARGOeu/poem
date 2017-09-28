@@ -134,7 +134,7 @@ AUTHENTICATION_BACKENDS = (
     #'django.contrib.auth.backends.ModelBackend',
     'Poem.cust_auth.backends.CustModelBackend',
     'Poem.ssl_auth.backends.SSLBackend',
-    'djangosaml2.backends.Saml2Backend'
+    'Poem.saml2_auth.backends.SAML2Backend'
 )
 
 SSL_USERNAME = 'SSL_CLIENT_S_DN_CN'
