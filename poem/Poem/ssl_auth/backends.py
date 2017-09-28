@@ -68,9 +68,10 @@ class SSLBackend(ModelBackend):
         return userprof
 
     def clean_username(self, username):
-        # replace spaces with _ and remove all non-word characters
+        # replace spaces with _
         # auth.User username field is 30 chars
         username = re.sub(r"\s+", '_', username)
+
         return username[:30]
 
     def configure_user(self, user, request):
