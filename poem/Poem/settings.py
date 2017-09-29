@@ -131,10 +131,9 @@ MIDDLEWARE_CLASSES = (
 )
 
 AUTHENTICATION_BACKENDS = (
-    #'django.contrib.auth.backends.ModelBackend',
-    'Poem.auth_backend.cust.CustModelBackend',
+    'Poem.auth_backend.cust.backends.CustModelBackend',
+    'Poem.auth_backend.saml2.SAML2Backend',
     'Poem.auth_backend.ssl.SSLBackend',
-    'Poem.auth_backend.saml2.SAML2Backend'
 )
 
 SSL_USERNAME = 'SSL_CLIENT_S_DN_CN'
