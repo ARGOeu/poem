@@ -43,15 +43,18 @@ class SAML2Backend(Saml2Backend):
         username = self.username_from_cn(cn_val)
 
         certsub = self.certsub_rev(certsub)
+        first_name = self.multival_attr(attributes['givenName'])
+        last_name = self.multival_attr(attributes['sn'])
+        email = self.multival_attr(attributes['mail'])
 
         userprof, created = None, None
         try:
             userprof = get_user_model().objects.get(userprofile__subject=certsub)
         except get_user_model().DoesNotExist:
             user, created = get_user_model().objects.get_or_create(username=username,
-                                                                   first_name=self.multival_attr(attributes['givenName']),
-                                                                   last_name=self.multival_attr(attributes['sn']),
-                                                                   email=self.multival_attr(attributes['mail']))
+                                                                   first_name=first_name,
+                                                                   last_name=last_name,
+                                                                   email=email)
         if created:
             user.set_unusable_password()
             user.is_active = True
@@ -68,6 +71,10 @@ class SAML2Backend(Saml2Backend):
             return user
 
         elif userprof:
+            user = get_user_model().objects.get(username=username)
+            user.email = email
+            user.save()
+
             return userprof
 
         else:
