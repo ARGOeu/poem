@@ -3,7 +3,8 @@ from django.contrib.auth import get_user_model
 
 from Poem.poem.models import UserProfile
 
-NAME_TO_OID = {'distinguishedName': 'urn:oid:2.5.4.49'}
+NAME_TO_OID = {'distinguishedName': 'urn:oid:2.5.4.49',
+               'eduPersonUniqueId': 'urn:oid:1.3.6.1.4.1.5923.1.1.1.13'}
 
 class SAML2Backend(Saml2Backend):
     def username_from_cn(self, cnval):
@@ -46,6 +47,8 @@ class SAML2Backend(Saml2Backend):
         first_name = self.multival_attr(attributes['givenName'])
         last_name = self.multival_attr(attributes['sn'])
         email = self.multival_attr(attributes['mail'])
+        displayname = self.multival_attr(attributes['displayName'])
+        egiid = self.multival_attr(attributes[NAME_TO_OID['eduPersonUniqueId']])
 
         userprof, created = None, None
         try:
@@ -64,6 +67,8 @@ class SAML2Backend(Saml2Backend):
             up, upcreated = UserProfile.objects.get_or_create(user=user)
             if upcreated:
                 up.subject = certsub
+                up.displayname = displayname
+                up.egiid = egiid
                 up.save()
             else:
                 raise Exception
@@ -74,6 +79,11 @@ class SAML2Backend(Saml2Backend):
             user = get_user_model().objects.get(username=username)
             user.email = email
             user.save()
+
+            up = UserProfile.objects.get(user=user)
+            up.displayname = displayname
+            up.egiid = egiid
+            up.save()
 
             return userprof
 

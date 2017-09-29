@@ -8,13 +8,16 @@ from django.forms import ModelForm, CharField
 from django.forms.widgets import TextInput
 
 class UserProfileForm(ModelForm):
-    subject = CharField(widget=TextInput(attrs={'style':'width:500px'}))
+    subject = CharField(label='distinguishedName', required=False, widget=TextInput(attrs={'style':'width:500px'}))
+    egiid = CharField(label='eduPersonUniqueId', required=False, widget=TextInput(attrs={'style':'width:500px'}))
+    displayname = CharField(label='displayName', required=False, widget=TextInput(attrs={'style':'width:250px'}))
 
 class UserProfileInline(admin.StackedInline):
     model = UserProfile
     form = UserProfileForm
     can_delete = False
     verbose_name_plural = 'Additional info'
+    template = 'admin/edit_inline/stacked-user.html'
 
 class UserProfileAdmin(UserAdmin):
     form = MyUserChangeForm
