@@ -12,18 +12,18 @@ URL:            https://tomtools.cern.ch/confluence/display/SAM/POEM
 Source0:        poem-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch:      noarch
+Requires:       django-ajax-selects
+Requires:       django-flat-theme
+Requires:       django-reversion
+Requires:       django-reversion-compare
+Requires:       mod_ssl 
+Requires:       mod_wsgi
 Requires:       python-django >= 1.6
 Requires:       python-django-south
-Requires:       python-unidecode
 Requires:       python-djangosaml2
 Requires:       python-pycrypto
 Requires:       python-pysaml2
-Requires:       django-ajax-selects
-Requires:       django-reversion
-Requires:       django-flat-theme
-Requires:       django-reversion-compare
-Requires:       mod_wsgi
-Requires:       mod_ssl 
+Requires:       python-unidecode
 
 %description
 The Profile Management (POEM) system couples metrics and services and enables

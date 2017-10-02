@@ -1,20 +1,35 @@
 from djangosaml2.backends import Saml2Backend
 from django.contrib.auth import get_user_model
 
+from unidecode import unidecode
+
 from Poem.poem.models import UserProfile
 
 NAME_TO_OID = {'distinguishedName': 'urn:oid:2.5.4.49',
                'eduPersonUniqueId': 'urn:oid:1.3.6.1.4.1.5923.1.1.1.13'}
 
 class SAML2Backend(Saml2Backend):
-    def username_from_cn(self, cnval):
-        if ' ' in cnval:
-            parts = cnval.split(' ')
-            parts = filter(lambda x: '@' not in x, parts)
+    def username_from_displayname(self, displayname):
+        ascii_displayname = unidecode(displayname)
 
-            return '_'.join(parts)
+        if ' ' in ascii_displayname:
+            name = ascii_displayname.split(' ')
+            return '_'.join(name)
         else:
-            return cnval
+            return ascii_displayname
+
+
+    def username_from_givename_sn(self, firstname, lastname):
+        ascii_firstname = unidecode(firstname)
+        ascii_lastname = unidecode(lastname)
+
+        if ' ' in ascii_firstname:
+            ascii_firstname = '_'.join(ascii_firstname.split(' '))
+
+        if ' ' in ascii_lastname:
+            ascii_lastname = '_'.join(ascii_lastname.split(' '))
+
+        return ascii_firstname + '_' + ascii_lastname
 
 
     def certsub_rev(self, certsubject, retlist=False):
@@ -37,55 +52,63 @@ class SAML2Backend(Saml2Backend):
     def authenticate(self, session_info=None, attribute_mapping=None,
                      create_unknown_user=True):
         attributes = session_info['ava']
-        certsub = attributes[NAME_TO_OID['distinguishedName']][0]
-        certsubl = self.certsub_rev(certsub, retlist=True)
 
-        cn_val = certsubl[0].split('=')[1]
-        username = self.username_from_cn(cn_val)
+        displayname, username, first_name, last_name = '', '', '', ''
+        try:
+            displayname = self.multival_attr(attributes['displayName'])
+            username = self.username_from_displayname(displayname)
+        except KeyError:
+            first_name = self.multival_attr(attributes['givenName'])
+            lastname = self.multival_attr(attributes['sn'])
+            username = self.username_from_givename_sn(firstname, lastname)
 
-        certsub = self.certsub_rev(certsub)
-        first_name = self.multival_attr(attributes['givenName'])
-        last_name = self.multival_attr(attributes['sn'])
+        certsub = ''
+        try:
+            certsub = attributes[NAME_TO_OID['distinguishedName']][0]
+            certsub = self.certsub_rev(certsub)
+        except (KeyError, IndexError):
+            pass
+
         email = self.multival_attr(attributes['mail'])
-        displayname = self.multival_attr(attributes['displayName'])
         egiid = self.multival_attr(attributes[NAME_TO_OID['eduPersonUniqueId']])
 
-        userprof, created = None, None
+        userfound, created = None, None
         try:
-            userprof = get_user_model().objects.get(userprofile__subject=certsub)
+            userfound = get_user_model().objects.get(username=username)
         except get_user_model().DoesNotExist:
             user, created = get_user_model().objects.get_or_create(username=username,
                                                                    first_name=first_name,
                                                                    last_name=last_name,
                                                                    email=email)
+
         if created:
             user.set_unusable_password()
             user.is_active = True
             user.is_staff = True
             user.save()
 
-            up, upcreated = UserProfile.objects.get_or_create(user=user)
+            userpro, upcreated = UserProfile.objects.get_or_create(user=user)
             if upcreated:
-                up.subject = certsub
-                up.displayname = displayname
-                up.egiid = egiid
-                up.save()
+                userpro.subject = certsub
+                userpro.displayname = displayname
+                userpro.egiid = egiid
+                userpro.save()
             else:
                 raise Exception
 
             return user
 
-        elif userprof:
-            user = get_user_model().objects.get(username=username)
-            user.email = email
-            user.save()
+        elif userfound:
+            userfound.email = email
+            userfound.save()
 
-            up = UserProfile.objects.get(user=user)
-            up.displayname = displayname
-            up.egiid = egiid
-            up.save()
+            userpro = UserProfile.objects.get(user=userfound)
+            userpro.displayname = displayname
+            userpro.egiid = egiid
+            userpro.subject = certsub
+            userpro.save()
 
-            return userprof
+            return userfound
 
         else:
             return None
