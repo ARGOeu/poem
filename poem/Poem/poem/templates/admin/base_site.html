@@ -15,7 +15,7 @@
       {% block userlinks %}
           {% url 'admin:logout' as logout_url %}
           {% if logout_url %}
-            <a href="{% request.build_absolute_uri logout_url %}">
+              <a href="{{ logout_url }}">
           {% endif %}
           {% trans 'Log out' %}</a>
       {% endblock %}
