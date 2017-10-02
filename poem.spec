@@ -14,6 +14,7 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch:      noarch
 Requires:       python-django >= 1.6
 Requires:       python-django-south
+Requires:       python-unidecode
 Requires:       python-djangosaml2
 Requires:       python-pycrypto
 Requires:       python-pysaml2
