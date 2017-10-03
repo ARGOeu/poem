@@ -5,6 +5,8 @@ import httplib
 import os
 import logging
 import Poem.django_logging
+import ssl
+
 from Poem import settings
 from Poem.poem import models
 from django.db import connection, transaction
@@ -13,6 +15,9 @@ from urlparse import urlparse
 
 logging.basicConfig(format='%(filename)s[%(process)s]: %(levelname)s %(message)s', level=logging.INFO)
 logger = logging.getLogger("POEM")
+
+# https://stackoverflow.com/questions/27835619/urllib-and-ssl-certificate-verify-failed-error
+ssl._create_default_https_context = ssl._create_unverified_context
 
 def main():
     "Parses service flavours list from GOCDB"
