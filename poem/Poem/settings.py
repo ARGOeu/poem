@@ -49,6 +49,8 @@ try:
     ALLOWED_HOSTS = config.get('SECURITY', 'AllowedHosts')
     HOST_CERT = config.get('SECURITY', 'HostCert')
     HOST_KEY = config.get('SECURITY', 'HostKey')
+    CAPATH = config.get('SECURITY', 'CAPath')
+    CAFILE = config.get('SECURITY', 'CAFile')
 
     DEBUG = bool(config.get('GENERAL','debug'))
     POEM_NAMESPACE = config.get('GENERAL', 'namespace')

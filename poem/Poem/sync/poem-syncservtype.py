@@ -6,6 +6,7 @@ import os
 import logging
 import Poem.django_logging
 import ssl
+from ssl import Purpose
 
 from Poem import settings
 from Poem.poem import models
@@ -17,7 +18,7 @@ logging.basicConfig(format='%(filename)s[%(process)s]: %(levelname)s %(message)s
 logger = logging.getLogger("POEM")
 
 # https://stackoverflow.com/questions/27835619/urllib-and-ssl-certificate-verify-failed-error
-ssl._create_default_https_context = ssl._create_unverified_context
+# ssl._create_default_https_context = ssl._create_unverified_context
 
 def main():
     "Parses service flavours list from GOCDB"
@@ -40,9 +41,12 @@ def main():
     o = urlparse(settings.SERVICETYPE_URL)
     try:
         if o.scheme.startswith('https'):
+            context = ssl.create_default_context(cafile=settings.CAFILE,
+                                                 capath=settings.CAPATH)
             conn = httplib.HTTPSConnection(host=o.netloc, \
                                            key_file=settings.HOST_KEY, cert_file=settings.HOST_CERT, \
-                                           timeout=60)
+                                           timeout=60,
+                                           context=context)
         else:
             conn = httplib.HTTPSConnection(host=o.netloc)
         conn.putrequest('GET', o.path+'?'+o.query)
