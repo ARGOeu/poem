@@ -10,10 +10,7 @@
         {% endif %}
       </strong>.
       {% block userlinks %}
-          {% url 'admin:logout' as logout_url %}
-          {% if logout_url %}
-              <a href="{{ logout_url }}">
-          {% endif %}
+          <a href="{% url 'admin:logout' %}">
           {% trans 'Log out' %}</a>
       {% endblock %}
   </div>
