@@ -57,9 +57,10 @@ class SAML2Backend(Saml2Backend):
         try:
             displayname = self.multival_attr(attributes['displayName'])
             username = self.username_from_displayname(displayname)
+            first_name, last_name = displayname.split(' ', 1)
         except KeyError:
             first_name = self.multival_attr(attributes['givenName'])
-            lastname = self.multival_attr(attributes['sn'])
+            last_name = self.multival_attr(attributes['sn'])
             username = self.username_from_givename_sn(firstname, lastname)
 
         certsub = ''
@@ -100,6 +101,8 @@ class SAML2Backend(Saml2Backend):
 
         elif userfound:
             userfound.email = email
+            userfound.first_name = first_name
+            userfound.last_name = last_name
             userfound.save()
 
             userpro = UserProfile.objects.get(user=userfound)
