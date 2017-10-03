@@ -4,6 +4,7 @@ import string
 import httplib
 import os
 import logging
+import Poem.django_logging
 from Poem import settings
 from Poem.poem import models
 from django.db import connection, transaction
