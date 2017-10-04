@@ -12,14 +12,18 @@ URL:            https://tomtools.cern.ch/confluence/display/SAM/POEM
 Source0:        poem-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch:      noarch
+Requires:       django-ajax-selects
+Requires:       django-flat-theme
+Requires:       django-reversion
+Requires:       django-reversion-compare
+Requires:       mod_ssl 
+Requires:       mod_wsgi
 Requires:       python-django >= 1.6
 Requires:       python-django-south
-Requires:       django-ajax-selects
-Requires:       django-reversion
-Requires:       django-flat-theme
-Requires:       django-reversion-compare
-Requires:       mod_wsgi
-Requires:       mod_ssl 
+Requires:       python-djangosaml2
+Requires:       python-pycrypto
+Requires:       python-pysaml2
+Requires:       python-unidecode
 
 %description
 The Profile Management (POEM) system couples metrics and services and enables
@@ -54,10 +58,11 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/poem-importprofiles
 %{_bindir}/poem-exportprofiles
 
-%config %{_sysconfdir}/%{name}/poem_logging.ini
+%config %{_sysconfdir}/%{name}/poem_logging.conf
 %config %{_sysconfdir}/httpd/conf.d/poem.conf
 %attr(0640,root,apache)
-%config(noreplace) %{_sysconfdir}/%{name}/poem.ini
+%config(noreplace) %{_sysconfdir}/%{name}/poem.conf
+%config(noreplace) %{_sysconfdir}/%{name}/saml2.conf
 %attr(0644,root,root) %{_sysconfdir}/cron.d/poem-syncvosf
 
 %{_datadir}/%{name}/apache/poem.wsgi
