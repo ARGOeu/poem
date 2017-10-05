@@ -136,13 +136,6 @@ AUTHENTICATION_BACKENDS = (
     'Poem.auth_backend.saml2.backends.SAML2Backend',
 )
 
-SSL_USERNAME = 'SSL_CLIENT_S_DN_CN'
-SSL_DN = 'SSL_CLIENT_S_DN'
-SSL_CREATE_ACTIVE = True
-SSL_CREATE_STAFF = True
-SSL_SERIAL = 'SSL_CLIENT_M_SERIAL'
-
-
 AUTH_USER_MODEL = 'poem.CustUser'
 ROOT_URLCONF = 'Poem.urls'
 
