@@ -245,6 +245,21 @@ class ProfileAdmin(admin.ModelAdmin):
             self._groupown_turn(request.user, 'add')
         return super(ProfileAdmin, self).get_form(request, obj=None, **kwargs)
 
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        mi = MetricInstance.objects.filter(profile__pk=object_id)
+        num_tuples = len(mi)
+        services = set()
+        map(lambda s: services.add(s.service_flavour), mi)
+        num_services = len(services)
+        metrics = set()
+        map(lambda m: metrics.add(m.metric), mi)
+        num_metrics = len(metrics)
+        extra_context = dict()
+        extra_context.update({'num_metrics': num_metrics,
+                              'num_services': num_services,
+                              'num_tuples': num_tuples})
+        return super(ProfileAdmin, self).change_view(request, object_id, form_url, extra_context)
+
     def save_model(self, request, obj, form, change):
         sh = SharedInfo()
         if obj and sh.getgroup():
