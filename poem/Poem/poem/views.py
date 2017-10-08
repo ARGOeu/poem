@@ -29,12 +29,16 @@ class Profiles(View):
     def get(self, request):
         lp = []
         for profile in models.Profile.objects.all():
-            lp.append({"name" : profile.name, "vo" : profile.vo,
-                    "version" : profile.version,
-                    "description" : profile.description,
-                    "metric_instances" : list(profile.metric_instances.all().\
-                                    values('metric', 'fqan', 'vo', 'service_flavour'))
-                    })
+            mi = list(profile.metric_instances.all().\
+                 values('metric', 'fqan', 'vo', 'service_flavour'))
+            mi = map(lambda e: {'metric': e['metric'],\
+                                'fqan': e['fqan'],\
+                                'vo': e['vo'],\
+                                'atp_service_type_flavour': e['service_flavour']}, mi)
+            lp.append({"name": profile.name, "atp_vo" : profile.vo,
+                    "version": profile.version,
+                    "description": profile.description,
+                    "metric_instances": mi})
 
         return HttpResponse(json.dumps(lp), mimetype='application/json')
 
@@ -84,7 +88,9 @@ class MetricsInProfiles(View):
                 metrics_in_profiles.append({'name' : p[0], \
                                             'namespace' : settings.POEM_NAMESPACE, \
                                             'description' : p[1], \
-                                            'metrics' : [m for m in metrics \
+                                            'metrics' : [{'service_flavour': m['service_flavour'], \
+                                                          'name': m['metric'], \
+                                                          'fqan': m['fqan']} for m in metrics \
                                                         if m['profile__name'] == p[0]]})
             result = {"name" : lookup, "profiles" : metrics_in_profiles}
 
