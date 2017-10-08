@@ -47,3 +47,10 @@ td.field-fqan input {
   margin-right: 180px;
 }
 
+.stats {
+    color: #666;
+    border-bottom: 1px solid #eee;
+    background: #fff;
+    overflow: hidden;
+    font-size: 0.9em;
+}

@@ -61,7 +61,7 @@ class SAML2Backend(Saml2Backend):
         except KeyError:
             first_name = self.multival_attr(attributes['givenName'])
             last_name = self.multival_attr(attributes['sn'])
-            username = self.username_from_givename_sn(firstname, lastname)
+            username = self.username_from_givename_sn(first_name, last_name)
 
         certsub = ''
         try:
@@ -70,8 +70,12 @@ class SAML2Backend(Saml2Backend):
         except (KeyError, IndexError):
             pass
 
-        email = self.multival_attr(attributes['mail'])
-        egiid = self.multival_attr(attributes[NAME_TO_OID['eduPersonUniqueId']])
+        email, egiid = '', ''
+        try:
+            email = self.multival_attr(attributes['mail'])
+            egiid = self.multival_attr(attributes[NAME_TO_OID['eduPersonUniqueId']])
+        except KeyError:
+            pass
 
         userfound, created = None, None
         try:
