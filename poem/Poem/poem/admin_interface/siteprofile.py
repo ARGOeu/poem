@@ -1,7 +1,6 @@
 from django.forms import ModelForm, CharField, Textarea, ValidationError
 from django.forms.widgets import TextInput, Select
 from django.contrib import admin
-from django.contrib import auth
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied
@@ -9,10 +8,11 @@ from django.core.exceptions import PermissionDenied
 from Poem.poem import widgets
 from Poem.poem.lookups import check_cache
 from Poem.poem.admin_interface.formmodel import MyModelMultipleChoiceField
-from Poem.poem.models import MetricInstance, Profile, UserProfile, VO, ServiceFlavour, GroupOfProfiles, CustUser
-
+from Poem.poem.models import MetricInstance, Profile, VO, ServiceFlavour, GroupOfProfiles
 
 from ajax_select import make_ajax_field
+
+import modelclone
 
 
 class SharedInfo:
@@ -180,7 +180,7 @@ class ProfileForm(ModelForm):
             raise ValidationError("Unable to find virtual organization %s." % (str(form_vo)))
         return form_vo
 
-class ProfileAdmin(admin.ModelAdmin):
+class ProfileAdmin(modelclone.ClonableModelAdmin):
     """
     POEM admin core class that customizes its look and feel.
     """
@@ -216,6 +216,14 @@ class ProfileAdmin(admin.ModelAdmin):
     form = ProfileForm
     actions = None
 
+    change_form_template = None
+
+    def get_formsets_with_inlines(self, request, obj=None):
+        """
+        Yields formsets and the corresponding inlines.
+        """
+        for inline in self.get_inline_instances(request, obj):
+            yield inline.get_formset(request, obj), inline
 
     def _groupown_turn(self, user, flag):
         perm_prdel = Permission.objects.get(codename='delete_profile')
@@ -245,7 +253,7 @@ class ProfileAdmin(admin.ModelAdmin):
             self._groupown_turn(request.user, 'add')
         return super(ProfileAdmin, self).get_form(request, obj=None, **kwargs)
 
-    def change_view(self, request, object_id, form_url='', extra_context=None):
+    def _profile_stats(self, object_id, context):
         mi = MetricInstance.objects.filter(profile__pk=object_id)
         num_tuples = len(mi)
 
@@ -257,12 +265,18 @@ class ProfileAdmin(admin.ModelAdmin):
         map(lambda m: metrics.add(m.metric), mi)
         num_metrics = len(metrics)
 
-        extra_context = extra_context or dict()
-        extra_context.update({'num_metrics': num_metrics,
-                              'num_services': num_services,
-                              'num_tuples': num_tuples})
+        context = context or dict()
+        context.update({'num_metrics': num_metrics,
+                        'num_services': num_services,
+                        'num_tuples': num_tuples})
 
-        return super(ProfileAdmin, self).change_view(request, object_id, form_url, extra_context)
+        return context
+
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        return super(ProfileAdmin, self).change_view(request, object_id, form_url, self._profile_stats(object_id, extra_context))
+
+    def clone_view(self, request, object_id, form_url='', extra_context=None):
+        return super(ProfileAdmin, self).clone_view(request, object_id, form_url, self._profile_stats(object_id, extra_context))
 
     def save_model(self, request, obj, form, change):
         sh = SharedInfo()

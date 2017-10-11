@@ -46,6 +46,11 @@
 {% if change %}{% if not is_popup %}
   <ul class="object-tools">
     {% block object-tools-items %}
+    {% if user.is_superuser or perms.poem.groupown_profile %}
+      {% if include_clone_link %}
+          <li><a href="clone/">{{ clone_verbose_name }}</a></li>
+      {% endif %}
+    {% endif %}
     <li>
         {% url opts|admin_urlname:'history' original.pk|admin_urlquote as history_url %}
         <a href="{% add_preserved_filters history_url %}" class="historylink">{% trans "History" %}</a>
