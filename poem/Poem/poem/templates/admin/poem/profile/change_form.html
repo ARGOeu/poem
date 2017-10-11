@@ -28,7 +28,13 @@
     {% else %}
       {{ opts.verbose_name_plural|capfirst }}
     {% endif %}
-    &rsaquo;
+    {% if clone_view %}
+      &rsaquo;
+      <a href="{% url 'admin:poem_profile_change' profile_id %}">{{ profile_name }}</a>
+      &rsaquo;
+    {% else %}
+      &rsaquo;
+    {% endif %}
     {% if add %}
       {% trans 'Add' %} {{ opts.verbose_name }}
     {% else %}

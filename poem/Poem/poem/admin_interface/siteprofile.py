@@ -276,6 +276,11 @@ class ProfileAdmin(modelclone.ClonableModelAdmin):
         return super(ProfileAdmin, self).change_view(request, object_id, form_url, self._profile_stats(object_id, extra_context))
 
     def clone_view(self, request, object_id, form_url='', extra_context=None):
+        extra_context = extra_context or {}
+        extra_context.update({'clone_view': True,
+                              'profile_id': object_id,
+                              'profile_name': str(Profile.objects.get(pk=object_id)),
+                              'original': 'Duplicate'})
         return super(ProfileAdmin, self).clone_view(request, object_id, form_url, self._profile_stats(object_id, extra_context))
 
     def save_model(self, request, obj, form, change):
