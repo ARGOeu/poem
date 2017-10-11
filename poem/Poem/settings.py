@@ -157,7 +157,8 @@ INSTALLED_APPS = (
     'ajax_select',
     'Poem.poem',
     'south',
-    'djangosaml2'
+    'djangosaml2',
+    'modelclone'
 )
 
 AJAX_LOOKUP_CHANNELS = {
