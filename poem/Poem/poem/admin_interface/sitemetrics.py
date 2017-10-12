@@ -22,6 +22,7 @@ from reversion_compare.admin import CompareVersionAdmin
 from reversion.models import Version
 import reversion
 import json
+import modelclone
 
 class SharedInfo:
     def __init__(self, requser=None, grname=None):
@@ -346,7 +347,7 @@ class MetricProbeExecutableInline(admin.TabularInline):
         return True
 
 
-class MetricAdmin(CompareVersionAdmin, admin.ModelAdmin):
+class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
     """
     POEM admin core class that customizes its look and feel.
     """
@@ -386,6 +387,16 @@ class MetricAdmin(CompareVersionAdmin, admin.ModelAdmin):
     change_list_template = ''
     object_history_template = ''
     compare_template = ''
+    change_form_template = ''
+
+    def get_formsets_with_inlines(self, request, obj=None):
+        """
+        Yields formsets and the corresponding inlines.
+        """
+        for inline in self.get_inline_instances(request, obj):
+            if isinstance(inline, MetricConfigInline):
+                inline.formset = BaseInlineFormSet
+            yield inline.get_formset(request, obj), inline
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'group' and not request.user.is_superuser:
@@ -408,6 +419,14 @@ class MetricAdmin(CompareVersionAdmin, admin.ModelAdmin):
         elif flag == 'del':
             user.user_permissions.remove(perm_grpown)
             user.user_permissions.remove(perm_prdel)
+
+    def clone_view(self, request, object_id, form_url='', extra_context=None):
+        extra_context = extra_context or {}
+        extra_context.update({'clone_view': True,
+                              'metric_id': object_id,
+                              'metric_name': str(Metric.objects.get(pk=object_id)),
+                              'original': 'Duplicate'})
+        return super(MetricAdmin, self).clone_view(request, object_id, form_url, extra_context)
 
     def get_form(self, request, obj=None, **kwargs):
         rquser = SharedInfo(requser=request.user)
