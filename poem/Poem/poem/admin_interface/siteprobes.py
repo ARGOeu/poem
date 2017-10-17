@@ -143,11 +143,14 @@ class ProbeForm(ModelForm):
         ver = self.cleaned_data['version']
         name = self.cleaned_data['name']
 
-        probe = Probe.objects.get(name=name)
-        if probe.version == ver:
-            raise ValidationError("Version number should be raised")
-        else:
-            return ver
+        try:
+            probe = Probe.objects.get(name=name)
+            if probe.version == ver:
+                raise ValidationError("Version number should be raised")
+        except Probe.DoesNotExist:
+            pass
+
+        return ver
 
 class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
     """
