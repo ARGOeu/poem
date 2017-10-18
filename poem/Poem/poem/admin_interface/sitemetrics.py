@@ -456,6 +456,11 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
 
     def save_model(self, request, obj, form, change):
         obj.probekey = Version.objects.get(object_repr__exact=obj.probeversion)
+        if request.path.endswith('clone/'):
+            import re
+            obj.cloned = re.search('([0-9]*)/clone', request.path).group(1)
+        else:
+            obj.cloned = ''
         if request.user.has_perm('poem.groupown_metric') \
                 or request.user.is_superuser:
             obj.save()
@@ -523,4 +528,4 @@ def update_field(field, formdata, model):
     except KeyError as e:
         raise ValidationError('')
 
-reversion.register(Metric)
+reversion.register(Metric, exclude=["cloned"])
