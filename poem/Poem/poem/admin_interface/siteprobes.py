@@ -231,6 +231,8 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
             self.readonly_fields = ()
         return super(ProbeAdmin, self).get_form(request, obj=None, **kwargs)
 
+    @transaction.atomic()
+    @reversion.create_revision()
     def save_model(self, request, obj, form, change):
         sh = SharedInfo()
 
@@ -271,6 +273,7 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
     def has_change_permission(self, request, obj=None):
         return True
 
+    @transaction.atomic()
     def delete_model(self, request, obj):
         ct = ContentType.objects.get_for_model(obj)
         lver = reversion.models.Version.objects.filter(object_id_int=obj.id,

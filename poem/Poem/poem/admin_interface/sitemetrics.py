@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.contrib import admin
 from django.contrib import auth
 from django.contrib.auth.models import Permission
@@ -445,15 +446,19 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
                 self._groupown_turn(request.user, 'del')
         return super(MetricAdmin, self).get_form(request, obj=None, **kwargs)
 
+    @transaction.atomic()
     def delete_model(self, request, obj):
         ct = ContentType.objects.get_for_model(obj)
         lver = reversion.models.Version.objects.filter(object_id_int=obj.id,
                                                        content_type_id=ct.id)
-        for v in lver:
-            reversion.models.Revision.objects.get(pk=v.revision_id).delete()
+        ids = map(lambda x: x.revision_id, lver)
+        reversion.models.Revision.objects.filter(pk__in=ids).delete()
+        transaction.commit_unless_managed()
 
         return super(MetricAdmin, self).delete_model(request, obj)
 
+    @transaction.atomic()
+    @reversion.create_revision()
     def save_model(self, request, obj, form, change):
         obj.probekey = Version.objects.get(object_repr__exact=obj.probeversion)
         if request.path.endswith('clone/'):

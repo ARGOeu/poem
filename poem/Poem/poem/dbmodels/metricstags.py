@@ -1,11 +1,10 @@
 from django.contrib.auth.models import GroupManager, Permission
-from django.db import models
+from django.db import models, transaction
 from django.db.models.signals import post_delete
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.contenttypes.models import ContentType
 
 import json
-
 
 from reversion.models import Version, Revision
 from reversion import post_revision_commit, pre_revision_commit
@@ -171,22 +170,28 @@ def copy_derived_metric(instances, **kwargs):
                                                   content_type_id=ct.id)
             for v in derived_vers:
                 rev = Revision.objects.get(pk=v.revision_id)
-                copy_rev = Revision.objects.create(manager_slug=rev.manager_slug,
-                                                   date_created=rev.date_created,
-                                                   user_id=rev.user_id,
-                                                   comment=rev.comment)
-                Revision.objects.filter(pk=copy_rev.id).update(date_created=rev.date_created)
-                ver = Version.objects.create(revision_id=copy_rev.id,
-                                             object_id=str(instances[0].id),
-                                             object_id_int=instances[0].id,
-                                             content_type_id=ct.id,
-                                             format=v.format,
-                                             serialized_data=v.serialized_data,
-                                             object_repr=repr(instances[0]))
-                data = json.loads(ver.serialized_data)[0]
-                data['pk'] = instances[0].id
-                ver.serialized_data = json.dumps([data])
-                ver.save()
+                copy_rev = Revision(manager_slug=rev.manager_slug,
+                                    date_created=rev.date_created,
+                                    user_id=rev.user_id, comment=rev.comment)
+                ver = Version(object_id=str(instances[0].id),
+                              object_id_int=int(instances[0].id),
+                              content_type_id=ct.id,
+                              format=v.format,
+                              serialized_data=v.serialized_data,
+                              object_repr=v.object_repr)
+
+                with transaction.atomic():
+                    copy_rev.save()
+                    # date_created is auto_now_add field which will contain the
+                    # timestamp when the model record is created. overwrite that
+                    # with the timestamp of copied revision.
+                    Revision.objects.filter(pk=copy_rev.id).update(date_created=rev.date_created)
+                    ver.revision = copy_rev
+                    data = json.loads(ver.serialized_data)[0]
+                    data['pk'] = instances[0].id
+                    ver.serialized_data = json.dumps([data])
+                    ver.save()
+
     already_called = True
 
 pre_revision_commit.connect(copy_derived_metric)
