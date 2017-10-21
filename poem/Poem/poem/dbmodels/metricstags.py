@@ -164,6 +164,7 @@ def copy_derived_metric(instances, **kwargs):
     global already_called
     if len(instances) == 1 and isinstance(instances[0], Metric):
         if instances[0].cloned and not already_called:
+            vers = list()
             derived_id = int(instances[0].cloned)
             ct = ContentType.objects.get_for_model(Metric)
             derived_vers = Version.objects.filter(object_id_int=derived_id,
@@ -180,17 +181,18 @@ def copy_derived_metric(instances, **kwargs):
                               serialized_data=v.serialized_data,
                               object_repr=v.object_repr)
 
-                with transaction.atomic():
-                    copy_rev.save()
-                    # date_created is auto_now_add field which will contain the
-                    # timestamp when the model record is created. overwrite that
-                    # with the timestamp of copied revision.
-                    Revision.objects.filter(pk=copy_rev.id).update(date_created=rev.date_created)
-                    ver.revision = copy_rev
-                    data = json.loads(ver.serialized_data)[0]
-                    data['pk'] = instances[0].id
-                    ver.serialized_data = json.dumps([data])
-                    ver.save()
+                copy_rev.save()
+                # date_created is auto_now_add field which will contain the
+                # timestamp when the model record is created. overwrite that
+                # with the timestamp of copied revision.
+                Revision.objects.filter(pk=copy_rev.id).update(date_created=rev.date_created)
+                ver.revision = copy_rev
+                data = json.loads(ver.serialized_data)[0]
+                data['pk'] = instances[0].id
+                ver.serialized_data = json.dumps([data])
+                vers.append(ver)
+
+            Version.objects.bulk_create(vers)
 
     already_called = True
 
