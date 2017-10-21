@@ -151,7 +151,12 @@ def delete_leftover_revision(instances, **kwargs):
     if len(instances) == 1 and isinstance(instances[0], Metric):
         rev = kwargs['revision']
         if rev.comment:
-            pass
+            if instances[0].cloned and 'Initial' in rev.comment:
+                from_metric = Metric.objects.get(pk=instances[0].cloned)
+                rev.comment = 'Derived from %s' % from_metric
+                rev.save()
+            else:
+                pass
         else:
             rev.delete()
     else:
