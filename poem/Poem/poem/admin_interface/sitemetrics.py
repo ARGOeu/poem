@@ -469,7 +469,7 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
     @reversion.create_revision()
     def save_model(self, request, obj, form, change):
         obj.probekey = Version.objects.get(object_repr__exact=obj.probeversion)
-        if request.path.endswith('clone/'):
+        if request.path.endswith('/clone/'):
             import re
             obj.cloned = re.search('([0-9]*)/clone', request.path).group(1)
         else:

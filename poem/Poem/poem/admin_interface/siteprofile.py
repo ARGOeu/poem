@@ -180,6 +180,19 @@ class ProfileForm(ModelForm):
             raise ValidationError("Unable to find virtual organization %s." % (str(form_vo)))
         return form_vo
 
+class ProfileCloneForm(ProfileForm):
+    def clean_name(self):
+        name = self.cleaned_data['name']
+
+        try:
+            profile = Profile.objects.get(name=name)
+            if profile:
+                raise ValidationError("Profile name already exists and name should be changed")
+        except Profile.DoesNotExist:
+            pass
+
+        return name
+
 class ProfileAdmin(modelclone.ClonableModelAdmin):
     """
     POEM admin core class that customizes its look and feel.
@@ -243,6 +256,8 @@ class ProfileAdmin(modelclone.ClonableModelAdmin):
 
     def get_form(self, request, obj=None, **kwargs):
         rquser = SharedInfo(requser=request.user)
+        if request.path.endswith('/clone/'):
+            self.form = ProfileCloneForm
         if obj:
             ug = request.user.groupsofprofiles.all().values_list('name', flat=True)
             if obj.groupname in ug:
