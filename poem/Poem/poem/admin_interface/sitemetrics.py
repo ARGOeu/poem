@@ -520,20 +520,27 @@ def update_field(field, formdata, model):
         except KeyError:
             newentry = '{0}'.format(formdata['value'])
 
+        deleted = bool(formdata.get('DELETE', False))
         objs = model.objects.filter(metric__exact=formdata['metric'])
-        fielddata = None
-
         objfield = eval("formdata['metric'].%s" % field)
 
-        if objfield:
+        fielddata = None
+        if deleted and objfield:
             fielddata = json.loads(objfield)
             if formdata['id']:
                 index = list(objs).index(formdata['id'])
-                fielddata[index] = newentry
-            else:
-                fielddata.append(newentry)
+                if index in fielddata:
+                    del fielddata[index]
         else:
-            fielddata = list([newentry])
+            if objfield:
+                fielddata = json.loads(objfield)
+                if formdata['id']:
+                    index = list(objs).index(formdata['id'])
+                    fielddata[index] = newentry
+                else:
+                    fielddata.append(newentry)
+            else:
+                fielddata = list([newentry])
 
         codestr = """formdata['metric'].%s = json.dumps(fielddata)""" % field
         exec codestr
