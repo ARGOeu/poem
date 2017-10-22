@@ -116,21 +116,21 @@ class ProbeForm(ModelForm):
     repository = CharField(help_text='Probe repository URL',
                            max_length=100,
                            widget=TextInput(attrs={'maxlength': 100,
-                                                   'size': 45}),
+                                                   'size': 61}),
                            label='Repository')
     docurl = CharField(help_text='Documentation URL',
                      max_length=100,
-                     widget=TextInput(attrs={'maxlength': 100, 'size': 45}),
+                     widget=TextInput(attrs={'maxlength': 100, 'size': 61}),
                      label='Documentation')
     comment = CharField(help_text='Short comment about this version.',
-                     widget=Textarea(attrs={'style':'width:480px;height:100px'}),
+                     widget=Textarea(attrs={'style':'width:500px;height:100px'}),
                      label='Comment')
     version = CharField(help_text='Version of the probe.',
                         max_length=28,
                         widget=TextInput(attrs={'maxlength': 28, 'size': 45}),
                         label='Version')
     description = CharField(help_text='Free text description outlining the purpose of this probe.',
-                            widget=Textarea(attrs={'style':'width:480px;height:100px'}))
+                            widget=Textarea(attrs={'style':'width:500px;height:100px'}))
 
     user = CharField(help_text='User that added the probe', max_length=64, required=False)
     datetime = CharField(help_text='Time when probe is added', max_length=64, required=False)
