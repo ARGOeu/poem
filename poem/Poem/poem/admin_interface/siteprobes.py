@@ -2,19 +2,15 @@ from django.db import transaction
 from django.forms import ModelForm, CharField, Textarea, ValidationError
 from django.forms.widgets import TextInput, Select
 from django.contrib import admin
-from django.contrib import auth
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse
 from django.utils.html import format_html
 
-from Poem.poem import widgets
-from Poem.poem.lookups import check_cache
 from Poem.poem.admin_interface.formmodel import MyModelMultipleChoiceField
 from Poem.poem.models import MetricInstance, Probe, UserProfile, VO, ServiceFlavour, GroupOfProbes, CustUser, ExtRevision
 
-from ajax_select import make_ajax_field
 from reversion_compare.admin import CompareVersionAdmin
 import reversion
 
