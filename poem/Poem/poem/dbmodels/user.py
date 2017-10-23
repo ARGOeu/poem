@@ -146,9 +146,9 @@ class UserProfile(models.Model):
 
     user = models.OneToOneField(settings.AUTH_USER_MODEL)
     subject = models.CharField('distinguishedName', max_length=255, blank=True,
-                               null=True, unique=True,)
+                               null=True,)
     egiid = models.CharField('eduPersonUniqueId', max_length=255, blank=True,
-                             null=True)
+                             null=True, unique=True)
     displayname = models.CharField('displayName', max_length=30, blank=True,
                                    null=True)
 

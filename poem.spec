@@ -19,6 +19,7 @@ Requires:       django-reversion-compare
 Requires:       mod_ssl 
 Requires:       mod_wsgi
 Requires:       python-django >= 1.6
+Requires:       python-django-modelclone
 Requires:       python-django-south
 Requires:       python-djangosaml2
 Requires:       python-pycrypto

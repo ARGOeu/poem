@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.contrib import admin
 from django.contrib import auth
 from django.contrib.auth.models import Permission
@@ -22,6 +23,7 @@ from reversion_compare.admin import CompareVersionAdmin
 from reversion.models import Version
 import reversion
 import json
+import modelclone
 
 class SharedInfo:
     def __init__(self, requser=None, grname=None):
@@ -346,7 +348,7 @@ class MetricProbeExecutableInline(admin.TabularInline):
         return True
 
 
-class MetricAdmin(CompareVersionAdmin, admin.ModelAdmin):
+class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
     """
     POEM admin core class that customizes its look and feel.
     """
@@ -386,6 +388,16 @@ class MetricAdmin(CompareVersionAdmin, admin.ModelAdmin):
     change_list_template = ''
     object_history_template = ''
     compare_template = ''
+    change_form_template = ''
+
+    def get_formsets_with_inlines(self, request, obj=None):
+        """
+        Yields formsets and the corresponding inlines.
+        """
+        for inline in self.get_inline_instances(request, obj):
+            if isinstance(inline, MetricConfigInline):
+                inline.formset = BaseInlineFormSet
+            yield inline.get_formset(request, obj), inline
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'group' and not request.user.is_superuser:
@@ -409,6 +421,22 @@ class MetricAdmin(CompareVersionAdmin, admin.ModelAdmin):
             user.user_permissions.remove(perm_grpown)
             user.user_permissions.remove(perm_prdel)
 
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        extra_context = extra_context or {}
+        extra_context.update({'clone_verbose_name': 'Clone',
+                              'include_clone_link': True})
+
+        return super(modelclone.ClonableModelAdmin, self).change_view(request, object_id, form_url, extra_context)
+
+    def clone_view(self, request, object_id, form_url='', extra_context=None):
+        extra_context = extra_context or {}
+        extra_context.update({'clone_view': True,
+                              'metric_id': object_id,
+                              'metric_name': str(Metric.objects.get(pk=object_id)),
+                              'original': 'Clone',
+                              'title': 'Clone'})
+        return super(MetricAdmin, self).clone_view(request, object_id, form_url, extra_context)
+
     def get_form(self, request, obj=None, **kwargs):
         rquser = SharedInfo(requser=request.user)
         if obj:
@@ -426,17 +454,26 @@ class MetricAdmin(CompareVersionAdmin, admin.ModelAdmin):
                 self._groupown_turn(request.user, 'del')
         return super(MetricAdmin, self).get_form(request, obj=None, **kwargs)
 
+    @transaction.atomic()
     def delete_model(self, request, obj):
         ct = ContentType.objects.get_for_model(obj)
         lver = reversion.models.Version.objects.filter(object_id_int=obj.id,
                                                        content_type_id=ct.id)
-        for v in lver:
-            reversion.models.Revision.objects.get(pk=v.revision_id).delete()
+        ids = map(lambda x: x.revision_id, lver)
+        reversion.models.Revision.objects.filter(pk__in=ids).delete()
+        transaction.commit_unless_managed()
 
         return super(MetricAdmin, self).delete_model(request, obj)
 
+    @transaction.atomic()
+    @reversion.create_revision()
     def save_model(self, request, obj, form, change):
         obj.probekey = Version.objects.get(object_repr__exact=obj.probeversion)
+        if request.path.endswith('/clone/'):
+            import re
+            obj.cloned = re.search('([0-9]*)/clone', request.path).group(1)
+        else:
+            obj.cloned = ''
         if request.user.has_perm('poem.groupown_metric') \
                 or request.user.is_superuser:
             obj.save()
@@ -483,20 +520,27 @@ def update_field(field, formdata, model):
         except KeyError:
             newentry = '{0}'.format(formdata['value'])
 
+        deleted = bool(formdata.get('DELETE', False))
         objs = model.objects.filter(metric__exact=formdata['metric'])
-        fielddata = None
-
         objfield = eval("formdata['metric'].%s" % field)
 
-        if objfield:
+        fielddata = None
+        if deleted and objfield:
             fielddata = json.loads(objfield)
             if formdata['id']:
                 index = list(objs).index(formdata['id'])
-                fielddata[index] = newentry
-            else:
-                fielddata.append(newentry)
+                if index in fielddata:
+                    del fielddata[index]
         else:
-            fielddata = list([newentry])
+            if objfield:
+                fielddata = json.loads(objfield)
+                if formdata['id']:
+                    index = list(objs).index(formdata['id'])
+                    fielddata[index] = newentry
+                else:
+                    fielddata.append(newentry)
+            else:
+                fielddata = list([newentry])
 
         codestr = """formdata['metric'].%s = json.dumps(fielddata)""" % field
         exec codestr
@@ -504,4 +548,4 @@ def update_field(field, formdata, model):
     except KeyError as e:
         raise ValidationError('')
 
-reversion.register(Metric)
+reversion.register(Metric, exclude=["cloned"])

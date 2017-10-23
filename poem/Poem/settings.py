@@ -123,7 +123,6 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 )
 
 MIDDLEWARE_CLASSES = (
-    'reversion.middleware.RevisionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -157,7 +156,8 @@ INSTALLED_APPS = (
     'ajax_select',
     'Poem.poem',
     'south',
-    'djangosaml2'
+    'djangosaml2',
+    'modelclone'
 )
 
 AJAX_LOOKUP_CHANNELS = {

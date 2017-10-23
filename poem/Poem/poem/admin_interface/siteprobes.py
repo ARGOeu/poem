@@ -2,19 +2,15 @@ from django.db import transaction
 from django.forms import ModelForm, CharField, Textarea, ValidationError
 from django.forms.widgets import TextInput, Select
 from django.contrib import admin
-from django.contrib import auth
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse
 from django.utils.html import format_html
 
-from Poem.poem import widgets
-from Poem.poem.lookups import check_cache
 from Poem.poem.admin_interface.formmodel import MyModelMultipleChoiceField
 from Poem.poem.models import MetricInstance, Probe, UserProfile, VO, ServiceFlavour, GroupOfProbes, CustUser, ExtRevision
 
-from ajax_select import make_ajax_field
 from reversion_compare.admin import CompareVersionAdmin
 import reversion
 
@@ -120,21 +116,21 @@ class ProbeForm(ModelForm):
     repository = CharField(help_text='Probe repository URL',
                            max_length=100,
                            widget=TextInput(attrs={'maxlength': 100,
-                                                   'size': 45}),
+                                                   'size': 61}),
                            label='Repository')
     docurl = CharField(help_text='Documentation URL',
                      max_length=100,
-                     widget=TextInput(attrs={'maxlength': 100, 'size': 45}),
+                     widget=TextInput(attrs={'maxlength': 100, 'size': 61}),
                      label='Documentation')
     comment = CharField(help_text='Short comment about this version.',
-                     widget=Textarea(attrs={'style':'width:480px;height:100px'}),
+                     widget=Textarea(attrs={'style':'width:500px;height:100px'}),
                      label='Comment')
     version = CharField(help_text='Version of the probe.',
                         max_length=28,
                         widget=TextInput(attrs={'maxlength': 28, 'size': 45}),
                         label='Version')
     description = CharField(help_text='Free text description outlining the purpose of this probe.',
-                            widget=Textarea(attrs={'style':'width:480px;height:100px'}))
+                            widget=Textarea(attrs={'style':'width:500px;height:100px'}))
 
     user = CharField(help_text='User that added the probe', max_length=64, required=False)
     datetime = CharField(help_text='Time when probe is added', max_length=64, required=False)
@@ -143,11 +139,14 @@ class ProbeForm(ModelForm):
         ver = self.cleaned_data['version']
         name = self.cleaned_data['name']
 
-        probe = Probe.objects.get(name=name)
-        if probe.version == ver:
-            raise ValidationError("Version number should be raised")
-        else:
-            return ver
+        try:
+            probe = Probe.objects.get(name=name)
+            if probe.version == ver:
+                raise ValidationError("Version number should be raised")
+        except Probe.DoesNotExist:
+            pass
+
+        return ver
 
 class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
     """
@@ -228,6 +227,8 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
             self.readonly_fields = ()
         return super(ProbeAdmin, self).get_form(request, obj=None, **kwargs)
 
+    @transaction.atomic()
+    @reversion.create_revision()
     def save_model(self, request, obj, form, change):
         sh = SharedInfo()
 
@@ -268,6 +269,7 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
     def has_change_permission(self, request, obj=None):
         return True
 
+    @transaction.atomic()
     def delete_model(self, request, obj):
         ct = ContentType.objects.get_for_model(obj)
         lver = reversion.models.Version.objects.filter(object_id_int=obj.id,
