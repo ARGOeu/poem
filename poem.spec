@@ -65,6 +65,7 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/%{name}/poem.conf
 %config(noreplace) %{_sysconfdir}/%{name}/saml2.conf
 %attr(0644,root,root) %{_sysconfdir}/cron.d/poem-syncvosf
+%attr(0644,root,root) %{_sysconfdir}/cron.d/poem-clearsessions
 
 %{_datadir}/%{name}/apache/poem.wsgi
 %{_datadir}/%{name}/media/*

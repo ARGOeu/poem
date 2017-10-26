@@ -40,7 +40,7 @@ setup(name=NAME,
                'bin/poem-exportprofiles'],
     data_files = [
         ('/etc/poem', ['etc/poem.conf', 'etc/poem_logging.conf', 'etc/saml2.conf']),
-        ('/etc/cron.d/', ['cron/poem-syncvosf']),
+        ('/etc/cron.d/', ['cron/poem-syncvosf', 'cron/poem-clearsessions']),
         ('/etc/httpd/conf.d', ['poem/apache/poem.conf']),
         ('/usr/share/poem/apache', ['poem/apache/poem.wsgi']),
     ] + poem_media_files,

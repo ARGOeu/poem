@@ -19,7 +19,7 @@ then
     usage
 fi
 
-while getopts 'camlh' OPTION
+while getopts 'camlhs' OPTION
 do
     case $OPTION in
         c)
@@ -43,6 +43,11 @@ do
             su -s /bin/sh - $RUNASUSER -c \
             "export DJANGO_SETTINGS_MODULE=Poem.settings && \
             python $SITEPACK/Poem/manage.py migrate poem --list"
+            ;;
+        s)
+            su -s /bin/sh - $RUNASUSER -c \
+            "export DJANGO_SETTINGS_MODULE=Poem.settings && \
+            python $SITEPACK/Poem/manage.py clearsessions"
             ;;
         h)
             usage
