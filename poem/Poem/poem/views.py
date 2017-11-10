@@ -94,7 +94,7 @@ class MetricsInProfiles(View):
                                                         if m['profile__name'] == p[0]]})
             result = {"name" : lookup, "profiles" : metrics_in_profiles}
 
-            return HttpResponse(json.dumps(result), mimetype='application/json')
+            return HttpResponse(json.dumps([result]), mimetype='application/json')
 
         else:
             return HttpResponse("Need the name of VO")
