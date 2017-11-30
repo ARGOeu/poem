@@ -1,0 +1,27 @@
+#!/usr/bin/python
+
+import argparse
+import random
+import sys
+
+validchars = 'abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)'
+
+def main():
+    parser = argparse.ArgumentParser(description='Write SECRET_KEY to file')
+    parser.add_argument('-f', dest='outfile', help='output file', required=True)
+    args = parser.parse_args()
+
+    SECRET_KEY = ''.join([random.SystemRandom().choice(validchars) \
+                          for i in range(50)])
+
+    try:
+        secret = open(args.outfile, 'w')
+        secret.write(SECRET_KEY)
+        secret.close()
+
+    except Exception as e:
+        sys.stderr.write(repr(e) + '\n')
+        raise SystemExit(1)
+
+if __name__ == "__main__":
+    main()
