@@ -58,6 +58,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/poem-db
 %{_bindir}/poem-importprofiles
 %{_bindir}/poem-exportprofiles
+%{_bindir}/poem-genseckey
 
 %config %{_sysconfdir}/%{name}/poem_logging.conf
 %config %{_sysconfdir}/httpd/conf.d/poem.conf
