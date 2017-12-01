@@ -100,7 +100,12 @@ STATIC_URL = '/'
 STATIC_ROOT = '/usr/share/poem/static/'
 
 # Make this unique, and don't share it with anybody.
-SECRET_KEY = 'gjrm%pqd!)3l^)x%5)nb1r%x6_2c1lo@j#)1*sh9hwwzfji8dw'
+SECRET_FILE_PATH = '/etc/poem/secret_key'
+try:
+    SECRET_KEY = open(SECRET_FILE_PATH, 'r').read()
+except Exception as e:
+    print SECRET_FILE_PATH + ': %s' % repr(e)
+    raise SystemExit(1)
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (

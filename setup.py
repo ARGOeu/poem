@@ -37,7 +37,7 @@ setup(name=NAME,
     url='https://tomtools.cern.ch/confluence/display/SAM/POEM',
     scripts = ['bin/poem-syncvo', 'bin/poem-syncservtype',
                'bin/poem-db', 'bin/poem-importprofiles',
-               'bin/poem-exportprofiles'],
+               'bin/poem-exportprofiles', 'bin/poem-genseckey'],
     data_files = [
         ('/etc/poem', ['etc/poem.conf', 'etc/poem_logging.conf', 'etc/saml2.conf']),
         ('/etc/cron.d/', ['cron/poem-syncvosf', 'cron/poem-clearsessions']),
