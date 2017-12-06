@@ -45,12 +45,12 @@ try:
     SERVICETYPE_URL = config.get('SYNC', 'servicetype')
     VO_URL = config.get('SYNC', 'vo')
 
-    SECRET_KEY = config.get('SECURITY','SecretKey')
     ALLOWED_HOSTS = config.get('SECURITY', 'AllowedHosts')
+    CAFILE = config.get('SECURITY', 'CAFile')
+    CAPATH = config.get('SECURITY', 'CAPath')
     HOST_CERT = config.get('SECURITY', 'HostCert')
     HOST_KEY = config.get('SECURITY', 'HostKey')
-    CAPATH = config.get('SECURITY', 'CAPath')
-    CAFILE = config.get('SECURITY', 'CAFile')
+    SECRETKEY_PATH = config.get('SECURITY', 'SecretKeyPath')
 
     DEBUG = bool(config.get('GENERAL','debug'))
     POEM_NAMESPACE = config.get('GENERAL', 'namespace')
@@ -100,11 +100,10 @@ STATIC_URL = '/'
 STATIC_ROOT = '/usr/share/poem/static/'
 
 # Make this unique, and don't share it with anybody.
-SECRET_FILE_PATH = '/etc/poem/secret_key'
 try:
-    SECRET_KEY = open(SECRET_FILE_PATH, 'r').read()
+    SECRET_KEY = open(SECRETKEY_PATH, 'r').read()
 except Exception as e:
-    print SECRET_FILE_PATH + ': %s' % repr(e)
+    print SECRETKEY_PATH + ': %s' % repr(e)
     raise SystemExit(1)
 
 # List of callables that know how to import templates from various sources.
