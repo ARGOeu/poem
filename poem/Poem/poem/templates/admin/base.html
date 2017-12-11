@@ -30,7 +30,9 @@
         {% block nav-global %}{% endblock %}
     </div>
     <!-- END Header -->
-    {% block breadcrumbs %} {% endblock %}
+    <div id="breadcrumbswrap">
+        {% block breadcrumbs %} {% endblock %}
+    </div>
     {% endif %}
 
     {% block messages %}
