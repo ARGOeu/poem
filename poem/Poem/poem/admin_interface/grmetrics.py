@@ -8,12 +8,6 @@ from Poem.poem.models import GroupOfMetrics, Metrics
 class GroupOfMetricsForm(ModelForm):
     class Meta:
         model = GroupOfMetrics
-    qs = Permission.objects.filter(codename__startswith='metrics')
-    permissions = MyModelMultipleChoiceField(queryset=qs,
-                                             widget=MySelect,
-                                             help_text='Permission given to user members of the group across chosen metrics',
-                                             ftype='permissions')
-    permissions.empty_label = '----------------'
     qs = Metrics.objects.filter(groupofmetrics__id__isnull=True).order_by('name')
     metrics = MyModelMultipleChoiceField(queryset=qs,
                                          required=False,
@@ -27,4 +21,9 @@ class GroupOfMetricsAdmin(GroupAdmin):
     search_field = ()
     filter_horizontal=('metrics',)
     fieldsets = [(None, {'fields': ['name']}),
-                 ('Settings', {'fields': ['permissions', 'metrics']})]
+                 ('Settings', {'fields': ['metrics']})]
+
+    def save_model(self, request, obj, form, change):
+        obj.save()
+        perm = Permission.objects.get(codename__startswith='metrics')
+        obj.permissions.add(perm)
