@@ -10,6 +10,10 @@ td.field-service_flavour, td.field-metric, td.field-fqan, td.delete {
     padding: 2px;
 }
 
+td.delete {
+    text-align: center;
+}
+
 td.field-service_flavour input {
     width: 300px;
 }
