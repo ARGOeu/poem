@@ -1,5 +1,8 @@
 #header {
-  background: #416090 none repeat scroll 0% 0%
+  background: #416090 none repeat scroll 0% 0%;
+  margin: 0 auto;
+  position: relative;
+  width: 1000px;
 }
 
 #branding h1 {
@@ -9,6 +12,10 @@
 
 #user-tools {
   font-size: 12px;
+}
+
+#headerwrap {
+  background: #416090 none repeat scroll 0% 0%;
 }
 
 #breadcrumbswrap {
