@@ -186,6 +186,7 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
     inlines = (GroupOfProbesInline, )
     form = ProbeForm
     actions = None
+    list_per_page = 20
 
     change_list_template = ''
     object_history_template = ''

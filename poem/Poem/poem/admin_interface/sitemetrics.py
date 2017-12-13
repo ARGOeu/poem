@@ -384,6 +384,7 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
     search_fields = ('name',)
     actions = None
     ordering = ('name',)
+    list_per_page = 30
 
     change_list_template = ''
     object_history_template = ''
