@@ -8,16 +8,11 @@ from Poem.poem.admin_interface.formmodel import MyModelMultipleChoiceField, MySe
 class GroupOfProbesAdminForm(ModelForm):
     class Meta:
         model = GroupOfProbes
-    qs = Permission.objects.filter(codename__startswith='probe')
-    permissions = MyModelMultipleChoiceField(queryset=qs,
-                                             widget=MySelect,
-                                             help_text='Permission given to user members of the group across chosen probes',
-                                             ftype='permissions')
-    permissions.empty_label = '----------------'
     qs = Probe.objects.filter(groupofprobes__id__isnull=True).order_by('nameversion')
     probes = MyModelMultipleChoiceField(queryset=qs,
                                         required=False,
                                         widget=MyFilteredSelectMultiple('probes', False), ftype='probes')
+
 
 class GroupOfProbesAdmin(GroupAdmin):
     class Media:
@@ -27,5 +22,9 @@ class GroupOfProbesAdmin(GroupAdmin):
     search_field = ()
     filter_horizontal=('probes',)
     fieldsets = [(None, {'fields': ['name']}),
-                 ('Settings', {'fields': ['permissions', 'probes']})]
+                 ('Settings', {'fields': ['probes']})]
 
+    def save_model(self, request, obj, form, change):
+        obj.save()
+        perm = Permission.objects.get(codename__startswith='probe')
+        obj.permissions.add(perm)

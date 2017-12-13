@@ -2,8 +2,14 @@ td.original p {
     visibility: hidden
 }
 
+#content {
+    margin: 0 auto;
+    position: relative;
+    width: 1000px;
+}
+
 #content-main {
-    float: left;
+    float: center;
     width: 1000px;
 }
 

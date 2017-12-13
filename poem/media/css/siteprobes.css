@@ -80,14 +80,22 @@ div.module table#change-history > tbody td:nth-of-type(1) {
   text-align: center;
 }
 
+#content {
+    margin: 0 auto;
+    position: relative;
+    width: 1000px;
+}
+
 #content-main {
   float: left;
   width: 1000px;
 }
+
 #changelist-filter {
   width: 150px;
   text-align: left;
 }
+
 .change-list tbody th a, td {
   font-size: 14px;
 }

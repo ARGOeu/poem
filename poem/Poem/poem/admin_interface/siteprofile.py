@@ -228,6 +228,7 @@ class ProfileAdmin(modelclone.ClonableModelAdmin):
     exclude = ('version',)
     form = ProfileForm
     actions = None
+    list_per_page = 30
 
     change_form_template = None
 
