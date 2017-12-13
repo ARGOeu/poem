@@ -30,5 +30,6 @@ class UserProfileAdmin(UserAdmin):
                  ('Personal info', {'fields': ['first_name', 'last_name', 'email']}),
                  ('Permissions', {'fields': ['is_superuser', 'is_staff', 'is_active', 'groupsofprofiles', 'groupsofmetrics', 'groupsofprobes']})]
     inlines = [UserProfileInline]
-    list_filter = ('is_superuser',)
+    list_filter = ('is_superuser', 'is_staff')
+    list_display = ('username', 'first_name', 'last_name', 'email', 'is_staff', 'is_superuser')
     filter_horizontal = ('user_permissions',)
