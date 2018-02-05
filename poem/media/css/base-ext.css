@@ -22,6 +22,12 @@
   background: #76ABC3 none repeat scroll 0% 0%;
 }
 
+#messageswrap {
+  margin: 0 auto;
+  position: relative;
+  width: 1000px; 
+}
+
 div.breadcrumbs {
   padding: 10px 40px;
   border: medium none;
