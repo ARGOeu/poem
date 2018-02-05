@@ -16,6 +16,6 @@ Apache web server and all its information is stored in light SQLite database.
 
 Devel instance: https://poem-devel.argo.grnet.gr/
 
-Production instance: http://poem.egi.eu/
+Production instance: https://poem.egi.eu/
 
 More info: http://argoeu.github.io/guides/poem

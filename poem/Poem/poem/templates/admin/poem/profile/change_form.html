@@ -93,10 +93,12 @@
 
 {% block after_related_objects %}{% endblock %}
 
-<div class="stats">
-  {{ num_tuples }} tuples, {{ num_services }} unique service flavours and {{ num_metrics }} unique metrices
-</div>
-</br></br>
+{% if not add %}
+  <div class="stats">
+    {{ num_tuples }} tuples, {{ num_services }} unique service flavours and {{ num_metrics }} unique metrices
+  </div>
+  </br></br>
+{% endif %}
 
 {% if user.is_superuser or perms.poem.groupown_profile %}
   {% submit_row %}
