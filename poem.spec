@@ -2,7 +2,7 @@
 %{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name:           poem
-Version:        1.0.6
+Version:        1.1.0
 Release:        1%{?dist}
 Summary:        Profile Management (POEM) system for Service Availability Monitoring (SAM).
 Group:          Web application
@@ -80,6 +80,25 @@ rm -rf $RPM_BUILD_ROOT
 %pre 
 
 %changelog
+* Tue Feb 6 2018 Daniel Vrcic <dvrcic@srce.hr> - 1.1.0-1%{?dist}
+- ARGO-532 Support for schema and data migration 
+- ARGO-533 Support federated logins using SAML2
+- ARGO-841 Improve import/export profile cmd tool
+- ARGO-874 Add term of use to POEM
+- ARGO-878 Metric can end up wrongly associated to probe revision
+- ARGO-879 Support for metric configuration versioning
+- ARGO-880 Remove permission select on group page
+- ARGO-881 Metric cannot be saved with empty configuration 
+- ARGO-882 Introduce API with exposed metric configuration
+- ARGO-883 Add fields for probe repository link and probe executable
+- ARGO-885 Probe create revision datetime is wrongly presented in UI
+- ARGO-907 Copy profile/metric UI feature
+- ARGO-908 Delete probe/metric should also delete all made revisions
+- ARGO-926 Ensure version number bump on new probe revision
+- ARGO-937 Use private SECRET_KEY
+- ARGO-938 Number of metric tuples in profile page
+- ARGO-939 Automatic purge of expired sessions
+- ARGO-1015 UI Message list centered
 * Mon Jun 19 2017 Daniel Vrcic <dvrcic@srce.hr> - 1.0.5-1%{?dist}
 - ARGO-834 POEM breaks with python-django-1.6.11.6-1.el7
 * Wed Mar 29 2017 Daniel Vrcic <dvrcic@srce.hr> - 1.0.4-1%{?dist}
