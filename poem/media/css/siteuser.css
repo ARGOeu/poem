@@ -6,13 +6,13 @@ th, td {
   font-size: 14px;
 }
 
-//td.field-service_flavour {
-//  width: 209px;
-//}
+/*td.field-service_flavour {
+  width: 209px;
+}
 
-//td.field-service_flavour input {
-//  width: 181px;
-//}
+td.field-service_flavour input {
+  width: 181px;
+}*/
 
 td.field-metric {
   width: 415px;
@@ -32,6 +32,12 @@ input#id_vo.ui-autocomplete-input {
 
 td.field-fqan input {
   width: 228px;
+}
+
+#content {
+    margin: 0 auto;
+    position: relative;
+    width: 1000px;
 }
 
 #content-main {

@@ -1,5 +1,8 @@
 #header {
-  background: #416090 none repeat scroll 0% 0%
+  background: #416090 none repeat scroll 0% 0%;
+  margin: 0 auto;
+  position: relative;
+  width: 1000px;
 }
 
 #branding h1 {
@@ -11,6 +14,20 @@
   font-size: 12px;
 }
 
+#headerwrap {
+  background: #416090 none repeat scroll 0% 0%;
+}
+
+#breadcrumbswrap {
+  background: #76ABC3 none repeat scroll 0% 0%;
+}
+
+#messageswrap {
+  margin: 0 auto;
+  position: relative;
+  width: 1000px; 
+}
+
 div.breadcrumbs {
   padding: 10px 40px;
   border: medium none;
@@ -18,8 +35,10 @@ div.breadcrumbs {
   color: #C4DCE8;
   text-align: left;
   background: #76ABC3 none repeat scroll 0% 0%;
+  margin: 0 auto;
+  position: relative;
+  width: 1000px;
 }
-
 
 .egiack {
   background: white;

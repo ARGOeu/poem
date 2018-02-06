@@ -1,5 +1,5 @@
 {% extends "admin/base.html" %}
-{% load i18n ssl %}
+{% load i18n %}
 
 {% block title %}{{ title }} | {% trans 'POEM' %}{% endblock %}
 
@@ -13,10 +13,7 @@
       <strong>{% firstof user.get_short_name user.get_username %}
       </strong>.
       {% block userlinks %}
-          {% url 'admin:logout' as logout_url %}
-          {% if logout_url %}
-            <a href="{% to_http request.build_absolute_uri logout_url %}">
-          {% endif %}
+          <a href="{% url 'admin:logout' %}">
           {% trans 'Log out' %}</a>
       {% endblock %}
   </div>

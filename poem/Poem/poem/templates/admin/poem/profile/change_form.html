@@ -1,5 +1,5 @@
 {% extends "admin/change_form.html" %}
-{% load i18n admin_urls admin_static admin_list admin_modify ssl %}
+{% load i18n admin_urls admin_static admin_list admin_modify %}
 
 {% block usertools %}
   <div id="user-tools">
@@ -11,10 +11,7 @@
         {% endif %}
       </strong>.
       {% block userlinks %}
-          {% url 'admin:logout' as logout_url %}
-          {% if logout_url %}
-            <a href="{% to_http request.build_absolute_uri logout_url %}">
-          {% endif %}
+          <a href="{% url 'admin:logout' %}">
           {% trans 'Log out' %}</a>
       {% endblock %}
   </div>
@@ -31,7 +28,13 @@
     {% else %}
       {{ opts.verbose_name_plural|capfirst }}
     {% endif %}
-    &rsaquo;
+    {% if clone_view %}
+      &rsaquo;
+      <a href="{% url 'admin:poem_profile_change' profile_id %}">{{ profile_name }}</a>
+      &rsaquo;
+    {% else %}
+      &rsaquo;
+    {% endif %}
     {% if add %}
       {% trans 'Add' %} {{ opts.verbose_name }}
     {% else %}
@@ -49,6 +52,11 @@
 {% if change %}{% if not is_popup %}
   <ul class="object-tools">
     {% block object-tools-items %}
+    {% if user.is_superuser or perms.poem.groupown_profile %}
+      {% if include_clone_link %}
+          <li><a href="clone/">{{ clone_verbose_name }}</a></li>
+      {% endif %}
+    {% endif %}
     <li>
         {% url opts|admin_urlname:'history' original.pk|admin_urlquote as history_url %}
         <a href="{% add_preserved_filters history_url %}" class="historylink">{% trans "History" %}</a>
@@ -84,6 +92,13 @@
 {% endblock %}
 
 {% block after_related_objects %}{% endblock %}
+
+{% if not add %}
+  <div class="stats">
+    {{ num_tuples }} tuples, {{ num_services }} unique service flavours and {{ num_metrics }} unique metrices
+  </div>
+  </br></br>
+{% endif %}
 
 {% if user.is_superuser or perms.poem.groupown_profile %}
   {% submit_row %}

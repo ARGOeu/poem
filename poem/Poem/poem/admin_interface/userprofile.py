@@ -8,13 +8,16 @@ from django.forms import ModelForm, CharField
 from django.forms.widgets import TextInput
 
 class UserProfileForm(ModelForm):
-    subject = CharField(widget=TextInput(attrs={'style':'width:500px'}))
+    subject = CharField(label='distinguishedName', required=False, widget=TextInput(attrs={'style':'width:500px'}))
+    egiid = CharField(label='eduPersonUniqueId', required=False, widget=TextInput(attrs={'style':'width:500px'}))
+    displayname = CharField(label='displayName', required=False, widget=TextInput(attrs={'style':'width:250px'}))
 
 class UserProfileInline(admin.StackedInline):
     model = UserProfile
     form = UserProfileForm
     can_delete = False
     verbose_name_plural = 'Additional info'
+    template = 'admin/edit_inline/stacked-user.html'
 
 class UserProfileAdmin(UserAdmin):
     form = MyUserChangeForm
@@ -27,5 +30,6 @@ class UserProfileAdmin(UserAdmin):
                  ('Personal info', {'fields': ['first_name', 'last_name', 'email']}),
                  ('Permissions', {'fields': ['is_superuser', 'is_staff', 'is_active', 'groupsofprofiles', 'groupsofmetrics', 'groupsofprobes']})]
     inlines = [UserProfileInline]
-    list_filter = ('is_superuser',)
+    list_filter = ('is_superuser', 'is_staff')
+    list_display = ('username', 'first_name', 'last_name', 'email', 'is_staff', 'is_superuser')
     filter_horizontal = ('user_permissions',)

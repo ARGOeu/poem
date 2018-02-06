@@ -1,7 +1,7 @@
-from ajax_select import LookupChannel
 from Poem.poem.models import VO, ServiceFlavour, Metrics, MetricInstance, Tags, Probe
+from ajax_select import LookupChannel
+from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
-import json
 from reversion.models import Version
 
 def check_cache(request, model, attr):
@@ -12,12 +12,14 @@ def check_cache(request, model, attr):
         values = cache.get(request)
     return values
 
+
 class VOLookup(LookupChannel):
     model = VO
 
     def get_query(self, q, request):
         values = check_cache(request, self.model, 'name')
         return sorted(filter(lambda x: q.lower() in x.lower(), values))
+
 
 class SFLookup(LookupChannel):
     model = ServiceFlavour
@@ -26,12 +28,14 @@ class SFLookup(LookupChannel):
         values = check_cache(request, self.model, 'name')
         return sorted(filter(lambda x: q.lower() in x.lower(), values))
 
+
 class MILookup(LookupChannel):
     model = MetricInstance
 
     def get_query(self, q, request):
         values = check_cache(request, self.model, 'name')
         return sorted(filter(lambda x: q.lower() in x.lower(), values))
+
 
 class MFiltLookup(LookupChannel):
     model = Metrics
@@ -47,6 +51,7 @@ class MFiltLookup(LookupChannel):
                 meting += self.relmodel.objects.get(name=u).metrics.all().values_list('name', flat=True)
         return sorted(filter(lambda x: q.lower() in x.lower(), meting))
 
+
 class MAllLookup(LookupChannel):
     model = Metrics
     relmodel = model.groupofmetrics_set.related.model
@@ -55,13 +60,15 @@ class MAllLookup(LookupChannel):
         mets = self.model.objects.all().values_list('name', flat=True)
         return sorted(filter(lambda x: q.lower() in x.lower(), mets))
 
+
 class PLookup(LookupChannel):
     model = Version
 
     def get_query(self, q, request):
-        values = [val for val in self.model.objects.filter(metric__id__isnull=True)\
-                  if json.loads(val.serialized_data)[0]['model'] == 'poem.probe']
-        return sorted(filter(lambda x: q.lower() in x.object_repr.lower(), values))
+        ct = ContentType.objects.get_for_model(Probe)
+        proberevs = self.model.objects.filter(content_type_id=ct.id)
+        return sorted(filter(lambda x: q.lower() in x.object_repr.lower(), proberevs))
+
 
 class TLookup(LookupChannel):
     model = Tags
