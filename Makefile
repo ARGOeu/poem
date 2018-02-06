@@ -1,6 +1,6 @@
 PKGNAME=poem
 SPECFILE=${PKGNAME}.spec
-FILES=Makefile ${SPECFILE} CHANGES LICENSE MANIFEST.in README README.md setup.py
+FILES=Makefile ${SPECFILE} LICENSE MANIFEST.in README.md setup.py
 
 PKGVERSION=$(shell grep -s '^Version:' $(SPECFILE) | sed -e 's/Version: *//')
 
