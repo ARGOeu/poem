@@ -3,7 +3,7 @@
 
 Name:           poem
 Version:        1.1.0
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Profile Management (POEM) system for Service Availability Monitoring (SAM).
 Group:          Web application
 License:        ASL 2.0
@@ -80,6 +80,8 @@ rm -rf $RPM_BUILD_ROOT
 %pre 
 
 %changelog
+* Tue Feb 13 2018 Daniel Vrcic <dvrcic@srce.hr> - 1.1.0-2%{?dist}
+- added slipped revision metric template
 * Tue Feb 6 2018 Daniel Vrcic <dvrcic@srce.hr> - 1.1.0-1%{?dist}
 - ARGO-532 Support for schema and data migration 
 - ARGO-533 Support federated logins using SAML2
