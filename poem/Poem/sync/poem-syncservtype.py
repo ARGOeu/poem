@@ -1,11 +1,12 @@
 #!/usr/bin/python
 
-import string
-import httplib
-import os
-import logging
 import Poem.django_logging
+import base64
+import httplib
+import logging
+import os
 import ssl
+import string
 
 from Poem import settings
 from Poem.poem import models
@@ -44,12 +45,18 @@ def main():
                                            timeout=60,
                                            context=context)
         else:
-            conn = httplib.HTTPSConnection(host=o.netloc)
-        conn.putrequest('GET', o.path+'?'+o.query)
-        conn.endheaders()
+            conn = httplib.HTTPConnection(host=o.netloc)
+
+        headers = dict()
+        if settings.HTTPAUTH:
+            userpass = base64.b64encode(settings.HTTPUSER + ':' + settings.HTTPPASS)
+            headers={'Authorization': 'Basic ' + userpass}
+
+        conn.request('GET', o.path + '?' + o.query, headers=headers)
         ret = conn.getresponse().read()
+
     except Exception as e:
-        logger.error("Error service flavours feed - %s" % (e))
+        logger.error("Error service flavours feed - %s" % (repr(e)))
         raise SystemExit(1)
 
     try:
