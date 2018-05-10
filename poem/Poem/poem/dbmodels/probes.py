@@ -14,6 +14,7 @@ class Probe(models.Model):
     nameversion = models.CharField(max_length=128, null=False, help_text='Name, version tuple.')
     description = models.CharField(max_length=1024)
     comment = models.CharField(max_length=512)
+    repository = models.CharField(max_length=512)
     docurl = models.CharField(max_length=512)
     group = models.CharField(max_length=1024)
     user = models.CharField(max_length=32, blank=True)

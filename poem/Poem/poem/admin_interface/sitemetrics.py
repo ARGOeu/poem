@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.contrib import admin
 from django.contrib import auth
 from django.contrib.auth.models import Permission
@@ -5,7 +6,9 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse
 from django.forms import ModelForm, CharField, Textarea, ModelChoiceField, ValidationError
+from django.forms.models import BaseInlineFormSet
 from django.forms.widgets import TextInput, Select
+from django.http import HttpResponse
 from django.utils.html import format_html
 from django.utils.translation import ugettext as _
 from Poem.poem import widgets
@@ -13,12 +16,14 @@ from Poem.poem.lookups import check_cache
 from Poem.poem.admin_interface.formmodel import MyModelMultipleChoiceField, MyModelChoiceField, MySelect
 from Poem.poem.models import Metric, Probe, UserProfile, VO, ServiceFlavour,GroupOfProbes,\
                              CustUser, Tags, Metrics, GroupOfMetrics, MetricAttribute, MetricConfig, MetricParameter,\
-                             MetricFlags, MetricDependancy
+                             MetricFlags, MetricDependancy, MetricProbeExecutable
 
 from ajax_select import make_ajax_field
 from reversion_compare.admin import CompareVersionAdmin
 from reversion.models import Version
 import reversion
+import json
+import modelclone
 
 class SharedInfo:
     def __init__(self, requser=None, grname=None):
@@ -41,6 +46,42 @@ class SharedInfo:
             return self.__class__.user
         else:
             return None
+
+
+class RequiredProbeExecutable(BaseInlineFormSet):
+    """
+    Generates an inline formset that is required
+    """
+
+    def _construct_form(self, i, **kwargs):
+        """
+        Override the method to change the form attribute empty_permitted
+        """
+        form = super(RequiredProbeExecutable, self)._construct_form(i, **kwargs)
+        n = MetricProbeExecutable.objects.filter(metric__exact=self.instance).count()
+        if n == 0:
+            form.empty_permitted = False
+        else:
+            form.empty_permitted = True
+        return form
+
+
+class RequiredMetricConfig(BaseInlineFormSet):
+    """
+    Generates an inline formset that is required
+    """
+
+    def _construct_form(self, i, **kwargs):
+        """
+        Override the method to change the form attribute empty_permitted
+        """
+        form = super(RequiredMetricConfig, self)._construct_form(i, **kwargs)
+        n = MetricConfig.objects.filter(metric__exact=self.instance).count()
+        if n == 0:
+            form.empty_permitted = False
+        else:
+            form.empty_permitted = True
+        return form
 
 
 class MetricAddForm(ModelForm):
@@ -69,18 +110,21 @@ class MetricAddForm(ModelForm):
                      widget=TextInput(attrs={'class': 'metricautocomplete'}))
     probeversion = make_ajax_field(Metric, 'probeversion', 'hintsprobes', label='Probe', help_text='Probe name and version')
 
-
     def clean(self):
-        metric = self.cleaned_data['name']
-        group = self.cleaned_data.get('group')
-        if group:
-            try:
-                Metrics.objects.get(name=metric)
-            except Metrics.DoesNotExist:
-                new = Metrics.objects.create(name=metric)
-                GroupOfMetrics.objects.get(name=group).metrics.add(new)
-            super(MetricAddForm, self).clean()
-        return self.cleaned_data
+        try:
+            metric = self.cleaned_data['name']
+            group = self.cleaned_data.get('group')
+        except KeyError as e:
+            raise ValidationError('')
+        else:
+            if group:
+                try:
+                    Metrics.objects.get(name=metric)
+                except Metrics.DoesNotExist:
+                    new = Metrics.objects.create(name=metric)
+                    GroupOfMetrics.objects.get(name=group).metrics.add(new)
+                super(MetricAddForm, self).clean()
+            return self.cleaned_data
 
     def clean_tag(self):
         fetched = self.cleaned_data['tag']
@@ -109,9 +153,16 @@ class MetricChangeForm(MetricAddForm):
             raise ValidationError("You are not member of group %s." % (str(groupsel)))
         return groupsel
 
+
 class MetricAttributeForm(ModelForm):
     key = CharField(label='key')
     value = CharField(label='value')
+
+    def clean(self):
+        update_field('attribute', self.cleaned_data, MetricAttribute)
+
+        return super(MetricAttributeForm, self).clean()
+
 
 class MetricAttributeInline(admin.TabularInline):
     model = MetricAttribute
@@ -134,9 +185,16 @@ class MetricAttributeInline(admin.TabularInline):
     def has_change_permission(self, request, obj=None):
         return True
 
+
 class MetricParameterForm(ModelForm):
     key = CharField(label='key')
     value = CharField(label='value')
+
+    def clean(self):
+        update_field('parameter', self.cleaned_data, MetricParameter)
+
+        return super(MetricParameterForm, self).clean()
+
 
 class MetricParameterInline(admin.TabularInline):
     model = MetricParameter
@@ -159,9 +217,16 @@ class MetricParameterInline(admin.TabularInline):
     def has_change_permission(self, request, obj=None):
         return True
 
+
 class MetricFlagsForm(ModelForm):
     key = CharField(label='key')
     value = CharField(label='value')
+
+    def clean(self):
+        update_field('flags', self.cleaned_data, MetricFlags)
+
+        return super(MetricFlagsForm, self).clean()
+
 
 class MetricFlagsInline(admin.TabularInline):
     model = MetricFlags
@@ -184,14 +249,21 @@ class MetricFlagsInline(admin.TabularInline):
     def has_change_permission(self, request, obj=None):
         return True
 
+
 class MetricDependancyForm(ModelForm):
     key = CharField(label='key')
     value = CharField(label='value')
 
+    def clean(self):
+        update_field('dependancy', self.cleaned_data, MetricDependancy)
+
+        return super(MetricDependancyForm, self).clean()
+
+
 class MetricDependancyInline(admin.TabularInline):
-    model = MetricConfig
-    verbose_name = 'Dependancy'
-    verbose_name_plural = 'Dependancy'
+    model = MetricDependancy
+    verbose_name = 'Dependency'
+    verbose_name_plural = 'Dependency'
     form = MetricDependancyForm
     template = 'admin/edit_inline/tabular-attrs.html'
     extra = 1
@@ -214,12 +286,19 @@ class MetricConfigForm(ModelForm):
     key = CharField(label='key')
     value = CharField(label='value')
 
+    def clean(self):
+        update_field('config', self.cleaned_data, MetricConfig)
+
+        return super(MetricConfigForm, self).clean()
+
+
 class MetricConfigInline(admin.TabularInline):
     model = MetricConfig
     verbose_name = 'Config'
     verbose_name_plural = 'Config'
     form = MetricConfigForm
     template = 'admin/edit_inline/tabular-attrs.html'
+    formset = RequiredMetricConfig
     extra = 1
 
     def has_add_permission(self, request):
@@ -235,7 +314,41 @@ class MetricConfigInline(admin.TabularInline):
     def has_change_permission(self, request, obj=None):
         return True
 
-class MetricAdmin(CompareVersionAdmin, admin.ModelAdmin):
+
+class MetricProbeExecutableForm(ModelForm):
+    value = CharField(max_length=255)
+
+    def clean(self):
+        update_field('probeexecutable', self.cleaned_data, MetricProbeExecutable)
+
+        return super(MetricProbeExecutableForm, self).clean()
+
+
+class MetricProbeExecutableInline(admin.TabularInline):
+    model = MetricProbeExecutable
+    verbose_name = 'Probe executable'
+    verbose_name_plural = 'Probe executable'
+    form = MetricProbeExecutableForm
+    template = 'admin/edit_inline/tabular-attrs-exec.html'
+    max_num = 1
+    can_delete = False
+    formset = RequiredProbeExecutable
+
+    def has_add_permission(self, request):
+        if request.user.has_perm('poem.groupown_metric') \
+                or request.user.is_superuser:
+            return True
+        else:
+            return False
+
+    def has_delete_permission(self, request, obj=None):
+        return True
+
+    def has_change_permission(self, request, obj=None):
+        return True
+
+
+class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
     """
     POEM admin core class that customizes its look and feel.
     """
@@ -259,20 +372,33 @@ class MetricAdmin(CompareVersionAdmin, admin.ModelAdmin):
                 return queryset
 
     def probeversion_url(self, obj):
-        return format_html('<a href="{0}">{1}</a>',reverse('admin:poem_probe_revision', args=(obj.probekey.object_id, obj.probekey.revision_id)), obj.probeversion)
+        return format_html('<a href="{0}">{1}</a>',reverse('admin:poem_probe_revision', args=(obj.probekey.object_id, obj.probekey.pk)), obj.probeversion)
     probeversion_url.short_description = 'Probeversion'
 
     list_display = ('name', 'tag', 'probeversion_url', 'group')
     fieldsets = ((None, {'classes' : ['tagging'], 'fields' : (('name', 'probeversion', 'tag'), 'group')}),)
     list_filter = ('tag', GroupMetricsListFilter,)
-    inlines = (MetricConfigInline, MetricAttributeInline, MetricDependancyInline, MetricParameterInline, MetricFlagsInline, )
+    inlines = (MetricProbeExecutableInline, MetricConfigInline,
+               MetricAttributeInline, MetricDependancyInline,
+               MetricParameterInline, MetricFlagsInline, )
     search_fields = ('name',)
     actions = None
     ordering = ('name',)
+    list_per_page = 30
 
     change_list_template = ''
     object_history_template = ''
     compare_template = ''
+    change_form_template = ''
+
+    def get_formsets_with_inlines(self, request, obj=None):
+        """
+        Yields formsets and the corresponding inlines.
+        """
+        for inline in self.get_inline_instances(request, obj):
+            if isinstance(inline, MetricConfigInline):
+                inline.formset = BaseInlineFormSet
+            yield inline.get_formset(request, obj), inline
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'group' and not request.user.is_superuser:
@@ -296,6 +422,22 @@ class MetricAdmin(CompareVersionAdmin, admin.ModelAdmin):
             user.user_permissions.remove(perm_grpown)
             user.user_permissions.remove(perm_prdel)
 
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        extra_context = extra_context or {}
+        extra_context.update({'clone_verbose_name': 'Clone',
+                              'include_clone_link': True})
+
+        return super(modelclone.ClonableModelAdmin, self).change_view(request, object_id, form_url, extra_context)
+
+    def clone_view(self, request, object_id, form_url='', extra_context=None):
+        extra_context = extra_context or {}
+        extra_context.update({'clone_view': True,
+                              'metric_id': object_id,
+                              'metric_name': str(Metric.objects.get(pk=object_id)),
+                              'original': 'Clone',
+                              'title': 'Clone'})
+        return super(MetricAdmin, self).clone_view(request, object_id, form_url, extra_context)
+
     def get_form(self, request, obj=None, **kwargs):
         rquser = SharedInfo(requser=request.user)
         if obj:
@@ -313,8 +455,26 @@ class MetricAdmin(CompareVersionAdmin, admin.ModelAdmin):
                 self._groupown_turn(request.user, 'del')
         return super(MetricAdmin, self).get_form(request, obj=None, **kwargs)
 
+    @transaction.atomic()
+    def delete_model(self, request, obj):
+        ct = ContentType.objects.get_for_model(obj)
+        lver = reversion.models.Version.objects.filter(object_id_int=obj.id,
+                                                       content_type_id=ct.id)
+        ids = map(lambda x: x.revision_id, lver)
+        reversion.models.Revision.objects.filter(pk__in=ids).delete()
+        transaction.commit_unless_managed()
+
+        return super(MetricAdmin, self).delete_model(request, obj)
+
+    @transaction.atomic()
+    @reversion.create_revision()
     def save_model(self, request, obj, form, change):
         obj.probekey = Version.objects.get(object_repr__exact=obj.probeversion)
+        if request.path.endswith('/clone/'):
+            import re
+            obj.cloned = re.search('([0-9]*)/clone', request.path).group(1)
+        else:
+            obj.cloned = ''
         if request.user.has_perm('poem.groupown_metric') \
                 or request.user.is_superuser:
             obj.save()
@@ -353,13 +513,40 @@ class MetricAdmin(CompareVersionAdmin, admin.ModelAdmin):
     def has_change_permission(self, request, obj=None):
         return True
 
-reversion.register(Metric, exclude=["probekey"], follow=['metricconfig_set',
-                                                         'metricparameter_set',
-                                                         'metricattribute_set',
-                                                         'metricflags_set',
-                                                         'metricdependancy_set'])
-reversion.register(MetricDependancy)
-reversion.register(MetricParameter)
-reversion.register(MetricAttribute)
-reversion.register(MetricFlags)
-reversion.register(MetricConfig)
+
+def update_field(field, formdata, model):
+    try:
+        try:
+            newentry = '{0} {1}'.format(formdata['key'], formdata['value'])
+        except KeyError:
+            newentry = '{0}'.format(formdata['value'])
+
+        deleted = bool(formdata.get('DELETE', False))
+        objs = model.objects.filter(metric__exact=formdata['metric'])
+        objfield = eval("formdata['metric'].%s" % field)
+
+        fielddata = None
+        if deleted and objfield:
+            fielddata = json.loads(objfield)
+            if formdata['id']:
+                index = list(objs).index(formdata['id'])
+                if index in fielddata:
+                    del fielddata[index]
+        else:
+            if objfield:
+                fielddata = json.loads(objfield)
+                if formdata['id']:
+                    index = list(objs).index(formdata['id'])
+                    fielddata[index] = newentry
+                else:
+                    fielddata.append(newentry)
+            else:
+                fielddata = list([newentry])
+
+        codestr = """formdata['metric'].%s = json.dumps(fielddata)""" % field
+        exec codestr
+
+    except KeyError as e:
+        raise ValidationError('')
+
+reversion.register(Metric, exclude=["cloned"])

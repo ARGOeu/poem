@@ -4,20 +4,24 @@ RUNASUSER="apache"
 DEFPOEM="http://mon.egi.eu/poem/api/0.2/json/profiles"
 
 initial=
+file=
 url=$DEFPOEM
 
 usage()
 {
-	printf "Usage: %s [-i] [-s] [-p <POEM server>] PROFILE1 PROFILE2 ...\n" $(basename $0) >&2
+	printf "Usage: %s [-i] [-f] [-s] [-p <POEM server>] [-h] [PROFILE1 PROFILE2 ...]\n" $(basename $0) >&2
 	printf "       [-i] - Only import profiles if POEM database is empty\n" >&2
 	printf "       [-s] - Secure HTTP\n" >&2
 	printf "       [-l] - append slash on the end of PI method\n" >&2
+	printf "       [-f] - filename in /tmp with JSON serialized POEM profiles\n" >&2
 	printf "       [-p <POEM server>] - Hostname of POEM server\n" >&2
-	printf "       PROFILE1 PROFILE2 - Space separated list of profiles\n" >&2
+	printf "       [-h] - usage\n" >&2
+	printf "       [PROFILE1 PROFILE2] - Space separated list of profiles. If not specified,\n" >&2
+	printf "                             all profiles will be imported\n" >&2
 	exit 2
 }
 
-while getopts 'lisp:' OPTION
+while getopts 'lishp:f:' OPTION
 do
 	case $OPTION in
 		i)
@@ -29,6 +33,9 @@ do
 		s)
 			url=$(echo "$url" | sed "s/http/https/")
 			;;
+		f)
+			file="file:///tmp/$(basename $OPTARG)"
+			;;
 		p)
 			if echo $OPTARG | grep -q '^http'
 			then
@@ -36,6 +43,9 @@ do
 				exit 2
 			fi
 			url=$(echo "$url" | sed "s/mon.egi.eu/$OPTARG/")
+			;;
+		h)
+			usage
 			;;
 		?)
 			usage
@@ -51,6 +61,17 @@ fi
 
 shift $(($OPTIND - 1))
 
-su -s /bin/sh - $RUNASUSER -c \
-"export DJANGO_SETTINGS_MODULE=Poem.settings && \
-django-admin import_profiles $initial --url $url $*"
+if [[ -f "/${file##*//}" ]]
+then
+	su -s /bin/sh - $RUNASUSER -c \
+	"export DJANGO_SETTINGS_MODULE=Poem.settings && \
+	django-admin import_profiles --url \"$file\" $*"
+elif echo $url | grep -q '^http'
+then
+	su -s /bin/sh - $RUNASUSER -c \
+	"export DJANGO_SETTINGS_MODULE=Poem.settings && \
+	django-admin import_profiles $initial --url $url $*"
+else
+	usage
+	exit 2
+fi

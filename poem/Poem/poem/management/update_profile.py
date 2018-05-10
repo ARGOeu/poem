@@ -111,9 +111,10 @@ class PoemSync(object):
         self._raise_exception = False
         for ob in object_list:
             # from poem instance import selectively
-            if self._profile_list and ob['name'] in self._profile_list:
-                obj = function_name(ob)
-                ob_list.append(obj)
+            if self._profile_list and ob['name'] not in self._profile_list:
+                continue
+            obj = function_name(ob)
+            ob_list.append(obj)
         self._raise_exception = res
         return ob_list
 
@@ -123,7 +124,7 @@ class PoemSync(object):
         try:
             o = urlparse(url)
             if o.scheme.startswith('file'):
-                dcstr = simplejson.JSONDecoder().decode(open('/'+o.hostname+o.path).read())
+                dcstr = simplejson.JSONDecoder().decode(open('/'+o.path).read())
             else:
                 if o.scheme.startswith('https'):
                     conn = httplib.HTTPSConnection(host=o.netloc,

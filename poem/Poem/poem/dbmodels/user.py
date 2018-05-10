@@ -145,7 +145,12 @@ class UserProfile(models.Model):
         app_label = 'poem'
 
     user = models.OneToOneField(settings.AUTH_USER_MODEL)
-    subject = models.CharField(max_length=255, blank=True, null=True, unique=True)
+    subject = models.CharField('distinguishedName', max_length=255, blank=True,
+                               null=True,)
+    egiid = models.CharField('eduPersonUniqueId', max_length=255, blank=True,
+                             null=True, unique=True)
+    displayname = models.CharField('displayName', max_length=30, blank=True,
+                                   null=True)
 
 def create_user_profile(sender, instance, created, **kwargs):
     if created:

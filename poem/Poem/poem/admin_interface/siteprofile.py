@@ -1,7 +1,6 @@
 from django.forms import ModelForm, CharField, Textarea, ValidationError
 from django.forms.widgets import TextInput, Select
 from django.contrib import admin
-from django.contrib import auth
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied
@@ -9,10 +8,11 @@ from django.core.exceptions import PermissionDenied
 from Poem.poem import widgets
 from Poem.poem.lookups import check_cache
 from Poem.poem.admin_interface.formmodel import MyModelMultipleChoiceField
-from Poem.poem.models import MetricInstance, Profile, UserProfile, VO, ServiceFlavour, GroupOfProfiles, CustUser
-
+from Poem.poem.models import MetricInstance, Profile, VO, ServiceFlavour, GroupOfProfiles
 
 from ajax_select import make_ajax_field
+
+import modelclone
 
 
 class SharedInfo:
@@ -56,7 +56,10 @@ class MetricInstanceFormRW(ModelForm):
                                    ServiceFlavour, 'name')
         form_flavour = self.cleaned_data['service_flavour']
         if form_flavour not in clean_values:
-            raise ValidationError("Unable to find flavour %s." % (str(form_flavour)))
+            try:
+                ServiceFlavour.objects.get(name=form_flavour)
+            except ServiceFlavour.DoesNotExist:
+                ServiceFlavour.objects.create(name=form_flavour, description='Manually added service type not defined in GOCDB')
         return form_flavour
 
 class MetricInstanceFormRO(MetricInstanceFormRW):
@@ -88,18 +91,12 @@ class MetricInstanceInline(admin.TabularInline):
     def has_change_permission(self, request, obj=None):
         return True
 
-class GroupOfProfilesInlineChangeForm(ModelForm):
+class GroupOfProfilesInlineForms(ModelForm):
     def __init__(self, *args, **kwargs):
         sh = SharedInfo()
         self.user = sh.getuser()
         self.usergroups = self.user.groupsofprofiles.all()
-        super(GroupOfProfilesInlineChangeForm, self).__init__(*args, **kwargs)
-
-    qs = GroupOfProfiles.objects.all()
-    groupofprofiles = MyModelMultipleChoiceField(queryset=qs, widget=Select(),
-                                         help_text='Profile is a member of given group')
-    groupofprofiles.empty_label = '----------------'
-    groupofprofiles.label = 'Group of profiles'
+        super(GroupOfProfilesInlineForms, self).__init__(*args, **kwargs)
 
     def clean_groupofprofiles(self):
         groupsel = self.cleaned_data['groupofprofiles']
@@ -109,7 +106,14 @@ class GroupOfProfilesInlineChangeForm(ModelForm):
             raise ValidationError("You are not member of group %s." % (str(groupsel)))
         return groupsel
 
-class GroupOfProfilesInlineAddForm(ModelForm):
+class GroupOfProfilesInlineChangeForm(GroupOfProfilesInlineForms):
+    qs = GroupOfProfiles.objects.all()
+    groupofprofiles = MyModelMultipleChoiceField(queryset=qs, widget=Select(),
+                                         help_text='Profile is a member of given group')
+    groupofprofiles.empty_label = '----------------'
+    groupofprofiles.label = 'Group of profiles'
+
+class GroupOfProfilesInlineAddForm(GroupOfProfilesInlineForms):
     def __init__(self, *args, **kwargs):
         super(GroupOfProfilesInlineAddForm, self).__init__(*args, **kwargs)
         self.fields['groupofprofiles'].help_text = 'Select one of the groups you are member of'
@@ -176,7 +180,20 @@ class ProfileForm(ModelForm):
             raise ValidationError("Unable to find virtual organization %s." % (str(form_vo)))
         return form_vo
 
-class ProfileAdmin(admin.ModelAdmin):
+class ProfileCloneForm(ProfileForm):
+    def clean_name(self):
+        name = self.cleaned_data['name']
+
+        try:
+            profile = Profile.objects.get(name=name)
+            if profile:
+                raise ValidationError("Profile name already exists and name should be changed")
+        except Profile.DoesNotExist:
+            pass
+
+        return name
+
+class ProfileAdmin(modelclone.ClonableModelAdmin):
     """
     POEM admin core class that customizes its look and feel.
     """
@@ -211,7 +228,16 @@ class ProfileAdmin(admin.ModelAdmin):
     exclude = ('version',)
     form = ProfileForm
     actions = None
+    list_per_page = 30
 
+    change_form_template = None
+
+    def get_formsets_with_inlines(self, request, obj=None):
+        """
+        Yields formsets and the corresponding inlines.
+        """
+        for inline in self.get_inline_instances(request, obj):
+            yield inline.get_formset(request, obj), inline
 
     def _groupown_turn(self, user, flag):
         perm_prdel = Permission.objects.get(codename='delete_profile')
@@ -231,6 +257,8 @@ class ProfileAdmin(admin.ModelAdmin):
 
     def get_form(self, request, obj=None, **kwargs):
         rquser = SharedInfo(requser=request.user)
+        if request.path.endswith('/clone/'):
+            self.form = ProfileCloneForm
         if obj:
             ug = request.user.groupsofprofiles.all().values_list('name', flat=True)
             if obj.groupname in ug:
@@ -240,6 +268,44 @@ class ProfileAdmin(admin.ModelAdmin):
         elif not request.user.is_superuser:
             self._groupown_turn(request.user, 'add')
         return super(ProfileAdmin, self).get_form(request, obj=None, **kwargs)
+
+    def _profile_stats(self, object_id, context):
+        mi = MetricInstance.objects.filter(profile__pk=object_id)
+        num_tuples = len(mi)
+
+        services = set()
+        map(lambda s: services.add(s.service_flavour), mi)
+        num_services = len(services)
+
+        metrics = set()
+        map(lambda m: metrics.add(m.metric), mi)
+        num_metrics = len(metrics)
+
+        context = context or dict()
+        context.update({'num_metrics': num_metrics,
+                        'num_services': num_services,
+                        'num_tuples': num_tuples})
+
+        return context
+
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        extra_context = extra_context or {}
+        extra_context.update({'clone_verbose_name': 'Clone',
+                              'include_clone_link': True})
+
+        return super(modelclone.ClonableModelAdmin, self).change_view(request,
+                                                                      object_id,
+                                                                      form_url,
+                                                                      self._profile_stats(object_id, extra_context))
+
+    def clone_view(self, request, object_id, form_url='', extra_context=None):
+        extra_context = extra_context or {}
+        extra_context.update({'clone_view': True,
+                              'profile_id': object_id,
+                              'profile_name': str(Profile.objects.get(pk=object_id)),
+                              'original': 'Clone',
+                              'title': 'Clone'})
+        return super(ProfileAdmin, self).clone_view(request, object_id, form_url, self._profile_stats(object_id, extra_context))
 
     def save_model(self, request, obj, form, change):
         sh = SharedInfo()

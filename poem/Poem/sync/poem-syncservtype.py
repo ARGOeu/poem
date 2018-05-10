@@ -1,12 +1,13 @@
 #!/usr/bin/python
 
-import string
-import sys
-import urllib2
-import httplib
-import os
-import logging
 import Poem.django_logging
+import base64
+import httplib
+import logging
+import os
+import ssl
+import string
+
 from Poem import settings
 from Poem.poem import models
 from django.db import connection, transaction
@@ -34,18 +35,28 @@ def main():
     for fo in fos:
         fo.close()
 
-    o = urlparse(settings.GOCDB_SERVICETYPE_URL)
+    o = urlparse(settings.SERVICETYPE_URL)
     try:
         if o.scheme.startswith('https'):
+            context = ssl.create_default_context(cafile=settings.CAFILE,
+                                                 capath=settings.CAPATH)
             conn = httplib.HTTPSConnection(host=o.netloc, \
-                                            key_file=settings.HOST_KEY, cert_file=settings.HOST_CERT)
+                                           key_file=settings.HOST_KEY, cert_file=settings.HOST_CERT, \
+                                           timeout=60,
+                                           context=context)
         else:
-            conn = httplib.HTTPSConnection(host=o.netloc)
-        conn.putrequest('GET', o.path+'?'+o.query)
-        conn.endheaders()
+            conn = httplib.HTTPConnection(host=o.netloc)
+
+        headers = dict()
+        if settings.HTTPAUTH:
+            userpass = base64.b64encode(settings.HTTPUSER + ':' + settings.HTTPPASS)
+            headers={'Authorization': 'Basic ' + userpass}
+
+        conn.request('GET', o.path + '?' + o.query, headers=headers)
         ret = conn.getresponse().read()
+
     except Exception as e:
-        logger.error("Error service flavours feed - %s" % (e))
+        logger.error("Error service flavours feed - %s" % (repr(e)))
         raise SystemExit(1)
 
     try:
@@ -69,22 +80,21 @@ def main():
 
 
     sfindb = set([(sf.name, sf.description) for sf in models.ServiceFlavour.objects.all()])
-    if len(sfindb) != len(Feed_List) + 1:
+    if len(sfindb) != len(Feed_List):
         sfs = set([(feed['service_type_name'], feed['service_type_desc']) \
                 for feed in Feed_List])
-        sfs.add(('SRMv2', '[Site service] Storage Resource Manager. Mandatory for all sites running an SRM enabled storage element.'))
         cur = connection.cursor()
         try:
-            if len(sfindb) < len(Feed_List) + 1:
+            if len(sfindb) < len(Feed_List):
                 cur.executemany('INSERT INTO poem_serviceflavour VALUES (?,?)', \
                         sfs.difference(sfindb))
                 logger.info("Added %d service flavours" %\
-                            (len(Feed_List) + 1 - len(sfindb)))
-            elif len(sfindb) > len(Feed_List) + 1:
+                            (len(Feed_List) - len(sfindb)))
+            elif len(sfindb) > len(Feed_List):
                 cur.executemany('DELETE FROM poem_serviceflavour WHERE name IN (?,?)', \
                         sfindb.difference(sfs))
                 logger.info("Deleted %d service flavours" %\
-                            (len(sfindb) - len(Feed_List) + 1))
+                            (len(sfindb) - len(Feed_List)))
             transaction.commit_unless_managed()
             connection.close()
         except Exception as e:

@@ -3,21 +3,30 @@ from os import path as os_path
 from ConfigParser import RawConfigParser, NoSectionError
 from distutils.sysconfig import get_python_lib
 from django.core.exceptions import ImproperlyConfigured
+import saml2
 
 PROJECT_NAME = 'poem'
 APP_PATH = os_path.abspath(os_path.split(__file__)[0])
 PROJECT_PATH = os_path.abspath(os_path.join(APP_PATH, '..'))
-CONFIG_FILE = '/etc/poem/poem.ini'
-
-config = RawConfigParser()
-if not config.read([CONFIG_FILE]):
-    raise ImproperlyConfigured('Unable to parse config file %s' % CONFIG_FILE)
+CONFIG_FILE = '/etc/poem/poem.conf'
+LOG_CONFIG = '/etc/poem/poem_logging.conf'
+SAML_CONFIG_FILE = '/etc/poem/saml2.conf'
 
 try:
+    config = RawConfigParser()
+
+    if not config.read([CONFIG_FILE]):
+        raise ImproperlyConfigured('Unable to parse config file %s' % CONFIG_FILE)
+
     # General
-    SUPERUSER_NAME = config.get('general', 'SUPERUSER_NAME')
-    SUPERUSER_PASS = config.get('general', 'SUPERUSER_PASSWORD')
-    SUPERUSER_EMAIL = config.get('general', 'SUPERUSER_EMAIL')
+    SUPERUSER_NAME = config.get('SUPERUSER', 'name')
+    SUPERUSER_PASS = config.get('SUPERUSER', 'password')
+    SUPERUSER_EMAIL = config.get('SUPERUSER', 'email')
+
+    if not all([SUPERUSER_EMAIL, SUPERUSER_NAME, SUPERUSER_PASS]):
+        raise ImproperlyConfigured('Missing superuser value in config file %s' % CONFIG_FILE)
+
+
     DATABASES = {
         'default': {
             'NAME':  '/var/lib/poem/poemserv.db',
@@ -33,33 +42,42 @@ try:
             }
         }
     }
-    # Others
-    # Make these unique, and don't share it with anybody.
-    POEM_NAMESPACE = config.get('others', 'POEM_NAMESPACE')
-    LOG_CONFIG = config.get('log', 'LOG_CONFIG')
-    SECRET_KEY = config.get('others','SECRET_KEY')
-    DEBUG = bool(config.get('others','DEBUG') == 'True')
-    GOCDB_SERVICETYPE_URL = config.get('others', 'GOCDB_SERVICETYPE_URL')
-    CIC_VO_URL = config.get('others', 'CIC_VO_URL')
-    HOST_CERT = config.get('others', 'HOST_CERT')
-    HOST_KEY = config.get('others', 'HOST_KEY')
-    TIME_ZONE = config.get('others', 'TIME_ZONE')
 
-except NoSectionError, e:
-    raise ImproperlyConfigured(e)
+    HTTPAUTH = config.getboolean('SYNC', 'useplainhttpauth')
+    HTTPUSER = config.get('SYNC', 'httpuser')
+    HTTPPASS = config.get('SYNC', 'httppass')
+
+    SERVICETYPE_URL = config.get('SYNC', 'servicetype')
+    VO_URL = config.get('SYNC', 'vo')
+
+    ALLOWED_HOSTS = config.get('SECURITY', 'AllowedHosts')
+    CAFILE = config.get('SECURITY', 'CAFile')
+    CAPATH = config.get('SECURITY', 'CAPath')
+    HOST_CERT = config.get('SECURITY', 'HostCert')
+    HOST_KEY = config.get('SECURITY', 'HostKey')
+    SECRETKEY_PATH = config.get('SECURITY', 'SecretKeyPath')
+
+    DEBUG = bool(config.get('GENERAL','debug'))
+    POEM_NAMESPACE = config.get('GENERAL', 'namespace')
+    TIME_ZONE = config.get('GENERAL', 'timezone')
+
+except NoSectionError as e:
+    print e
+    raise SystemExit(1)
+
+except ImproperlyConfigured as e:
+    print e
+    raise SystemExit(1)
+
 
 URL_DEBUG = True
 
-TEMPLATE_DEBUG = DEBUG
+if ',' in ALLOWED_HOSTS:
+    ALLOWED_HOSTS = [h.strip() for h in ALLOWED_HOSTS.split(',')]
+else:
+    ALLOWED_HOSTS = [ALLOWED_HOSTS]
 
-# Local time zone for this installation. Choices can be found here:
-# http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
-# although not all choices may be available on all operating systems.
-# On Unix systems, a value of None will cause Django to use the same
-# timezone as the operating system.
-# If running in a Windows environment this must be set to the same as your
-# system time zone.
-#TIME_ZONE = 'Europe/Zagreb'
+TEMPLATE_DEBUG = DEBUG
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
@@ -87,7 +105,11 @@ STATIC_URL = '/'
 STATIC_ROOT = '/usr/share/poem/static/'
 
 # Make this unique, and don't share it with anybody.
-SECRET_KEY = 'gjrm%pqd!)3l^)x%5)nb1r%x6_2c1lo@j#)1*sh9hwwzfji8dw'
+try:
+    SECRET_KEY = open(SECRETKEY_PATH, 'r').read()
+except Exception as e:
+    print SECRETKEY_PATH + ': %s' % repr(e)
+    raise SystemExit(1)
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
@@ -97,7 +119,6 @@ TEMPLATE_LOADERS = (
         'django.template.loaders.eggs.Loader',
     )),
 )
-
 
 TEMPLATE_CONTEXT_PROCESSORS = (
     'django.contrib.auth.context_processors.auth',
@@ -111,27 +132,17 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 )
 
 MIDDLEWARE_CLASSES = (
-    'reversion.middleware.RevisionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'Poem.ssl_auth.middleware.SSLMiddleware',
 )
 
 AUTHENTICATION_BACKENDS = (
-    #'django.contrib.auth.backends.ModelBackend',
-    'Poem.cust_auth.backends.CustModelBackend',
-    'Poem.ssl_auth.backends.SSLBackend',
+    'Poem.auth_backend.cust.backends.CustModelBackend',
+    'Poem.auth_backend.saml2.backends.SAML2Backend',
 )
-
-SSL_USERNAME = 'SSL_CLIENT_S_DN_CN'
-SSL_DN = 'SSL_CLIENT_S_DN'
-SSL_CREATE_ACTIVE = True
-SSL_CREATE_STAFF = True
-SSL_SERIAL = 'SSL_CLIENT_M_SERIAL'
-
 
 AUTH_USER_MODEL = 'poem.CustUser'
 ROOT_URLCONF = 'Poem.urls'
@@ -139,6 +150,8 @@ ROOT_URLCONF = 'Poem.urls'
 TEMPLATE_DIRS = (
     os_path.join(APP_PATH, 'poem/templates'),
 )
+
+APPEND_SLASH=True
 
 INSTALLED_APPS = (
     'flat',
@@ -151,6 +164,9 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'ajax_select',
     'Poem.poem',
+    'south',
+    'djangosaml2',
+    'modelclone'
 )
 
 AJAX_LOOKUP_CHANNELS = {
@@ -162,3 +178,17 @@ AJAX_LOOKUP_CHANNELS = {
     'hintsmetricinstances' : ('Poem.poem.lookups', 'MILookup'),
     'hintsserviceflavours' : ('Poem.poem.lookups', 'SFLookup'),
 }
+
+# load SAML settings
+try:
+    if os_path.exists(SAML_CONFIG_FILE):
+        buf = open(SAML_CONFIG_FILE).readlines()
+        buf = ''.join(buf)
+        exec buf
+    else:
+        print '%s does not exist' % SAML_CONFIG_FILE
+        raise SystemExit(1)
+
+except Exception as e:
+    print e
+    raise SystemExit(1)

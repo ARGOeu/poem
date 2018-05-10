@@ -2,8 +2,8 @@
 %{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name:           poem
-Version:        1.0.0
-Release:        1%{?dist}
+Version:        1.1.0
+Release:        2%{?dist}
 Summary:        Profile Management (POEM) system for Service Availability Monitoring (SAM).
 Group:          Web application
 License:        ASL 2.0
@@ -12,13 +12,19 @@ URL:            https://tomtools.cern.ch/confluence/display/SAM/POEM
 Source0:        poem-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch:      noarch
-Requires:       python-django >= 1.6
 Requires:       django-ajax-selects
-Requires:       django-reversion
 Requires:       django-flat-theme
+Requires:       django-reversion
 Requires:       django-reversion-compare
-Requires:       mod_wsgi
 Requires:       mod_ssl 
+Requires:       mod_wsgi
+Requires:       python-django >= 1.6
+Requires:       python-django-modelclone
+Requires:       python-django-south
+Requires:       python-djangosaml2
+Requires:       python-pycrypto
+Requires:       python-pysaml2
+Requires:       python-unidecode
 
 %description
 The Profile Management (POEM) system couples metrics and services and enables
@@ -43,19 +49,24 @@ rm -rf $RPM_BUILD_ROOT
 
 %files 
 %defattr(-,root,root,-)
+%dir %{python_sitelib}/Poem
 %{python_sitelib}/Poem/*
 %{python_sitelib}/*egg-info
 
 %{_bindir}/poem-syncservtype
 %{_bindir}/poem-syncvo
-%{_bindir}/poem-createdb
+%{_bindir}/poem-db
 %{_bindir}/poem-importprofiles
+%{_bindir}/poem-exportprofiles
+%{_bindir}/poem-genseckey
 
-%config %{_sysconfdir}/%{name}/poem_logging.ini
+%config %{_sysconfdir}/%{name}/poem_logging.conf
 %config %{_sysconfdir}/httpd/conf.d/poem.conf
 %attr(0640,root,apache)
-%config(noreplace) %{_sysconfdir}/%{name}/poem.ini
+%config(noreplace) %{_sysconfdir}/%{name}/poem.conf
+%config(noreplace) %{_sysconfdir}/%{name}/saml2.conf
 %attr(0644,root,root) %{_sysconfdir}/cron.d/poem-syncvosf
+%attr(0644,root,root) %{_sysconfdir}/cron.d/poem-clearsessions
 
 %{_datadir}/%{name}/apache/poem.wsgi
 %{_datadir}/%{name}/media/*
@@ -69,6 +80,36 @@ rm -rf $RPM_BUILD_ROOT
 %pre 
 
 %changelog
+* Tue Feb 13 2018 Daniel Vrcic <dvrcic@srce.hr> - 1.1.0-2%{?dist}
+- added slipped revision metric template
+* Tue Feb 6 2018 Daniel Vrcic <dvrcic@srce.hr> - 1.1.0-1%{?dist}
+- ARGO-532 Support for schema and data migration 
+- ARGO-533 Support federated logins using SAML2
+- ARGO-841 Improve import/export profile cmd tool
+- ARGO-874 Add term of use to POEM
+- ARGO-878 Metric can end up wrongly associated to probe revision
+- ARGO-879 Support for metric configuration versioning
+- ARGO-880 Remove permission select on group page
+- ARGO-881 Metric cannot be saved with empty configuration 
+- ARGO-882 Introduce API with exposed metric configuration
+- ARGO-883 Add fields for probe repository link and probe executable
+- ARGO-885 Probe create revision datetime is wrongly presented in UI
+- ARGO-907 Copy profile/metric UI feature
+- ARGO-908 Delete probe/metric should also delete all made revisions
+- ARGO-926 Ensure version number bump on new probe revision
+- ARGO-937 Use private SECRET_KEY
+- ARGO-938 Number of metric tuples in profile page
+- ARGO-939 Automatic purge of expired sessions
+- ARGO-1015 UI Message list centered
+* Mon Jun 19 2017 Daniel Vrcic <dvrcic@srce.hr> - 1.0.5-1%{?dist}
+- ARGO-834 POEM breaks with python-django-1.6.11.6-1.el7
+* Wed Mar 29 2017 Daniel Vrcic <dvrcic@srce.hr> - 1.0.4-1%{?dist}
+- ARGO-766 Remove SRMv2 service type mapping
+* Thu Dec 15 2016 Daniel Vrcic <dvrcic@srce.hr> - 1.0.3-1%{?dist}
+- ARGO-641 fixed group membership of newly created profiles
+- add missing copy module in group of profiles association code
+* Thu Nov 10 2016 Daniel Vrcic <dvrcic@srce.hr> - 1.0.2-1%{?dist}
+- added timeouts in sync scripts
 * Mon Sep 25 2016 Themis Zamani <themiszamani@gmail.com> - 1.0.1-1%{?dist}
 - New RPM package release
 * Sat Sep 24 2016 Themis Zamani <themiszamani@gmail.com> - 1.0.0-1%{?dist}
