@@ -31,7 +31,6 @@ class MyAdminSite(AdminSite):
         extra_context.update(samlloginstring=SAMLLOGINSTRING)
         return super(MyAdminSite, self).login(request, extra_context)
 
-
     def app_index(self, request, app_label, extra_context=None):
         if request.user.is_authenticated():
             if request.user.is_superuser:
