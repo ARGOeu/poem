@@ -19,6 +19,11 @@ try:
         raise ImproperlyConfigured('Unable to parse config file %s' % CONFIG_FILE)
 
     # General
+    DEBUG = bool(config.get('GENERAL','debug'))
+    POEM_NAMESPACE = config.get('GENERAL', 'namespace')
+    TIME_ZONE = config.get('GENERAL', 'timezone')
+    SAMLLOGINSTRING = config.get('GENERAL', 'samlloginstring')
+
     SUPERUSER_NAME = config.get('SUPERUSER', 'name')
     SUPERUSER_PASS = config.get('SUPERUSER', 'password')
     SUPERUSER_EMAIL = config.get('SUPERUSER', 'email')
@@ -57,9 +62,6 @@ try:
     HOST_KEY = config.get('SECURITY', 'HostKey')
     SECRETKEY_PATH = config.get('SECURITY', 'SecretKeyPath')
 
-    DEBUG = bool(config.get('GENERAL','debug'))
-    POEM_NAMESPACE = config.get('GENERAL', 'namespace')
-    TIME_ZONE = config.get('GENERAL', 'timezone')
 
 except NoSectionError as e:
     print e
