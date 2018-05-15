@@ -9,6 +9,7 @@ from Poem.poem.admin_interface.grmetrics import GroupOfMetricsAdmin
 from Poem.poem.admin_interface.grprofiles import GroupOfProfilesAdmin
 from Poem.poem.admin_interface.grprobes import GroupOfProbesAdmin
 from Poem.poem.models import MetricInstance, Metric, Probe, Profile, UserProfile, VO, ServiceFlavour, GroupOfProfiles, CustUser
+from Poem.settings import SAMLLOGINSTRING
 
 from Poem.poem.admin_interface.userprofile import *
 from Poem.poem.admin_interface.siteprofile import *
@@ -23,6 +24,12 @@ class MyAdminSite(AdminSite):
                 return HttpResponseRedirect(request.path + 'poem')
             else:
                 return HttpResponseRedirect(request.path + 'poem/profile')
+
+    @never_cache
+    def login(self, request, extra_context=None):
+        extra_context = extra_context if extra_context else dict()
+        extra_context.update(samlloginstring=SAMLLOGINSTRING)
+        return super(MyAdminSite, self).login(request, extra_context)
 
     def app_index(self, request, app_label, extra_context=None):
         if request.user.is_authenticated():
