@@ -16,7 +16,7 @@ from Poem.poem.lookups import check_cache
 from Poem.poem.admin_interface.formmodel import MyModelMultipleChoiceField, MyModelChoiceField, MySelect
 from Poem.poem.models import Metric, Probe, UserProfile, VO, ServiceFlavour,GroupOfProbes,\
                              CustUser, Tags, Metrics, GroupOfMetrics, MetricAttribute, MetricConfig, MetricParameter,\
-                             MetricFlags, MetricDependancy, MetricProbeExecutable
+                             MetricFlags, MetricDependancy, MetricProbeExecutable, MetricFiles
 
 from ajax_select import make_ajax_field
 from reversion_compare.admin import CompareVersionAdmin
@@ -166,6 +166,38 @@ class MetricParameterInline(admin.TabularInline):
     verbose_name = 'Parameter'
     verbose_name_plural = 'Parameter'
     form = MetricParameterForm
+    template = 'admin/edit_inline/tabular-attrs.html'
+    extra = 1
+
+    def has_add_permission(self, request):
+        if request.user.has_perm('poem.groupown_metric') \
+                or request.user.is_superuser:
+            return True
+        else:
+            return False
+
+    def has_delete_permission(self, request, obj=None):
+        return True
+
+    def has_change_permission(self, request, obj=None):
+        return True
+
+
+class MetricFilesForm(ModelForm):
+    key = CharField(label='key')
+    value = CharField(label='value')
+
+    def clean(self):
+        update_field('files', self.cleaned_data, MetricFiles)
+
+        return super(MetricFilesForm, self).clean()
+
+
+class MetricFilesInline(admin.TabularInline):
+    model = MetricFiles
+    verbose_name = 'File attributes'
+    verbose_name_plural = 'File attributes'
+    form = MetricFilesForm
     template = 'admin/edit_inline/tabular-attrs.html'
     extra = 1
 
@@ -343,7 +375,7 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
     list_filter = ('tag', GroupMetricsListFilter,)
     inlines = (MetricProbeExecutableInline, MetricConfigInline,
                MetricAttributeInline, MetricDependancyInline,
-               MetricParameterInline, MetricFlagsInline, )
+               MetricParameterInline, MetricFlagsInline, MetricFilesInline, )
     search_fields = ('name',)
     actions = None
     ordering = ('name',)
