@@ -63,12 +63,12 @@ shift $(($OPTIND - 1))
 
 if [[ -f "/${file##*//}" ]]
 then
-	su -s /bin/sh - $RUNASUSER -c \
+	su -m -s /bin/sh $RUNASUSER -c \
 	"export DJANGO_SETTINGS_MODULE=Poem.settings && \
 	django-admin import_profiles --url \"$file\" $*"
 elif echo $url | grep -q '^http'
 then
-	su -s /bin/sh - $RUNASUSER -c \
+	su -m -s /bin/sh $RUNASUSER -c \
 	"export DJANGO_SETTINGS_MODULE=Poem.settings && \
 	django-admin import_profiles $initial --url $url $*"
 else

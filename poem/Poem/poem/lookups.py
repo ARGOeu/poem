@@ -39,7 +39,7 @@ class MILookup(LookupChannel):
 
 class MFiltLookup(LookupChannel):
     model = Metrics
-    relmodel = model.groupofmetrics_set.related.model
+    relmodel = model.groupofmetrics_set.through
 
     def get_query(self, q, request):
         meting = []
@@ -54,7 +54,7 @@ class MFiltLookup(LookupChannel):
 
 class MAllLookup(LookupChannel):
     model = Metrics
-    relmodel = model.groupofmetrics_set.related.model
+    relmodel = model.groupofmetrics_set.through
 
     def get_query(self, q, request):
         mets = self.model.objects.all().values_list('name', flat=True)

@@ -1,21 +1,25 @@
-#!/usr/bin/python
+import os
+import django
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'Poem.settings')
+django.setup()
 
 import Poem.django_logging
 import base64
-import httplib
+import http.client
 import logging
 import os
 import ssl
-import string
 
 from Poem import settings
 from Poem.poem import models
 from django.db import connection, transaction
 from xml.etree import ElementTree
-from urlparse import urlparse
+from urllib.parse import urlparse
 
 logging.basicConfig(format='%(filename)s[%(process)s]: %(levelname)s %(message)s', level=logging.INFO)
 logger = logging.getLogger("POEM")
+
 
 def main():
     "Parses service flavours list from GOCDB"
@@ -40,12 +44,12 @@ def main():
         if o.scheme.startswith('https'):
             context = ssl.create_default_context(cafile=settings.CAFILE,
                                                  capath=settings.CAPATH)
-            conn = httplib.HTTPSConnection(host=o.netloc, \
+            conn = http.client.HTTPSConnection(host=o.netloc, \
                                            key_file=settings.HOST_KEY, cert_file=settings.HOST_CERT, \
                                            timeout=60,
                                            context=context)
         else:
-            conn = httplib.HTTPConnection(host=o.netloc)
+            conn = http.client.HTTPConnection(host=o.netloc)
 
         headers = dict()
         if settings.HTTPAUTH:
@@ -75,7 +79,7 @@ def main():
         Element_List = {}
         if element.getchildren():
             for child_element in element.getchildren():
-                Element_List[string.lower(child_element.tag)] = (child_element.text)
+                Element_List[str(child_element.tag).lower()] = (child_element.text)
         Feed_List.append(Element_List)
 
 
@@ -95,7 +99,6 @@ def main():
                         sfindb.difference(sfs))
                 logger.info("Deleted %d service flavours" %\
                             (len(sfindb) - len(Feed_List)))
-            transaction.commit_unless_managed()
             connection.close()
         except Exception as e:
             logger.error("database operations failed - %s" % e)

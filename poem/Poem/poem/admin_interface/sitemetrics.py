@@ -4,8 +4,8 @@ from django.contrib import auth
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied
-from django.core.urlresolvers import reverse
-from django.forms import ModelForm, CharField, Textarea, ModelChoiceField, ValidationError
+from django.urls import reverse
+from django.forms import ModelForm, CharField, Textarea, ModelChoiceField, ValidationError, ModelMultipleChoiceField
 from django.forms.models import BaseInlineFormSet
 from django.forms.widgets import TextInput, Select
 from django.http import HttpResponse
@@ -13,7 +13,7 @@ from django.utils.html import format_html
 from django.utils.translation import ugettext as _
 from Poem.poem import widgets
 from Poem.poem.lookups import check_cache
-from Poem.poem.admin_interface.formmodel import MyModelMultipleChoiceField, MyModelChoiceField, MySelect
+from Poem.poem.admin_interface.formmodel import MyModelMultipleChoiceField, MyModelChoiceField
 from Poem.poem.models import Metric, Probe, UserProfile, VO, ServiceFlavour,GroupOfProbes,\
                              CustUser, Tags, Metrics, GroupOfMetrics, MetricAttribute, MetricConfig, MetricParameter,\
                              MetricFlags, MetricDependancy, MetricProbeExecutable
@@ -95,7 +95,6 @@ class MetricAddForm(ModelForm):
         self.fields['group'].empty_label = None
 
     class Meta:
-        model = Metric
         labels = {
             'group': _('Group'),
         }
@@ -139,9 +138,8 @@ class MetricChangeForm(MetricAddForm):
         super(MetricAddForm, self).__init__(*args, **kwargs)
 
     qs = GroupOfMetrics.objects.all()
-    group = MyModelMultipleChoiceField(queryset=qs,
-                                       widget=Select(),
-                                       help_text='Metric is a member of selected group')
+    group = ModelMultipleChoiceField(queryset=qs, widget=Select(),
+                                     help_text='Metric is a member of selected group')
     group.empty_label = '----------------'
     group.label = 'Group'
 
@@ -544,7 +542,7 @@ def update_field(field, formdata, model):
                 fielddata = list([newentry])
 
         codestr = """formdata['metric'].%s = json.dumps(fielddata)""" % field
-        exec codestr
+        exec(codestr)
 
     except KeyError as e:
         raise ValidationError('')

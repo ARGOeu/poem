@@ -1,11 +1,11 @@
 from django.db import transaction
-from django.forms import ModelForm, CharField, Textarea, ValidationError
+from django.forms import ModelForm, CharField, Textarea, ValidationError, ModelChoiceField
 from django.forms.widgets import TextInput, Select
 from django.contrib import admin
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.utils.html import format_html
 
 from Poem.poem.admin_interface.formmodel import MyModelMultipleChoiceField
@@ -45,9 +45,7 @@ class GroupOfProbesInlineChangeForm(ModelForm):
         super(GroupOfProbesInlineChangeForm, self).__init__(*args, **kwargs)
 
     qs = GroupOfProbes.objects.all()
-    groupofprobes = MyModelMultipleChoiceField(queryset=qs,
-                                       widget=Select(),
-                                       help_text='Probe is a member of given group')
+    groupofprobes = ModelChoiceField(queryset=qs, help_text='Probe is a member of given group')
     groupofprobes.empty_label = '----------------'
     groupofprobes.label = 'Group'
 
@@ -106,9 +104,6 @@ class ProbeForm(ModelForm):
     Connects profile attributes to autocomplete widget (:py:mod:`poem.widgets`). Also
     adds media and does basic sanity checking for input.
     """
-    class Meta:
-        model = Probe
-
     name = CharField(help_text='Name of this probe.',
                      max_length=100,
                      widget=TextInput(attrs={'maxlength': 100, 'size': 45}),

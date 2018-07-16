@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.contrib import auth
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.admin import UserAdmin
-from Poem.poem.admin_interface.formmodel import MyUserCreationForm, MyUserChangeForm
+from Poem.poem.admin_interface.formmodel import MyUserChangeForm
 from django.forms import ModelForm, CharField
 from django.forms.widgets import TextInput
 
@@ -21,7 +21,6 @@ class UserProfileInline(admin.StackedInline):
 
 class UserProfileAdmin(UserAdmin):
     form = MyUserChangeForm
-    add_form = MyUserCreationForm
 
     class Media:
         css = { "all" : ("/poem_media/css/siteuser.css",) }

@@ -21,7 +21,7 @@ def get_ver():
             if "Version:" in line:
                 return line.split()[1]
     except IOError:
-        print "Make sure that %s is in directory"  % (NAME+'.spec')
+        print("Make sure that {} is in directory".format(NAME+'.spec'))
         sys.exit(1)
 
 poem_media_files = get_files("/usr/share", "poem/media") + get_files("/usr/share/", "poem/static")
@@ -33,7 +33,7 @@ setup(name=NAME,
     author_email='dvrcic@srce.hr',
     license='GPL',
     long_description='''The Profile Management (POEM) system couples metrics
-                        and services and enables profile-based configuration of SAM/Nagios.''',
+                        and services and enables profile-based configuration of ARGO monitoring instances.''',
     url='https://tomtools.cern.ch/confluence/display/SAM/POEM',
     scripts = ['bin/poem-syncvo', 'bin/poem-syncservtype',
                'bin/poem-db', 'bin/poem-importprofiles',
