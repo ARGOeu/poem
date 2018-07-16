@@ -19,7 +19,7 @@ def on_revision_commit(instances, **kwargs):
         instances[0].datetime = rev.date_created
         instances[0].save()
     # delete extra revision that plugin creates with empty comment
-    if not rev.comment:
+    if rev.id and not rev.comment:
         rev.delete()
 
 reversion.post_revision_commit.connect(on_revision_commit)

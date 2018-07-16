@@ -111,17 +111,17 @@ class MetricAttribute(models.Model):
 
 
 class MetricConfig(models.Model):
-    key = models.CharField(max_length=128, blank=False, null=False)
-    value = models.CharField(max_length=128, blank=False, null=False)
-    metric = models.ForeignKey(Metric, blank=False, null=False)
+    key = models.CharField(max_length=128, blank=True, null=True)
+    value = models.CharField(max_length=128, blank=True, null=True)
+    metric = models.ForeignKey(Metric, blank=True, null=True)
 
     class Meta:
         app_label = 'poem'
 
 
 class MetricProbeExecutable(models.Model):
-    metric = models.ForeignKey(Metric, blank=False, null=False)
-    value = models.CharField(max_length=128, null=False,
+    metric = models.ForeignKey(Metric, blank=True, null=True)
+    value = models.CharField(max_length=128, null=True,
                             help_text='Probe executable')
     class Meta:
         app_label = 'poem'
