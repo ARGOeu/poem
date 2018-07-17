@@ -28,7 +28,7 @@ do
             python $SITEPACK/Poem/manage.py syncdb --all" && \
             su -s /bin/sh - $RUNASUSER -c \
             "export DJANGO_SETTINGS_MODULE=Poem.settings && \
-            python $SITEPACK/Poem/manage.py migrate poem --fake"
+            python $SITEPACK/Poem/manage.py migrate poem --fake --merge"
             ;;
         m)
             export DJANGO_SETTINGS_MODULE=Poem.settings && \
