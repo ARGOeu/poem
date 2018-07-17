@@ -76,8 +76,8 @@ class Metric(models.Model):
 
 
 class MetricDependancy(models.Model):
-    key = models.CharField(max_length=128)
-    value = models.CharField(max_length=128)
+    key = models.CharField(max_length=384)
+    value = models.CharField(max_length=384)
     metric = models.ForeignKey(Metric)
 
     class Meta:
@@ -85,8 +85,8 @@ class MetricDependancy(models.Model):
 
 
 class MetricFlags(models.Model):
-    key = models.CharField(max_length=128)
-    value = models.CharField(max_length=128)
+    key = models.CharField(max_length=384)
+    value = models.CharField(max_length=384)
     metric = models.ForeignKey(Metric)
 
     class Meta:
@@ -94,8 +94,8 @@ class MetricFlags(models.Model):
 
 
 class MetricFiles(models.Model):
-    key = models.CharField(max_length=256)
-    value = models.CharField(max_length=256)
+    key = models.CharField(max_length=384)
+    value = models.CharField(max_length=384)
     metric = models.ForeignKey(Metric)
 
     class Meta:
@@ -103,8 +103,8 @@ class MetricFiles(models.Model):
 
 
 class MetricParameter(models.Model):
-    key = models.CharField(max_length=128)
-    value = models.CharField(max_length=128)
+    key = models.CharField(max_length=384)
+    value = models.CharField(max_length=384)
     metric = models.ForeignKey(Metric)
 
     class Meta:
@@ -112,8 +112,8 @@ class MetricParameter(models.Model):
 
 
 class MetricAttribute(models.Model):
-    key = models.CharField(max_length=128)
-    value = models.CharField(max_length=128)
+    key = models.CharField(max_length=384)
+    value = models.CharField(max_length=384)
     metric = models.ForeignKey(Metric)
 
     class Meta:
@@ -121,8 +121,8 @@ class MetricAttribute(models.Model):
 
 
 class MetricConfig(models.Model):
-    key = models.CharField(max_length=128, blank=True, null=True)
-    value = models.CharField(max_length=128, blank=True, null=True)
+    key = models.CharField(max_length=384, blank=True, null=True)
+    value = models.CharField(max_length=384, blank=True, null=True)
     metric = models.ForeignKey(Metric, blank=True, null=True)
 
     class Meta:
@@ -131,7 +131,7 @@ class MetricConfig(models.Model):
 
 class MetricProbeExecutable(models.Model):
     metric = models.ForeignKey(Metric, blank=True, null=True)
-    value = models.CharField(max_length=128, null=True,
+    value = models.CharField(max_length=384, null=True,
                             help_text='Probe executable')
     class Meta:
         app_label = 'poem'
