@@ -63,7 +63,9 @@ class Metric(models.Model):
     attribute = models.CharField(max_length=1024)
     dependancy = models.CharField(max_length=1024)
     flags = models.CharField(max_length=1024)
+    files = models.CharField(max_length=1024)
     parameter = models.CharField(max_length=1024)
+    fileparameter = models.CharField(max_length=1024)
     cloned = models.CharField(max_length=128, null=True)
 
     class Meta:
@@ -75,8 +77,8 @@ class Metric(models.Model):
 
 
 class MetricDependancy(models.Model):
-    key = models.CharField(max_length=128)
-    value = models.CharField(max_length=128)
+    key = models.CharField(max_length=384)
+    value = models.CharField(max_length=384)
     metric = models.ForeignKey(Metric, on_delete=models.CASCADE)
 
     class Meta:
@@ -84,8 +86,17 @@ class MetricDependancy(models.Model):
 
 
 class MetricFlags(models.Model):
-    key = models.CharField(max_length=128)
-    value = models.CharField(max_length=128)
+    key = models.CharField(max_length=384)
+    value = models.CharField(max_length=384)
+    metric = models.ForeignKey(Metric, on_delete=models.CASCADE)
+
+    class Meta:
+        app_label = 'poem'
+
+
+class MetricFiles(models.Model):
+    key = models.CharField(max_length=384)
+    value = models.CharField(max_length=384)
     metric = models.ForeignKey(Metric, on_delete=models.CASCADE)
 
     class Meta:
@@ -93,8 +104,17 @@ class MetricFlags(models.Model):
 
 
 class MetricParameter(models.Model):
-    key = models.CharField(max_length=128)
-    value = models.CharField(max_length=128)
+    key = models.CharField(max_length=384)
+    value = models.CharField(max_length=384)
+    metric = models.ForeignKey(Metric, on_delete=models.CASCADE)
+
+    class Meta:
+        app_label = 'poem'
+
+
+class MetricFileParameter(models.Model):
+    key = models.CharField(max_length=384)
+    value = models.CharField(max_length=384)
     metric = models.ForeignKey(Metric, on_delete=models.CASCADE)
 
     class Meta:
@@ -102,8 +122,8 @@ class MetricParameter(models.Model):
 
 
 class MetricAttribute(models.Model):
-    key = models.CharField(max_length=128)
-    value = models.CharField(max_length=128)
+    key = models.CharField(max_length=384)
+    value = models.CharField(max_length=384)
     metric = models.ForeignKey(Metric, on_delete=models.CASCADE)
 
     class Meta:
@@ -111,17 +131,25 @@ class MetricAttribute(models.Model):
 
 
 class MetricConfig(models.Model):
-    key = models.CharField(max_length=128, blank=False, null=False)
-    value = models.CharField(max_length=128, blank=False, null=False)
-    metric = models.ForeignKey(Metric, blank=False, null=False, on_delete=models.CASCADE)
+    key = models.CharField(max_length=384, blank=True, null=True)
+    value = models.CharField(max_length=384, blank=True, null=True)
+    metric = models.ForeignKey(Metric, blank=True, null=True, on_delete=models.CASCADE)
 
     class Meta:
         app_label = 'poem'
 
 
+class MetricParent(models.Model):
+    metric = models.ForeignKey(Metric, blank=True, null=True, on_delete=models.CASCADE)
+    value = models.CharField(max_length=384, null=True,
+                            help_text='Parent metric')
+    class Meta:
+        app_label = 'poem'
+
+
 class MetricProbeExecutable(models.Model):
-    metric = models.ForeignKey(Metric, blank=False, null=False, on_delete=models.CASCADE)
-    value = models.CharField(max_length=128, null=False,
+    metric = models.ForeignKey(Metric, blank=True, null=True, on_delete=models.CASCADE)
+    value = models.CharField(max_length=384, null=True,
                             help_text='Probe executable')
     class Meta:
         app_label = 'poem'
@@ -143,6 +171,8 @@ post_delete.connect(delete_entryfield, sender=MetricConfig)
 post_delete.connect(delete_entryfield, sender=MetricDependancy)
 post_delete.connect(delete_entryfield, sender=MetricFlags)
 post_delete.connect(delete_entryfield, sender=MetricParameter)
+post_delete.connect(delete_entryfield, sender=MetricFiles)
+post_delete.connect(delete_entryfield, sender=MetricFileParameter)
 
 # delete empty revision leftover created by delete_entryfield()
 # on deletion of parent Metric record. such leftover revision

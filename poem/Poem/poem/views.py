@@ -145,6 +145,19 @@ class Metrics(View):
                     for parameter in mp:
                         mdict[m.name]['parameter'].update({parameter.key: parameter.value})
 
+                    mfp = models.MetricFileParameter.objects.filter(metric=m)
+                    mdict[m.name].update({'file_parameter': dict()})
+                    for parameter in mfp:
+                        mdict[m.name]['file_parameter'].update({parameter.key: parameter.value})
+
+                    mfa = models.MetricFiles.objects.filter(metric=m)
+                    mdict[m.name].update({'file_attribute': dict()})
+                    for parameter in mfa:
+                        mdict[m.name]['file_attribute'].update({parameter.key: parameter.value})
+
+                    parent = models.MetricParent.objects.get(metric=m)
+                    mdict[m.name].update({'parent': parent.value})
+
                     version_fields = json.loads(m.probekey.serialized_data)
 
                     mdict[m.name].update({'docurl': version_fields[0]['fields']['docurl']})

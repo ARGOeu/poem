@@ -16,7 +16,7 @@ from Poem.poem.lookups import check_cache
 from Poem.poem.admin_interface.formmodel import MyModelMultipleChoiceField, MyModelChoiceField
 from Poem.poem.models import Metric, Probe, UserProfile, VO, ServiceFlavour,GroupOfProbes,\
                              CustUser, Tags, Metrics, GroupOfMetrics, MetricAttribute, MetricConfig, MetricParameter,\
-                             MetricFlags, MetricDependancy, MetricProbeExecutable
+                             MetricFlags, MetricDependancy, MetricProbeExecutable, MetricFiles, MetricParent, MetricFileParameter
 
 from ajax_select import make_ajax_field
 from reversion_compare.admin import CompareVersionAdmin
@@ -24,6 +24,7 @@ from reversion.models import Version
 import reversion
 import json
 import modelclone
+
 
 class SharedInfo:
     def __init__(self, requser=None, grname=None):
@@ -46,42 +47,6 @@ class SharedInfo:
             return self.__class__.user
         else:
             return None
-
-
-class RequiredProbeExecutable(BaseInlineFormSet):
-    """
-    Generates an inline formset that is required
-    """
-
-    def _construct_form(self, i, **kwargs):
-        """
-        Override the method to change the form attribute empty_permitted
-        """
-        form = super(RequiredProbeExecutable, self)._construct_form(i, **kwargs)
-        n = MetricProbeExecutable.objects.filter(metric__exact=self.instance).count()
-        if n == 0:
-            form.empty_permitted = False
-        else:
-            form.empty_permitted = True
-        return form
-
-
-class RequiredMetricConfig(BaseInlineFormSet):
-    """
-    Generates an inline formset that is required
-    """
-
-    def _construct_form(self, i, **kwargs):
-        """
-        Override the method to change the form attribute empty_permitted
-        """
-        form = super(RequiredMetricConfig, self)._construct_form(i, **kwargs)
-        n = MetricConfig.objects.filter(metric__exact=self.instance).count()
-        if n == 0:
-            form.empty_permitted = False
-        else:
-            form.empty_permitted = True
-        return form
 
 
 class MetricAddForm(ModelForm):
@@ -216,6 +181,38 @@ class MetricParameterInline(admin.TabularInline):
         return True
 
 
+class MetricFilesForm(ModelForm):
+    key = CharField(label='key')
+    value = CharField(label='value')
+
+    def clean(self):
+        update_field('files', self.cleaned_data, MetricFiles)
+
+        return super(MetricFilesForm, self).clean()
+
+
+class MetricFilesInline(admin.StackedInline):
+    model = MetricFiles
+    verbose_name = 'File attributes'
+    verbose_name_plural = 'File attributes'
+    form = MetricFilesForm
+    template = 'admin/edit_inline/tabular-attrs.html'
+    extra = 1
+
+    def has_add_permission(self, request):
+        if request.user.has_perm('poem.groupown_metric') \
+                or request.user.is_superuser:
+            return True
+        else:
+            return False
+
+    def has_delete_permission(self, request, obj=None):
+        return True
+
+    def has_change_permission(self, request, obj=None):
+        return True
+
+
 class MetricFlagsForm(ModelForm):
     key = CharField(label='key')
     value = CharField(label='value')
@@ -296,8 +293,71 @@ class MetricConfigInline(admin.TabularInline):
     verbose_name_plural = 'Config'
     form = MetricConfigForm
     template = 'admin/edit_inline/tabular-attrs.html'
-    formset = RequiredMetricConfig
     extra = 1
+
+    def has_add_permission(self, request):
+        if request.user.has_perm('poem.groupown_metric') \
+                or request.user.is_superuser:
+            return True
+        else:
+            return False
+
+    def has_delete_permission(self, request, obj=None):
+        return True
+
+    def has_change_permission(self, request, obj=None):
+        return True
+
+
+class MetricFileParameterForm(ModelForm):
+    key = CharField(label='key')
+    value = CharField(label='value')
+
+    def clean(self):
+        update_field('fileparameter', self.cleaned_data, MetricFileParameter)
+
+        return super(MetricFileParameterForm, self).clean()
+
+
+class MetricFileParameterInline(admin.TabularInline):
+    model = MetricFileParameter
+    verbose_name = 'File parameters'
+    verbose_name_plural = 'File parameters'
+    form = MetricFileParameterForm
+    template = 'admin/edit_inline/tabular-attrs.html'
+    extra = 1
+
+    def has_add_permission(self, request):
+        if request.user.has_perm('poem.groupown_metric') \
+                or request.user.is_superuser:
+            return True
+        else:
+            return False
+
+    def has_delete_permission(self, request, obj=None):
+        return True
+
+    def has_change_permission(self, request, obj=None):
+        return True
+
+
+class MetricParentForm(ModelForm):
+    value = CharField(max_length=255)
+
+    def clean(self):
+        update_field('parent', self.cleaned_data, MetricParent)
+
+        return super(MetricParentForm, self).clean()
+
+
+class MetricParentInline(admin.TabularInline):
+    model = MetricParent
+    verbose_name = 'Parent metric'
+    verbose_name_plural = 'Parent metric'
+    form = MetricParentForm
+    template = 'admin/edit_inline/tabular-attrs-exec.html'
+    max_num = 1
+    can_delete = False
 
     def has_add_permission(self, request):
         if request.user.has_perm('poem.groupown_metric') \
@@ -330,7 +390,6 @@ class MetricProbeExecutableInline(admin.TabularInline):
     template = 'admin/edit_inline/tabular-attrs-exec.html'
     max_num = 1
     can_delete = False
-    formset = RequiredProbeExecutable
 
     def has_add_permission(self, request):
         if request.user.has_perm('poem.groupown_metric') \
@@ -378,7 +437,8 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
     list_filter = ('tag', GroupMetricsListFilter,)
     inlines = (MetricProbeExecutableInline, MetricConfigInline,
                MetricAttributeInline, MetricDependancyInline,
-               MetricParameterInline, MetricFlagsInline, )
+               MetricParameterInline, MetricFlagsInline, MetricFilesInline,
+               MetricFileParameterInline, MetricParentInline,)
     search_fields = ('name',)
     actions = None
     ordering = ('name',)
