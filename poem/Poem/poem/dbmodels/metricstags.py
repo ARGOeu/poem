@@ -58,6 +58,7 @@ class Metric(models.Model):
     probeversion = models.CharField(max_length=128)
     probekey = models.ForeignKey(Version)
     group = models.ForeignKey(GroupOfMetrics)
+    parent = models.CharField(max_length=128)
     probeexecutable = models.CharField(max_length=128)
     config = models.CharField(max_length=1024)
     attribute = models.CharField(max_length=1024)
@@ -125,6 +126,13 @@ class MetricConfig(models.Model):
     value = models.CharField(max_length=384, blank=True, null=True)
     metric = models.ForeignKey(Metric, blank=True, null=True)
 
+    class Meta:
+        app_label = 'poem'
+
+class MetricParent(models.Model):
+    metric = models.ForeignKey(Metric, blank=True, null=True)
+    value = models.CharField(max_length=384, null=True,
+                            help_text='Parent metric')
     class Meta:
         app_label = 'poem'
 
