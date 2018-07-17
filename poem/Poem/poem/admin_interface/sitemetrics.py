@@ -16,7 +16,7 @@ from Poem.poem.lookups import check_cache
 from Poem.poem.admin_interface.formmodel import MyModelMultipleChoiceField, MyModelChoiceField, MySelect
 from Poem.poem.models import Metric, Probe, UserProfile, VO, ServiceFlavour,GroupOfProbes,\
                              CustUser, Tags, Metrics, GroupOfMetrics, MetricAttribute, MetricConfig, MetricParameter,\
-                             MetricFlags, MetricDependancy, MetricProbeExecutable, MetricFiles
+                             MetricFlags, MetricDependancy, MetricProbeExecutable, MetricFiles, MetricParent
 
 from ajax_select import make_ajax_field
 from reversion_compare.admin import CompareVersionAdmin
@@ -193,7 +193,7 @@ class MetricFilesForm(ModelForm):
         return super(MetricFilesForm, self).clean()
 
 
-class MetricFilesInline(admin.TabularInline):
+class MetricFilesInline(admin.StackedInline):
     model = MetricFiles
     verbose_name = 'File attributes'
     verbose_name_plural = 'File attributes'
@@ -311,6 +311,38 @@ class MetricConfigInline(admin.TabularInline):
         return True
 
 
+class MetricParentForm(ModelForm):
+    value = CharField(max_length=255)
+
+    def clean(self):
+        update_field('parent', self.cleaned_data, MetricParent)
+
+        return super(MetricParentForm, self).clean()
+
+
+class MetricParentInline(admin.TabularInline):
+    model = MetricParent
+    verbose_name = 'Parent metric'
+    verbose_name_plural = 'Parent metric'
+    form = MetricParentForm
+    template = 'admin/edit_inline/tabular-attrs-exec.html'
+    max_num = 1
+    can_delete = False
+
+    def has_add_permission(self, request):
+        if request.user.has_perm('poem.groupown_metric') \
+                or request.user.is_superuser:
+            return True
+        else:
+            return False
+
+    def has_delete_permission(self, request, obj=None):
+        return True
+
+    def has_change_permission(self, request, obj=None):
+        return True
+
+
 class MetricProbeExecutableForm(ModelForm):
     value = CharField(max_length=255)
 
@@ -375,7 +407,8 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
     list_filter = ('tag', GroupMetricsListFilter,)
     inlines = (MetricProbeExecutableInline, MetricConfigInline,
                MetricAttributeInline, MetricDependancyInline,
-               MetricParameterInline, MetricFlagsInline, MetricFilesInline, )
+               MetricParameterInline, MetricFlagsInline, MetricFilesInline,
+               MetricParentInline,)
     search_fields = ('name',)
     actions = None
     ordering = ('name',)
