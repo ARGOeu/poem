@@ -16,7 +16,7 @@ from Poem.poem.lookups import check_cache
 from Poem.poem.admin_interface.formmodel import MyModelMultipleChoiceField, MyModelChoiceField, MySelect
 from Poem.poem.models import Metric, Probe, UserProfile, VO, ServiceFlavour,GroupOfProbes,\
                              CustUser, Tags, Metrics, GroupOfMetrics, MetricAttribute, MetricConfig, MetricParameter,\
-                             MetricFlags, MetricDependancy, MetricProbeExecutable, MetricFiles, MetricParent
+                             MetricFlags, MetricDependancy, MetricProbeExecutable, MetricFiles, MetricParent, MetricFileParameter
 
 from ajax_select import make_ajax_field
 from reversion_compare.admin import CompareVersionAdmin
@@ -311,6 +311,38 @@ class MetricConfigInline(admin.TabularInline):
         return True
 
 
+class MetricFileParameterForm(ModelForm):
+    key = CharField(label='key')
+    value = CharField(label='value')
+
+    def clean(self):
+        update_field('fileparameter', self.cleaned_data, MetricFileParameter)
+
+        return super(MetricFileParameterForm, self).clean()
+
+
+class MetricFileParameterInline(admin.TabularInline):
+    model = MetricFileParameter
+    verbose_name = 'File parameters'
+    verbose_name_plural = 'File parameters'
+    form = MetricFileParameterForm
+    template = 'admin/edit_inline/tabular-attrs.html'
+    extra = 1
+
+    def has_add_permission(self, request):
+        if request.user.has_perm('poem.groupown_metric') \
+                or request.user.is_superuser:
+            return True
+        else:
+            return False
+
+    def has_delete_permission(self, request, obj=None):
+        return True
+
+    def has_change_permission(self, request, obj=None):
+        return True
+
+
 class MetricParentForm(ModelForm):
     value = CharField(max_length=255)
 
@@ -408,7 +440,7 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
     inlines = (MetricProbeExecutableInline, MetricConfigInline,
                MetricAttributeInline, MetricDependancyInline,
                MetricParameterInline, MetricFlagsInline, MetricFilesInline,
-               MetricParentInline,)
+               MetricFileParameterInline, MetricParentInline,)
     search_fields = ('name',)
     actions = None
     ordering = ('name',)

@@ -66,6 +66,7 @@ class Metric(models.Model):
     flags = models.CharField(max_length=1024)
     files = models.CharField(max_length=1024)
     parameter = models.CharField(max_length=1024)
+    fileparameter = models.CharField(max_length=1024)
     cloned = models.CharField(max_length=128, null=True)
 
     class Meta:
@@ -112,6 +113,15 @@ class MetricParameter(models.Model):
         app_label = 'poem'
 
 
+class MetricFileParameter(models.Model):
+    key = models.CharField(max_length=384)
+    value = models.CharField(max_length=384)
+    metric = models.ForeignKey(Metric)
+
+    class Meta:
+        app_label = 'poem'
+
+
 class MetricAttribute(models.Model):
     key = models.CharField(max_length=384)
     value = models.CharField(max_length=384)
@@ -128,6 +138,7 @@ class MetricConfig(models.Model):
 
     class Meta:
         app_label = 'poem'
+
 
 class MetricParent(models.Model):
     metric = models.ForeignKey(Metric, blank=True, null=True)
@@ -162,6 +173,7 @@ post_delete.connect(delete_entryfield, sender=MetricDependancy)
 post_delete.connect(delete_entryfield, sender=MetricFlags)
 post_delete.connect(delete_entryfield, sender=MetricParameter)
 post_delete.connect(delete_entryfield, sender=MetricFiles)
+post_delete.connect(delete_entryfield, sender=MetricFileParameter)
 
 # delete empty revision leftover created by delete_entryfield()
 # on deletion of parent Metric record. such leftover revision
