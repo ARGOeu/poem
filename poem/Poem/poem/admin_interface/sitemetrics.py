@@ -73,7 +73,9 @@ class MetricAddForm(ModelForm):
     tag.empty_label = None
     name = CharField(max_length=255, label='Name', help_text='Metric name',
                      widget=TextInput(attrs={'class': 'metricautocomplete'}))
-    probeversion = make_ajax_field(Metric, 'probeversion', 'hintsprobes', label='Probe', help_text='Probe name and version')
+    probeversion = make_ajax_field(Metric, 'probeversion', 'hintsprobes',
+                                   label='Probe', help_text='Probe name and version',
+                                   required=False)
 
     def clean(self):
         try:
@@ -431,7 +433,14 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
                 return queryset
 
     def probeversion_url(self, obj):
-        return format_html('<a href="{0}">{1}</a>',reverse('admin:poem_probe_revision', args=(obj.probekey.object_id, obj.probekey.pk)), obj.probeversion)
+        if obj and obj.probeversion:
+            return format_html('<a href="{0}">{1}</a>',
+                               reverse('admin:poem_probe_revision',
+                                       args=(obj.probekey.object_id,
+                                             obj.probekey.pk)),
+                               obj.probeversion)
+        else:
+            return None
     probeversion_url.short_description = 'Probeversion'
 
     list_display = ('name', 'tag', 'probeversion_url', 'group')
@@ -529,7 +538,8 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
     @transaction.atomic()
     @reversion.create_revision()
     def save_model(self, request, obj, form, change):
-        obj.probekey = Version.objects.get(object_repr__exact=obj.probeversion)
+        if obj.probeversion:
+            obj.probekey = Version.objects.get(object_repr__exact=obj.probeversion)
         if request.path.endswith('/clone/'):
             import re
             obj.cloned = re.search('([0-9]*)/clone', request.path).group(1)

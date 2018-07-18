@@ -56,7 +56,7 @@ class Metric(models.Model):
     name = models.CharField(max_length=128)
     tag = models.ForeignKey(Tags)
     probeversion = models.CharField(max_length=128)
-    probekey = models.ForeignKey(Version)
+    probekey = models.ForeignKey(Version, blank=True, null=True)
     group = models.ForeignKey(GroupOfMetrics)
     parent = models.CharField(max_length=128)
     probeexecutable = models.CharField(max_length=128)
