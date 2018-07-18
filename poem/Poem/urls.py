@@ -14,20 +14,20 @@ from Poem.poem.admin import myadmin
 django_logging()
 
 # Apache settings
-# urlpatterns = [
-#     url(r'^$', lambda x: HttpResponseRedirect('/poem/admin/')),
-#     url(r'^admin/', myadmin.urls),
-#     url(r'^admin/lookups/', include(ajax_select_urls)),
-#     url(r'^api/', include('Poem.urls_api')),
-#     url(r'^saml2/', include(('djangosaml2.urls', 'poem'), namespace='saml2')),
-# ]
-
-# Django development server settings
 urlpatterns = [
     url(r'^$', lambda x: HttpResponseRedirect('/poem/admin/')),
     url(r'^admin/', myadmin.urls),
     url(r'^admin/lookups/', include(ajax_select_urls)),
     url(r'^api/', include('Poem.urls_api')),
     url(r'^saml2/', include(('djangosaml2.urls', 'poem'), namespace='saml2')),
-] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + \
-    static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]
+
+# Django development server settings
+# urlpatterns = [
+#     url(r'^$', lambda x: HttpResponseRedirect('/poem/admin/')),
+#     url(r'^admin/', myadmin.urls),
+#     url(r'^admin/lookups/', include(ajax_select_urls)),
+#     url(r'^api/', include('Poem.urls_api')),
+#     url(r'^saml2/', include(('djangosaml2.urls', 'poem'), namespace='saml2')),
+# ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + \
+#     static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

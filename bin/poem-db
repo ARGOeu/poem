@@ -30,6 +30,9 @@ do
             su -m -s /bin/sh $RUNASUSER -c \
             "export DJANGO_SETTINGS_MODULE=Poem.settings && \
             python $SITEPACK/Poem/manage.py poem_superuser"
+            su -m -s /bin/sh $RUNASUSER -c \
+            "export DJANGO_SETTINGS_MODULE=Poem.settings && \
+            python $SITEPACK/Poem/manage.py loaddata initial_data.json"
             ;;
         m)
             export DJANGO_SETTINGS_MODULE=Poem.settings && \

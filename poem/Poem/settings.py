@@ -171,13 +171,13 @@ TEMPLATE_DEBUG = DEBUG
 
 
 # Django development server settings
-MEDIA_URL = '/poem_media/'
-MEDIA_ROOT = '/usr/share/poem/media/'
-STATIC_URL = '/static/'
+# MEDIA_URL = '/poem_media/'
+# MEDIA_ROOT = '/usr/share/poem/media/'
+# STATIC_URL = '/static/'
 
 # Apache settings
-# STATIC_URL = '/'
-# STATIC_ROOT = '/usr/share/poem/static/'
+STATIC_URL = '/'
+STATIC_ROOT = '/usr/share/poem/static/'
 
 # load SAML settings
 try:
