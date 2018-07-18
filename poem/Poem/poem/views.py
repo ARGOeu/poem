@@ -117,8 +117,11 @@ class Metrics(View):
                     mdict = dict()
                     mdict.update({m.name: dict()})
 
-                    exe = models.MetricProbeExecutable.objects.get(metric=m)
-                    mdict[m.name].update({'probe': exe.value})
+                    try:
+                        exe = models.MetricProbeExecutable.objects.get(metric=m)
+                        mdict[m.name].update({'probe': exe.value})
+                    except models.MetricProbeExecutable.DoesNotExist:
+                        mdict[m.name].update({'probe': None})
 
                     mc = models.MetricConfig.objects.filter(metric=m)
                     mdict[m.name].update({'config': dict()})
@@ -155,12 +158,18 @@ class Metrics(View):
                     for parameter in mfa:
                         mdict[m.name]['file_attribute'].update({parameter.key: parameter.value})
 
-                    parent = models.MetricParent.objects.get(metric=m)
-                    mdict[m.name].update({'parent': parent.value})
+                    try:
+                        parent = models.MetricParent.objects.get(metric=m)
+                        mdict[m.name].update({'parent': parent.value})
+                    except models.MetricParent.DoesNotExist:
+                        mdict[m.name].update({'parent': None})
 
-                    version_fields = json.loads(m.probekey.serialized_data)
+                    if m.probekey:
+                        version_fields = json.loads(m.probekey.serialized_data)
+                        mdict[m.name].update({'docurl': version_fields[0]['fields']['docurl']})
+                    else:
+                        mdict[m.name].update({'docurl': None})
 
-                    mdict[m.name].update({'docurl': version_fields[0]['fields']['docurl']})
                     api.append(mdict)
             except models.Tags.DoesNotExist:
                 pass
