@@ -38,12 +38,12 @@ fieldset.docurl input {
     padding: 2px 10px 0px 0px;
 }
 
-fieldset.docurl > div > div > p.help {
+fieldset.docurl > div > div > div.help {
     padding-left: 130px;
     margin-left: 10px;
 }
 
-fieldset.tagging > div > div > p.help {
+fieldset.tagging > div > div > div.help {
     padding-left: 50px;
     margin-left: 10px;
 }

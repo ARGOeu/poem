@@ -35,7 +35,7 @@ fieldset.infoone .field-box.field-user p {
     margin-left: 10px;
 }
 
-fieldset.infoone > div > div > p.help {
+fieldset.infoone > div > div > div.help {
     padding-left: 30px;
     margin-left: 30px;
 }
