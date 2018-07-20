@@ -176,7 +176,7 @@ TEMPLATE_DEBUG = DEBUG
 # STATIC_URL = '/static/'
 
 # Apache settings
-STATIC_URL = '/'
+STATIC_URL = '/static/'
 STATIC_ROOT = '/usr/share/poem/static/'
 
 # load SAML settings
