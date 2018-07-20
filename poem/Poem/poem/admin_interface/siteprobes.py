@@ -12,6 +12,7 @@ from Poem.poem.admin_interface.formmodel import MyModelMultipleChoiceField
 from Poem.poem.models import MetricInstance, Probe, UserProfile, VO, ServiceFlavour, GroupOfProbes, CustUser, ExtRevision
 
 from reversion_compare.admin import CompareVersionAdmin
+from reversion.admin import VersionAdmin
 import reversion
 
 class SharedInfo:
@@ -64,6 +65,7 @@ class GroupOfProbesInlineAddForm(ModelForm):
         self.fields['groupofprobes'].empty_label = None
         self.fields['groupofprobes'].label = 'Group'
         self.fields['groupofprobes'].widget.can_add_related = False
+        self.fields['groupofprobes'].widget.can_change_related = False
 
     def clean_groupofprobes(self):
         groupsel = self.cleaned_data['groupofprobes']
@@ -223,7 +225,6 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
             self.readonly_fields = ()
         return super(ProbeAdmin, self).get_form(request, obj=None, **kwargs)
 
-    @transaction.atomic()
     @reversion.create_revision()
     def save_model(self, request, obj, form, change):
         sh = SharedInfo()
@@ -283,5 +284,6 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
         else:
             extra_context = {'cursel': currev, 'datecreated': datecreated}
         return super(ProbeAdmin, self).revision_view(request, object_id, version_id, extra_context)
+
 
 reversion.register(Probe, exclude=["nameversion", "datetime"])
