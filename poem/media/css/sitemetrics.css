@@ -72,8 +72,8 @@ td.field-value input {
     font-size: 14px;
 }
 
-
 select {
+    min-width: 100px;
     background: #F6F6F6;
 }
 
