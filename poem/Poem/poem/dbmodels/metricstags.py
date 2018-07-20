@@ -1,13 +1,14 @@
+import json
+
 from django.contrib.auth.models import GroupManager, Permission
 from django.db import models, transaction
 from django.db.models.signals import post_delete
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.contenttypes.models import ContentType
 
-import json
-
 from reversion.models import Version, Revision
 from reversion.signals import post_revision_commit, pre_revision_commit
+
 
 class Metrics(models.Model):
     id = models.AutoField(primary_key=True)
@@ -175,56 +176,52 @@ post_delete.connect(delete_entryfield, sender=MetricParameter)
 post_delete.connect(delete_entryfield, sender=MetricFiles)
 post_delete.connect(delete_entryfield, sender=MetricFileParameter)
 
-# delete empty revision leftover created by delete_entryfield()
-# on deletion of parent Metric record. such leftover revision
-# is created with empty comment.
-def delete_leftover_revision(revision, sender, signal, versions, **kwargs):
-    if len(versions) == 1:
-        version = versions[0]
-    model_changed = ContentType.objects.get_for_id(version.content_type_id).model_class()
-    if len(versions) == 1 and isinstance(model_changed, Metric):
-        if revision.comment:
-            instance = ContentType.objects.get_object_for_this_type(id=int(version.object_id))
-            if instance.cloned and 'Initial' in revision.comment:
-                from_metric = Metric.objects.get(pk=instance.cloned)
-                revision.comment = 'Derived from %s' % from_metric
-                revision.save()
-            else:
-                pass
-        else:
-            revision.delete()
-    else:
-        pass
 
-post_revision_commit.connect(delete_leftover_revision)
+def add_derived_comment(revision, sender, signal, versions, **kwargs):
+    """On metric configuration clone, add "Derived from <metric>" comment as
+       last revision
 
-already_called = False
-# def copy_derived_metric(instances, **kwargs):
-def copy_derived_metric(revision, sender, signal, versions, **kwargs):
-    global already_called
+    """
     if len(versions) == 1:
         version = versions[0]
     ct = ContentType.objects.get_for_id(version.content_type_id)
-    model_changed = ct.model_class()
-    if isinstance(model_changed, Metric):
+    metric_ct = ContentType.objects.get_for_model(Metric)
+    if len(versions) == 1 and ct.pk == metric_ct.pk:
         instance = ct.get_object_for_this_type(id=int(version.object_id))
-        if instance.cloned and not already_called:
+        if instance.cloned:
+            from_metric = Metric.objects.get(pk=instance.cloned)
+            revision.comment = 'Derived from %s' % from_metric
+            revision.save()
+post_revision_commit.connect(add_derived_comment)
+
+
+def copy_derived_metric(revision, sender, signal, versions, **kwargs):
+    """Realize copying of metric configuration changes from derived metric
+       configuration
+
+    """
+    if len(versions) == 1:
+        version = versions[0]
+    ct = ContentType.objects.get_for_id(version.content_type_id)
+    metric_ct = ContentType.objects.get_for_model(Metric)
+    if ct.pk == metric_ct.pk:
+        instance = ct.get_object_for_this_type(id=int(version.object_id))
+        if instance.cloned:
             vers = list()
             derived_id = int(instance.cloned)
             ct = ContentType.objects.get_for_model(Metric)
-            derived_vers = Version.objects.filter(object_id_int=derived_id,
+            derived_vers = Version.objects.filter(object_id=derived_id,
                                                   content_type_id=ct.id)
             for v in derived_vers:
                 rev = Revision.objects.get(pk=v.revision_id)
-                copy_rev = Revision(manager_slug=rev.manager_slug,
-                                    date_created=rev.date_created,
+                copy_rev = Revision(date_created=rev.date_created,
                                     user_id=rev.user_id, comment=rev.comment)
                 ver = Version(object_id=str(instance.id),
-                              object_id_int=int(instance.id),
                               content_type_id=ct.id,
                               format=v.format,
                               serialized_data=v.serialized_data,
-                              object_repr=v.object_repr)
+                              object_repr=v.object_repr,
+                              db='default')
 
                 copy_rev.save()
                 # date_created is auto_now_add field which will contain the
@@ -238,7 +235,4 @@ def copy_derived_metric(revision, sender, signal, versions, **kwargs):
                 vers.append(ver)
 
             Version.objects.bulk_create(vers)
-
-    already_called = True
-
 pre_revision_commit.connect(copy_derived_metric)
