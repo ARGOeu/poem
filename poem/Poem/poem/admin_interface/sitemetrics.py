@@ -21,6 +21,7 @@ from Poem.poem.models import Metric, Probe, UserProfile, VO, ServiceFlavour,Grou
 from ajax_select import make_ajax_field
 from reversion_compare.admin import CompareVersionAdmin
 from reversion.models import Version
+from reversion.admin import VersionAdmin
 import reversion
 import json
 import modelclone
@@ -57,6 +58,7 @@ class MetricAddForm(ModelForm):
     def __init__(self, *args, **kwargs):
         super(MetricAddForm, self).__init__(*args, **kwargs)
         self.fields['group'].widget.can_add_related = False
+        self.fields['group'].widget.can_change_related = False
         self.fields['group'].empty_label = None
 
     class Meta:
@@ -68,7 +70,7 @@ class MetricAddForm(ModelForm):
         }
 
     qs = Tags.objects.all()
-    tag = MyModelChoiceField(queryset=qs, label='Tag', help_text='Select one of the tags available.')
+    tag = ModelChoiceField(queryset=qs, label='Tag', help_text='Select one of the tags available.')
     tag.empty_label = None
     name = CharField(max_length=255, label='Name', help_text='Metric name',
                      widget=TextInput(attrs={'class': 'metricautocomplete'}))
@@ -102,10 +104,10 @@ class MetricChangeForm(MetricAddForm):
         sh = SharedInfo()
         self.user = sh.getuser()
         self.usergroups = self.user.groupsofmetrics.all()
-        super(MetricAddForm, self).__init__(*args, **kwargs)
+        super(MetricChangeForm, self).__init__(*args, **kwargs)
 
     qs = GroupOfMetrics.objects.all()
-    group = ModelMultipleChoiceField(queryset=qs, widget=Select(),
+    group = ModelChoiceField(queryset=qs, widget=Select(),
                                      help_text='Metric is a member of selected group')
     group.empty_label = '----------------'
     group.label = 'Group'
@@ -407,6 +409,7 @@ class MetricProbeExecutableInline(admin.TabularInline):
         return True
 
 
+# class MetricAdmin(CompareVersionAdmin):
 class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
     """
     POEM admin core class that customizes its look and feel.
@@ -458,14 +461,6 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
     compare_template = ''
     change_form_template = ''
 
-    def get_formsets_with_inlines(self, request, obj=None):
-        """
-        Yields formsets and the corresponding inlines.
-        """
-        for inline in self.get_inline_instances(request, obj):
-            if isinstance(inline, MetricConfigInline):
-                inline.formset = BaseInlineFormSet
-            yield inline.get_formset(request, obj), inline
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'group' and not request.user.is_superuser:
@@ -488,13 +483,6 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
         elif flag == 'del':
             user.user_permissions.remove(perm_grpown)
             user.user_permissions.remove(perm_prdel)
-
-    def change_view(self, request, object_id, form_url='', extra_context=None):
-        extra_context = extra_context or {}
-        extra_context.update({'clone_verbose_name': 'Clone',
-                              'include_clone_link': True})
-
-        return super(modelclone.ClonableModelAdmin, self).change_view(request, object_id, form_url, extra_context)
 
     def clone_view(self, request, object_id, form_url='', extra_context=None):
         extra_context = extra_context or {}
@@ -533,14 +521,13 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
 
         return super(MetricAdmin, self).delete_model(request, obj)
 
-    @transaction.atomic()
     @reversion.create_revision()
     def save_model(self, request, obj, form, change):
         if obj.probeversion:
             obj.probekey = Version.objects.get(object_repr__exact=obj.probeversion)
         if request.path.endswith('/clone/'):
             import re
-            obj.cloned = re.search('([0-9]*)/clone', request.path).group(1)
+            obj.cloned = re.search('([0-9]*)/change/clone', request.path).group(1)
         else:
             obj.cloned = ''
         if request.user.has_perm('poem.groupown_metric') \
