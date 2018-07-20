@@ -93,13 +93,10 @@ class SAML2Backend(Saml2Backend):
             user.save()
 
             userpro, upcreated = UserProfile.objects.get_or_create(user=user)
-            if upcreated:
-                userpro.subject = certsub
-                userpro.displayname = displayname
-                userpro.egiid = egiid
-                userpro.save()
-            else:
-                raise Exception
+            userpro.subject = certsub
+            userpro.displayname = displayname
+            userpro.egiid = egiid
+            userpro.save()
 
             return user
 
