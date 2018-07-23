@@ -45,7 +45,7 @@ setup(name=NAME,
     url='https://github.com/ARGOeu/poem',
     classifiers=(
           "Programming Language :: Python :: 3",
-          "License :: OSI Approved :: Apache License 2.0",
+          "License :: OSI Approved :: Apache Software License",
           "Operating System :: Linux",
       ),
     scripts = ['bin/poem-syncvo', 'bin/poem-syncservtype',
