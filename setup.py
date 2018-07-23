@@ -46,7 +46,7 @@ setup(name=NAME,
     classifiers=(
           "Programming Language :: Python :: 3",
           "License :: OSI Approved :: Apache Software License",
-          "Operating System :: Linux",
+          "Operating System :: POSIX :: Linux",
       ),
     scripts = ['bin/poem-syncvo', 'bin/poem-syncservtype',
                'bin/poem-db', 'bin/poem-importprofiles',
