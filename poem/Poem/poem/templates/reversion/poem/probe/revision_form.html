@@ -1,5 +1,5 @@
 {% extends "admin/change_form.html" %}
-{% load i18n admin_urls admin_static admin_list admin_modify %}
+{% load i18n admin_urls %}
 
 {% block usertools %}
   <div id="user-tools">
@@ -23,9 +23,9 @@
         {% endif %}
         <a href="{% url 'admin:poem_profile_changelist' %}">Profiles</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
 
-        <a href="{{changelist_url}}">{{opts.verbose_name_plural|capfirst}}</a> &rsaquo;
-        <a href="{{change_url}}">{{ original }}</a> &rsaquo;
-        <a href="{{history_url}}">{% trans "History" %}</a> &rsaquo;
+        <a href="{% url opts|admin_urlname:'changelist' %}">{{opts.verbose_name_plural|capfirst}}</a> &rsaquo;
+        <a href="{% url opts|admin_urlname:'change' object_id %}">{{ original }}</a> &rsaquo;
+        <a href="{% url opts|admin_urlname:'history' object_id %}">{% trans "History" %}</a> &rsaquo;
         {% blocktrans with opts.verbose_name as verbose_name %}{{ cursel }}{% endblocktrans %}
         &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
         <a href="{% url 'admin:poem_metric_changelist' %}">Metrics</a>
@@ -84,9 +84,6 @@
 {% if adminform and add %}
    <script type="text/javascript">document.getElementById("{{ adminform.first_field.id_for_label }}").focus();</script>
 {% endif %}
-
-{# JavaScript for prepopulated fields #}
-{% prepopulated_fields_js %}
 
 </div>
 </form></div>
