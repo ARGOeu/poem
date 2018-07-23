@@ -177,24 +177,6 @@ post_delete.connect(delete_entryfield, sender=MetricFiles)
 post_delete.connect(delete_entryfield, sender=MetricFileParameter)
 
 
-def add_derived_comment(revision, sender, signal, versions, **kwargs):
-    """On metric configuration clone, add "Derived from <metric>" comment as
-       last revision
-
-    """
-    if len(versions) == 1:
-        version = versions[0]
-    ct = ContentType.objects.get_for_id(version.content_type_id)
-    metric_ct = ContentType.objects.get_for_model(Metric)
-    if len(versions) == 1 and ct.pk == metric_ct.pk:
-        instance = ct.get_object_for_this_type(id=int(version.object_id))
-        if instance.cloned:
-            from_metric = Metric.objects.get(pk=instance.cloned)
-            revision.comment = 'Derived from %s' % from_metric
-            revision.save()
-post_revision_commit.connect(add_derived_comment)
-
-
 def copy_derived_metric(revision, sender, signal, versions, **kwargs):
     """Realize copying of metric configuration changes from derived metric
        configuration

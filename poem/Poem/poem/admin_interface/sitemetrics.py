@@ -461,13 +461,6 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
     compare_template = ''
     change_form_template = ''
 
-
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == 'group' and not request.user.is_superuser:
-            lgi = request.user.groupsofmetrics.all().values_list('id', flat=True)
-            kwargs["queryset"] = GroupOfMetrics.objects.filter(pk__in=lgi)
-        return super(MetricAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
-
     def _groupown_turn(self, user, flag):
         perm_prdel = Permission.objects.get(codename='delete_metric')
         try:
@@ -527,7 +520,11 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
             obj.probekey = Version.objects.get(object_repr__exact=obj.probeversion)
         if request.path.endswith('/clone/'):
             import re
-            obj.cloned = re.search('([0-9]*)/change/clone', request.path).group(1)
+            cloned_metric = re.search('([0-9]*)/change/clone', request.path).group(1)
+            from_metric = Metric.objects.get(pk=cloned_metric)
+            reversion.set_user(request.user)
+            reversion.set_comment('Derived from %s' % from_metric)
+            obj.cloned = cloned_metric
         else:
             obj.cloned = ''
         if request.user.has_perm('poem.groupown_metric') \
