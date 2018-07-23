@@ -18,11 +18,11 @@ def get_files(install_prefix, directory):
 poem_media_files = get_files("/usr/share", "poem/media") + get_files("/usr/share/", "poem/static")
 
 setup(name=NAME,
-    version='2.0.0',
+    version='2.0.0-rc1',
     description='Profile, Probes and Metric configuration Management (POEM) for ARGO Monitoring framework.',
     author='SRCE',
     author_email='dvrcic@srce.hr',
-    license='GPL',
+    license='Apache License 2.0',
     long_description="""
                     POEM service is a light web application used in ARGO framework that holds list
                     of services, metrics and probes used within EGI infrastructure. Services and
@@ -43,6 +43,11 @@ setup(name=NAME,
                     More info: http://argoeu.github.io/guides/poem
                     """,
     url='https://github.com/ARGOeu/poem',
+    classifiers=(
+          "Programming Language :: Python :: 3",
+          "License :: OSI Approved :: Apache License 2.0",
+          "Operating System :: Linux",
+      ),
     scripts = ['bin/poem-syncvo', 'bin/poem-syncservtype',
                'bin/poem-db', 'bin/poem-importprofiles',
                'bin/poem-exportprofiles', 'bin/poem-genseckey'],
