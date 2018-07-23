@@ -8,6 +8,7 @@ usage()
 	printf "Usage: %s [-c] [-m] [-h]\n" $(basename $0) >&2
 	printf "       [-c] - create database\n" >&2
 	printf "       [-a] - apply new migration\n" >&2
+	printf "       [-f] - mark migrations as run without running them\n" >&2
 	printf "       [-m] - create new migration\n" >&2
 	printf "       [-l] - list migrations\n" >&2
 	printf "       [-s] - clear stale login sessions\n" >&2
@@ -20,7 +21,7 @@ then
     usage
 fi
 
-while getopts 'camlhs' OPTION
+while getopts 'cafmlhs' OPTION
 do
     case $OPTION in
         c)
@@ -37,6 +38,11 @@ do
         m)
             export DJANGO_SETTINGS_MODULE=Poem.settings && \
             python $SITEPACK/Poem/manage.py makemigrations poem 
+            ;;
+				f)
+            su -m -s /bin/sh $RUNASUSER -c \
+            "export DJANGO_SETTINGS_MODULE=Poem.settings && \
+            python $SITEPACK/Poem/manage.py migrate --fake"
             ;;
         a)
             su -m -s /bin/sh $RUNASUSER -c \
