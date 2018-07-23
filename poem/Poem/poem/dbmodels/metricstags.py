@@ -192,8 +192,11 @@ def copy_derived_metric(revision, sender, signal, versions, **kwargs):
             vers = list()
             derived_id = int(instance.cloned)
             ct = ContentType.objects.get_for_model(Metric)
+            # Although get_for_object() VersionQuerySet should return date ordered
+            # version, it does not so we sort manually
+            # derived_vers = Version.objects.get_for_object(Metric.objects.get(pk=derived_id))
             derived_vers = Version.objects.filter(object_id=derived_id,
-                                                  content_type_id=ct.id)
+                                                  content_type_id=ct.id).order_by('revision__date_created')
             for v in derived_vers:
                 rev = Revision.objects.get(pk=v.revision_id)
                 copy_rev = Revision(date_created=rev.date_created,
@@ -217,4 +220,5 @@ def copy_derived_metric(revision, sender, signal, versions, **kwargs):
                 vers.append(ver)
 
             Version.objects.bulk_create(vers)
+
 pre_revision_commit.connect(copy_derived_metric)
