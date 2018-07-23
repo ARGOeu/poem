@@ -269,7 +269,7 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
     @transaction.atomic()
     def delete_model(self, request, obj):
         ct = ContentType.objects.get_for_model(obj)
-        lver = reversion.models.Version.objects.filter(object_id_int=obj.id,
+        lver = reversion.models.Version.objects.filter(object_id=obj.id,
                                                        content_type_id=ct.id)
         for v in lver:
             reversion.models.Revision.objects.get(pk=v.revision_id).delete()

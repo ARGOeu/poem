@@ -506,11 +506,10 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
     @transaction.atomic()
     def delete_model(self, request, obj):
         ct = ContentType.objects.get_for_model(obj)
-        lver = reversion.models.Version.objects.filter(object_id_int=obj.id,
+        lver = reversion.models.Version.objects.filter(object_id=obj.id,
                                                        content_type_id=ct.id)
         ids = map(lambda x: x.revision_id, lver)
         reversion.models.Revision.objects.filter(pk__in=ids).delete()
-        transaction.commit_unless_managed()
 
         return super(MetricAdmin, self).delete_model(request, obj)
 
