@@ -12,7 +12,7 @@ URL:            https://tomtools.cern.ch/confluence/display/SAM/POEM
 Source0:        poem-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch:      noarch
-Requires:       django-ajax-selects
+Requires:       django-ajax-selects = 1.4.2
 Requires:       django-flat-theme
 Requires:       django-reversion
 Requires:       django-reversion-compare
