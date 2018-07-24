@@ -4,5 +4,6 @@ django-reversion
 git+https://github.com/vrdel/django-modelclone
 git+https://github.com/vrdel/django-reversion-compare
 djangosaml2
+unidecode
 mod-wsgi
 mod-wsgi-httpd

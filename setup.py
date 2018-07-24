@@ -15,7 +15,7 @@ def get_files(install_prefix, directory):
             files.append((os.path.join(install_prefix, root), subdir_files))
     return files
 
-poem_media_files = get_files("/usr/share", "poem/media") + get_files("/usr/share/", "poem/static")
+poem_media_files = get_files("usr/share", "poem/media") + get_files("usr/share/", "poem/static")
 
 setup(name=NAME,
     version='2.0.0-rc1',
@@ -52,10 +52,10 @@ setup(name=NAME,
                'bin/poem-db', 'bin/poem-importprofiles',
                'bin/poem-exportprofiles', 'bin/poem-genseckey'],
     data_files = [
-        ('/etc/poem', ['etc/poem.conf', 'etc/poem_logging.conf', 'etc/saml2.conf']),
-        ('/etc/cron.d/', ['cron/poem-syncvosf', 'cron/poem-clearsessions']),
-        ('/etc/httpd/conf.d', ['poem/apache/poem.conf']),
-        ('/usr/share/poem/apache', ['poem/apache/poem.wsgi']),
+        ('etc/poem', ['etc/poem.conf', 'etc/poem_logging.conf', 'etc/saml2.conf']),
+        ('etc/cron.d/', ['cron/poem-syncvosf', 'cron/poem-clearsessions']),
+        ('etc/httpd/conf.d', ['poem/apache/poem.conf']),
+        ('usr/share/poem/apache', ['poem/apache/poem.wsgi']),
     ] + poem_media_files,
     package_dir = {'Poem': 'poem/Poem'},
     packages = ['Poem', 'Poem.auth_backend', 'Poem.poem', 'Poem.poem.management', 'Poem.poem.dbmodels', 'Poem.poem.management.commands',

@@ -1,19 +1,21 @@
 # Django settings
 from os import path as os_path
-from configparser import RawConfigParser, NoSectionError
+from os import environ
+from configparser import ConfigParser, NoSectionError
 from distutils.sysconfig import get_python_lib
 from django.core.exceptions import ImproperlyConfigured
 import saml2
 
+VENV = '/home/poem/env/poem'
 PROJECT_NAME = 'poem'
 APP_PATH = os_path.abspath(os_path.split(__file__)[0])
 PROJECT_PATH = os_path.abspath(os_path.join(APP_PATH, '..'))
-CONFIG_FILE = '/etc/poem/poem.conf'
-LOG_CONFIG = '/etc/poem/poem_logging.conf'
-SAML_CONFIG_FILE = '/etc/poem/saml2.conf'
+CONFIG_FILE = '{}/etc/poem/poem.conf'.format(VENV)
+LOG_CONFIG = '{}/etc/poem/poem_logging.conf'.format(VENV)
+SAML_CONFIG_FILE = '{}/etc/poem/saml2.conf'.format(VENV)
 
 try:
-    config = RawConfigParser()
+    config = ConfigParser()
 
     if not config.read([CONFIG_FILE]):
         raise ImproperlyConfigured('Unable to parse config file %s' % CONFIG_FILE)
@@ -34,7 +36,7 @@ try:
 
     DATABASES = {
         'default': {
-            'NAME':  '/var/lib/poem/poemserv.db',
+            'NAME':  '{}/var/lib/poem/poemserv.db'.format(VENV),
             'ENGINE': 'django.db.backends.sqlite3',
         }
     }
@@ -177,7 +179,7 @@ TEMPLATE_DEBUG = DEBUG
 
 # Apache settings
 STATIC_URL = '/static/'
-STATIC_ROOT = '/usr/share/poem/static/'
+STATIC_ROOT = '{}/usr/share/poem/static/'.format(VENV)
 
 # load SAML settings
 try:
