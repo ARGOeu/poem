@@ -19,7 +19,7 @@ poem_media_files = get_files("usr/share", "poem/media") + get_files("usr/share/"
 
 setup(name=NAME,
     version='2.0.0-rc1',
-    description='Profile, Probes and Metric configuration Management (POEM) for ARGO Monitoring framework.',
+    description='Profile, Probes and Metric Configuration Management (POEM) for ARGO Monitoring framework.',
     author='SRCE',
     author_email='dvrcic@srce.hr',
     license='Apache License 2.0',
@@ -42,6 +42,13 @@ setup(name=NAME,
 
                     More info: http://argoeu.github.io/guides/poem
                     """,
+    install_requires=['django>=2',
+                      'django-ajax-selects',
+                      'django-reversion',
+                      'djangosaml2',
+                      'unidecode',
+                      'mod-wsgi',
+                      'mod-wsgi-httpd'],
     url='https://github.com/ARGOeu/poem',
     classifiers=(
           "Programming Language :: Python :: 3",
@@ -75,4 +82,3 @@ setup(name=NAME,
                               ]
                     },
 )
-
