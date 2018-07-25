@@ -409,7 +409,6 @@ class MetricProbeExecutableInline(admin.TabularInline):
         return True
 
 
-# class MetricAdmin(CompareVersionAdmin):
 class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
     """
     POEM admin core class that customizes its look and feel.
@@ -460,6 +459,12 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
     object_history_template = ''
     compare_template = ''
     change_form_template = ''
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'group' and not request.user.is_superuser:
+            lgi = request.user.groupsofmetrics.all().values_list('id', flat=True)
+            kwargs["queryset"] = GroupOfMetrics.objects.filter(pk__in=lgi)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def _groupown_turn(self, user, flag):
         perm_prdel = Permission.objects.get(codename='delete_metric')
