@@ -20,6 +20,7 @@ class UserProfileInline(admin.StackedInline):
     template = 'admin/edit_inline/stacked-user.html'
 
 class UserProfileAdmin(UserAdmin):
+    view_on_site = False
     form = MyUserChangeForm
 
     class Media:
