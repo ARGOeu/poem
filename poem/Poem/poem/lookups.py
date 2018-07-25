@@ -21,7 +21,7 @@ class VOLookup(LookupChannel):
         return sorted(filter(lambda x: q.lower() in x.lower(), values))
 
 
-class SFLookup(LookupChannel):
+class ServiceFlavoursLookup(LookupChannel):
     model = ServiceFlavour
 
     def get_query(self, q, request):
@@ -29,7 +29,7 @@ class SFLookup(LookupChannel):
         return sorted(filter(lambda x: q.lower() in x.lower(), values))
 
 
-class MILookup(LookupChannel):
+class MetricInstancesLookup(LookupChannel):
     model = MetricInstance
 
     def get_query(self, q, request):
@@ -37,7 +37,7 @@ class MILookup(LookupChannel):
         return sorted(filter(lambda x: q.lower() in x.lower(), values))
 
 
-class MFiltLookup(LookupChannel):
+class MetricsFilteredLookup(LookupChannel):
     model = Metrics
     relmodel = model.groupofmetrics_set.through
 
@@ -52,7 +52,7 @@ class MFiltLookup(LookupChannel):
         return sorted(filter(lambda x: q.lower() in x.lower(), meting))
 
 
-class MAllLookup(LookupChannel):
+class MetricsAllLookup(LookupChannel):
     model = Metrics
     relmodel = model.groupofmetrics_set.through
 
@@ -61,7 +61,7 @@ class MAllLookup(LookupChannel):
         return sorted(filter(lambda x: q.lower() in x.lower(), mets))
 
 
-class PLookup(LookupChannel):
+class ProbeLookup(LookupChannel):
     model = Version
 
     def get_query(self, q, request):
@@ -70,7 +70,7 @@ class PLookup(LookupChannel):
         return sorted(filter(lambda x: q.lower() in x.object_repr.lower(), proberevs))
 
 
-class TLookup(LookupChannel):
+class TagsLookup(LookupChannel):
     model = Tags
 
     def get_query(self, q, request):
