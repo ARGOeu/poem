@@ -1,1 +1,1 @@
-30 0 * * * root source /etc/profile.d/venv_poem.sh; $WORKON_HOME/poem/bin/poem-db -s
+30 0 * * * root source /etc/profile.d/venv_poem.sh; workon poem; $WORKON_HOME/poem/bin/poem-db -s

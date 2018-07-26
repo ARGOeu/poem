@@ -1,1 +1,1 @@
-50 * * * * root source /etc/profile.d/venv_poem.sh; $WORKON_HOME/poem/bin/poem-syncservtype; $WORKON_HOME/poem/bin/poem-syncvo
+50 * * * * root source /etc/profile.d/venv_poem.sh; workon poem; $WORKON_HOME/poem/bin/poem-syncservtype; $WORKON_HOME/poem/bin/poem-syncvo
