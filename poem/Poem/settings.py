@@ -6,7 +6,7 @@ from distutils.sysconfig import get_python_lib
 from django.core.exceptions import ImproperlyConfigured
 import saml2
 
-VENV = '/home/poem/env/poem'
+VENV = '/home/pyvenv/poem'
 PROJECT_NAME = 'poem'
 APP_PATH = os_path.abspath(os_path.split(__file__)[0])
 PROJECT_PATH = os_path.abspath(os_path.join(APP_PATH, '..'))
