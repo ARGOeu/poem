@@ -1,6 +1,7 @@
 
 from setuptools import setup
-import os, sys
+import os
+import sys
 
 NAME='poem'
 
@@ -9,8 +10,7 @@ def get_files(install_prefix, directory):
     for root, _, filenames in os.walk(directory):
         subdir_files = []
         for filename in filenames:
-            if 'svn' not in root:
-                subdir_files.append(os.path.join(root, filename))
+            subdir_files.append(os.path.join(root, filename))
         if filenames and subdir_files:
             files.append((os.path.join(install_prefix, root), subdir_files))
     return files
@@ -23,25 +23,8 @@ setup(name=NAME,
     author='SRCE',
     author_email='dvrcic@srce.hr',
     license='Apache License 2.0',
-    long_description="""
-                    POEM service is a light web application used in ARGO framework that holds list
-                    of services, metrics and probes used within EGI infrastructure. Services and
-                    associated metrics are grouped into POEM profiles that instruct monitoring
-                    instances what kind of tests to execute for given service. Additionally, it is
-                    a register of probes and Nagios metric configurations exposed to monitoring
-                    instances via REST API.
-
-                    It is based on Django web framework, specifically extension of its admin
-                    interface and several Django modules. EGI users are allowed to sign-in through
-                    EGI CheckIn federated authentication mechanism. Application is served with
-                    Apache web server and all its information is stored in light SQLite database.
-
-                    Devel instance: https://poem-devel.argo.grnet.gr/
-
-                    Production instance: https://poem.egi.eu/
-
-                    More info: http://argoeu.github.io/guides/poem
-                    """,
+    long_description=open('README.md').read(),
+    long_description_content_type = 'text/markdown',
     install_requires=['django>=2',
                       'django-ajax-selects',
                       'django-reversion',
