@@ -31,16 +31,16 @@ class Profiles(View):
         for profile in models.Profile.objects.all():
             mi = list(profile.metric_instances.all().\
                  values('metric', 'fqan', 'vo', 'service_flavour'))
-            mi = map(lambda e: {'metric': e['metric'],\
+            mi = list(map(lambda e: {'metric': e['metric'],\
                                 'fqan': e['fqan'],\
                                 'vo': e['vo'],\
-                                'atp_service_type_flavour': e['service_flavour']}, mi)
+                                'atp_service_type_flavour': e['service_flavour']}, mi))
             lp.append({"name": profile.name, "atp_vo" : profile.vo,
                     "version": profile.version,
                     "description": profile.description,
                     "metric_instances": mi})
 
-        return HttpResponse(json.dumps(lp), mimetype='application/json')
+        return HttpResponse(json.dumps(lp), content_type='application/json')
 
 class MetricsInProfiles(View):
     """
@@ -94,7 +94,7 @@ class MetricsInProfiles(View):
                                                         if m['profile__name'] == p[0]]})
             result = {"name" : lookup, "profiles" : metrics_in_profiles}
 
-            return HttpResponse(json.dumps([result]), mimetype='application/json')
+            return HttpResponse(json.dumps([result]), content_type='application/json')
 
         else:
             return HttpResponse("Need the name of VO")

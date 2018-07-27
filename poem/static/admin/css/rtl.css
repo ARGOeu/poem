@@ -36,13 +36,13 @@ th {
 }
 
 .addlink, .changelink {
-    padding-left: 0px;
+    padding-left: 0;
     padding-right: 16px;
     background-position: 100% 1px;
 }
 
 .deletelink {
-    padding-left: 0px;
+    padding-left: 0;
     padding-right: 16px;
     background-position: 100% 1px;
 }
@@ -116,7 +116,7 @@ thead th.sorted .text {
 }
 
 .change-list .filtered .results, .change-list .filtered .paginator, .filtered #toolbar, .filtered div.xfull {
-    margin-right: 0px;
+    margin-right: 0;
     margin-left: 280px;
 }
 
@@ -164,6 +164,10 @@ thead th.sorted .text {
 
 .aligned .form-row input {
     margin-left: 5px;
+}
+
+form .aligned p.help, form .aligned div.help {
+    clear: right;
 }
 
 form ul.inline li {
@@ -224,6 +228,10 @@ fieldset .field-box {
 
 form .form-row p.datetime {
     overflow: hidden;
+}
+
+.related-widget-wrapper {
+    float: right;
 }
 
 /* MISC */

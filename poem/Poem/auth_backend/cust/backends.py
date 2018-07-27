@@ -5,7 +5,7 @@ from django.contrib.auth.models import Permission
 
 class CustModelBackend(ModelBackend):
     def get_group_permissions(self, user_obj, obj=None):
-        if user_obj.is_anonymous() or obj is not None:
+        if user_obj.is_anonymous or obj is not None:
             return set()
         if not hasattr(user_obj, '_group_perm_cache'):
             if user_obj.is_superuser:

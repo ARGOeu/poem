@@ -1,17 +1,18 @@
 from django.db import transaction
-from django.forms import ModelForm, CharField, Textarea, ValidationError
+from django.forms import ModelForm, CharField, Textarea, ValidationError, ModelChoiceField
 from django.forms.widgets import TextInput, Select
 from django.contrib import admin
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.utils.html import format_html
 
 from Poem.poem.admin_interface.formmodel import MyModelMultipleChoiceField
 from Poem.poem.models import MetricInstance, Probe, UserProfile, VO, ServiceFlavour, GroupOfProbes, CustUser, ExtRevision
 
 from reversion_compare.admin import CompareVersionAdmin
+from reversion.admin import VersionAdmin
 import reversion
 
 class SharedInfo:
@@ -45,9 +46,7 @@ class GroupOfProbesInlineChangeForm(ModelForm):
         super(GroupOfProbesInlineChangeForm, self).__init__(*args, **kwargs)
 
     qs = GroupOfProbes.objects.all()
-    groupofprobes = MyModelMultipleChoiceField(queryset=qs,
-                                       widget=Select(),
-                                       help_text='Probe is a member of given group')
+    groupofprobes = ModelChoiceField(queryset=qs, help_text='Probe is a member of given group')
     groupofprobes.empty_label = '----------------'
     groupofprobes.label = 'Group'
 
@@ -66,6 +65,7 @@ class GroupOfProbesInlineAddForm(ModelForm):
         self.fields['groupofprobes'].empty_label = None
         self.fields['groupofprobes'].label = 'Group'
         self.fields['groupofprobes'].widget.can_add_related = False
+        self.fields['groupofprobes'].widget.can_change_related = False
 
     def clean_groupofprobes(self):
         groupsel = self.cleaned_data['groupofprobes']
@@ -106,9 +106,6 @@ class ProbeForm(ModelForm):
     Connects profile attributes to autocomplete widget (:py:mod:`poem.widgets`). Also
     adds media and does basic sanity checking for input.
     """
-    class Meta:
-        model = Probe
-
     name = CharField(help_text='Name of this probe.',
                      max_length=100,
                      widget=TextInput(attrs={'maxlength': 100, 'size': 45}),
@@ -228,7 +225,6 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
             self.readonly_fields = ()
         return super(ProbeAdmin, self).get_form(request, obj=None, **kwargs)
 
-    @transaction.atomic()
     @reversion.create_revision()
     def save_model(self, request, obj, form, change):
         sh = SharedInfo()
@@ -273,7 +269,7 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
     @transaction.atomic()
     def delete_model(self, request, obj):
         ct = ContentType.objects.get_for_model(obj)
-        lver = reversion.models.Version.objects.filter(object_id_int=obj.id,
+        lver = reversion.models.Version.objects.filter(object_id=obj.id,
                                                        content_type_id=ct.id)
         for v in lver:
             reversion.models.Revision.objects.get(pk=v.revision_id).delete()
@@ -288,5 +284,6 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
         else:
             extra_context = {'cursel': currev, 'datecreated': datecreated}
         return super(ProbeAdmin, self).revision_view(request, object_id, version_id, extra_context)
+
 
 reversion.register(Probe, exclude=["nameversion", "datetime"])

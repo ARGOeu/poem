@@ -1,5 +1,5 @@
 from django.http import HttpResponseRedirect
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.contrib import admin
 from django.contrib.auth.models import Group
 from django.contrib.admin.sites import AdminSite
@@ -19,7 +19,7 @@ from Poem.poem.admin_interface.sitemetrics import *
 class MyAdminSite(AdminSite):
     @never_cache
     def index(self, request, extra_context=None):
-        if request.user.is_authenticated():
+        if request.user.is_authenticated:
             if request.user.is_superuser:
                 return HttpResponseRedirect(request.path + 'poem')
             else:
@@ -32,7 +32,7 @@ class MyAdminSite(AdminSite):
         return super(MyAdminSite, self).login(request, extra_context)
 
     def app_index(self, request, app_label, extra_context=None):
-        if request.user.is_authenticated():
+        if request.user.is_authenticated:
             if request.user.is_superuser:
                 return super(MyAdminSite, self).app_index(request, app_label, extra_context)
             else:

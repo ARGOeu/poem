@@ -24,7 +24,7 @@ class Probe(models.Model):
         permissions = (('probesown', 'Read/Write/Modify'),)
         app_label = 'poem'
 
-    def __unicode__(self):
+    def __str__(self):
         return u'%s (%s)' % (self.name, self.version)
 
 @receiver(pre_save, sender=Probe)
@@ -35,7 +35,7 @@ class GroupOfProbes(models.Model):
     name = models.CharField(_('name'), max_length=80, unique=True)
     permissions = models.ManyToManyField(Permission,
                                          verbose_name=_('permissions'), blank=True)
-    probes = models.ManyToManyField(Probe, null=True, blank=True)
+    probes = models.ManyToManyField(Probe, blank=True)
     objects = GroupManager()
 
     class Meta:

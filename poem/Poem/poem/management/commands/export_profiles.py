@@ -18,14 +18,16 @@ class Command(BaseCommand):
     args = '[<space separated list of profiles to export>]'
     help = 'Export profiles from POEM to JSON formatted file'
 
-    option_list = BaseCommand.option_list + (
-                  make_option('--export',
-                              action='store',
-                              type='string',
-                              help='Export profiles to a file',
-                              dest='exportfile',
-                              metavar='filename',
-                              default=False),)
+    def add_arguments(self, parser):
+        parser.add_argument('--export',
+                            action='store',
+                            help='export profiles to a file',
+                            dest='exportfile',
+                            metavar='filename',
+                            default=False)
+        parser.add_argument('profiles',
+                            nargs='+',
+                            help='space separated list of profiles')
 
     def handle(self, *args, **options):
         if not options.get('exportfile'):
@@ -53,16 +55,18 @@ class Command(BaseCommand):
                      })
 
         profile_export = []
+        p = options.get('profiles')
+        ef = options.get('exportfile')
         for profile in lp:
-            if args and profile['name'] not in args:
+            if p and profile['name'] not in p:
                 continue
             profile_export.append(profile)
 
-        with open(options.get('exportfile'), mode='w') as fp:
+        with open(ef, mode='w') as fp:
             json.dump(profile_export, fp, indent=4)
 
-        if args:
-            logger.info('Exported %s profiles to %s' % (' '.join(args), options.get('exportfile')))
+        if p:
+            logger.info('Exported %s profiles to %s' % (' '.join(p), ef))
         else:
-            logger.info('Exported all profiles to %s' % (options.get('exportfile')))
+            logger.info('Exported all profiles to %s' % (ef))
 

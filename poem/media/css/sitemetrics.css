@@ -38,8 +38,18 @@ fieldset.docurl input {
     padding: 2px 10px 0px 0px;
 }
 
+fieldset.docurl > div > div > div.help {
+    padding-left: 130px;
+    margin-left: 10px;
+}
+
 fieldset.docurl > div > div > p.help {
     padding-left: 130px;
+    margin-left: 10px;
+}
+
+fieldset.tagging > div > div > div.help {
+    padding-left: 50px;
     margin-left: 10px;
 }
 
@@ -72,8 +82,8 @@ td.field-value input {
     font-size: 14px;
 }
 
-
 select {
+    min-width: 100px;
     background: #F6F6F6;
 }
 

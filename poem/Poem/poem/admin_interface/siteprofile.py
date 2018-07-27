@@ -1,4 +1,4 @@
-from django.forms import ModelForm, CharField, Textarea, ValidationError
+from django.forms import ModelForm, CharField, Textarea, ValidationError, ModelMultipleChoiceField, ModelChoiceField
 from django.forms.widgets import TextInput, Select
 from django.contrib import admin
 from django.contrib.auth.models import Permission
@@ -7,7 +7,6 @@ from django.core.exceptions import PermissionDenied
 
 from Poem.poem import widgets
 from Poem.poem.lookups import check_cache
-from Poem.poem.admin_interface.formmodel import MyModelMultipleChoiceField
 from Poem.poem.models import MetricInstance, Profile, VO, ServiceFlavour, GroupOfProfiles
 
 from ajax_select import make_ajax_field
@@ -97,6 +96,8 @@ class GroupOfProfilesInlineForms(ModelForm):
         self.user = sh.getuser()
         self.usergroups = self.user.groupsofprofiles.all()
         super(GroupOfProfilesInlineForms, self).__init__(*args, **kwargs)
+        self.fields['groupofprofiles'].widget.can_add_related = False
+        self.fields['groupofprofiles'].widget.can_change_related = False
 
     def clean_groupofprofiles(self):
         groupsel = self.cleaned_data['groupofprofiles']
@@ -108,8 +109,8 @@ class GroupOfProfilesInlineForms(ModelForm):
 
 class GroupOfProfilesInlineChangeForm(GroupOfProfilesInlineForms):
     qs = GroupOfProfiles.objects.all()
-    groupofprofiles = MyModelMultipleChoiceField(queryset=qs, widget=Select(),
-                                         help_text='Profile is a member of given group')
+    groupofprofiles = ModelChoiceField(queryset=qs, widget=Select(),
+                                       help_text='Profile is a member of given group')
     groupofprofiles.empty_label = '----------------'
     groupofprofiles.label = 'Group of profiles'
 
@@ -117,8 +118,7 @@ class GroupOfProfilesInlineAddForm(GroupOfProfilesInlineForms):
     def __init__(self, *args, **kwargs):
         super(GroupOfProfilesInlineAddForm, self).__init__(*args, **kwargs)
         self.fields['groupofprofiles'].help_text = 'Select one of the groups you are member of'
-        self.fields['groupofprofiles'].empty_label = None
-        self.fields['groupofprofiles'].widget.can_add_related = False
+        self.fields['groupofprofiles'].empty_label = '----------------'
         self.fields['groupofprofiles'].label = 'Group of profiles'
 
 
@@ -157,8 +157,6 @@ class ProfileForm(ModelForm):
     Connects profile attributes to autocomplete widget (:py:mod:`poem.widgets`). Also
     adds media and does basic sanity checking for input.
     """
-    class Meta:
-        model = Profile
 
     name = CharField(help_text='Namespace and name of this profile.',
                            max_length=128,
@@ -232,13 +230,6 @@ class ProfileAdmin(modelclone.ClonableModelAdmin):
 
     change_form_template = None
 
-    def get_formsets_with_inlines(self, request, obj=None):
-        """
-        Yields formsets and the corresponding inlines.
-        """
-        for inline in self.get_inline_instances(request, obj):
-            yield inline.get_formset(request, obj), inline
-
     def _groupown_turn(self, user, flag):
         perm_prdel = Permission.objects.get(codename='delete_profile')
         try:
@@ -273,12 +264,11 @@ class ProfileAdmin(modelclone.ClonableModelAdmin):
         mi = MetricInstance.objects.filter(profile__pk=object_id)
         num_tuples = len(mi)
 
-        services = set()
-        map(lambda s: services.add(s.service_flavour), mi)
+        services, metrics = set(), set()
+        for t in mi:
+            services.add(t.service_flavour)
+            metrics.add(t.metric)
         num_services = len(services)
-
-        metrics = set()
-        map(lambda m: metrics.add(m.metric), mi)
         num_metrics = len(metrics)
 
         context = context or dict()
