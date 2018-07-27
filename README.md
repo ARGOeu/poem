@@ -70,11 +70,7 @@ Once the Python 3.6 is installed, it needs to be used to create a new virtual en
 ```sh
 % scl enable rh-python36 'pip install -U pip'
 % scl enable rh-python36 'pip3 install virtualenv virtualenvwrapper'
-% export VIRTUALENVWRAPPER_PYTHON=/opt/rh/rh-python36/root/bin/python3.6
-% source /opt/rh/rh-python36/root/usr/bin/virtualenvwrapper.sh
-% export WORKON_HOME=/home/pyvenv
-% mkdir -p $WORKON_HOME
-% mkvirtualenv poem
+% scl enable rh-python36 'export VIRTUALENVWRAPPER_PYTHON=/opt/rh/rh-python36/root/bin/python3.6; source /opt/rh/rh-python36/root/usr/bin/virtualenvwrapper.sh; export WORKON_HOME=/home/pyvenv; mkdir -p $WORKON_HOME; mkvirtualenv poem'
 ```
 
 > **Notice** how the location of virtual environment is controlled with `WORKON_HOME` variable. Created virtual environment directory will be `$WORKON_HOME/poem`. It needs to be aligned with `VENV` variable in service configuration. 
