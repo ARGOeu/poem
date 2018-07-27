@@ -99,8 +99,8 @@ Creation and installation of wheel package is done in the context of virtual env
 wheel package ships cron jobs and Apache configuration and as it is installed in virtual environment, it can **not** actually layout files outside of it meaning that system-wide files should be placed manually:
 
 ```sh
-% (poem) ln -f -s $VIRTUAL_ENV/etc/cron.d/poem-clearsessions /etc/cron.d/
-% (poem) ln -f -s $VIRTUAL_ENV/etc/cron.d/poem-syncvosf /etc/cron.d/
+% (poem) cp $VIRTUAL_ENV/etc/cron.d/poem-clearsessions /etc/cron.d/
+% (poem) cp $VIRTUAL_ENV/etc/cron.d/poem-syncvosf /etc/cron.d/
 % (poem) ln -f -s $VIRTUAL_ENV/etc/httpd/conf.d/poem.conf /etc/httpd/conf.d/
 ```
 
