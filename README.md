@@ -186,6 +186,7 @@ Prerequisites for creating the empty database are:
 1) `[SUPERUSER]` section is set with desired credentials
 2) `SECRET_KEY` is generated and placed in `$VIRTUAL_ENV/etc/poem/secret_key`
 3) `$VIRTUAL_ENV` has permissions set to `apache:apache`
+4) `poem.conf` Apache configuration is presented in `/etc/httpd/conf.d/`
 
 Once all is set, database can be created with provided tool `poem-db`:
 
