@@ -73,21 +73,23 @@ class MetricsInProfiles(View):
     }
 
     * *Supported formats*: json
-    * *URL*: /api/0.2/json/metrics_in_profiles/?vo_name=ops
+    * *URL*: /api/0.2/json/metrics_in_profiles/?vo_name=ops&vo_name=biomed&profile=ARGO_MON&profile=ARGO_MON_BIOMED
     * *Supported methods*: GET
     """
 
     def get(self, request):
-        lookup = request.GET.get('vo_name')
-        if lookup:
+        lookup = request.GET.getlist('vo_name')
+        plookup = request.GET.getlist('profile')
+        if lookup and plookup:
             metrics = {}
-            metrics = models.MetricInstance.objects.filter(vo__exact=lookup).values('metric', 'service_flavour', 'fqan', 'profile__name')
-            profiles = set(models.MetricInstance.objects.filter(vo__exact=lookup).values_list('profile__name', 'profile__description'))
+            metrics = models.MetricInstance.objects.filter(vo__in=lookup).filter(profile__name__in=plookup).values('metric', 'service_flavour', 'fqan', 'profile__name')
+            profiles = set(models.MetricInstance.objects.filter(vo__in=lookup).filter(profile__name__in=plookup).values_list('profile__name', 'profile__description', 'profile__vo'))
             metrics_in_profiles = []
             for p in profiles:
                 metrics_in_profiles.append({'name' : p[0], \
                                             'namespace' : settings.POEM_NAMESPACE, \
                                             'description' : p[1], \
+                                            'vo' : p[2],\
                                             'metrics' : [{'service_flavour': m['service_flavour'], \
                                                           'name': m['metric'], \
                                                           'fqan': m['fqan']} for m in metrics \
@@ -97,7 +99,7 @@ class MetricsInProfiles(View):
             return HttpResponse(json.dumps([result]), content_type='application/json')
 
         else:
-            return HttpResponse("Need the name of VO")
+            return HttpResponse("Need the name of VO and profile")
 
 class MetricsInGroup(View):
     def get(self, request):
