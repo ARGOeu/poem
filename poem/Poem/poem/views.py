@@ -78,19 +78,19 @@ class MetricsInProfiles(View):
     """
 
     def get(self, request):
-        lookup = request.GET.getlist('vo_name')
+        vo_lookup = request.GET.getlist('vo_name')
         try:
-            plookup = request.GET.getlist('profile')
+            profile_lookup = request.GET.getlist('profile')
         except NameError:
             pass
-        if lookup:
+        if vo_lookup:
             metrics = {}
-            if plookup:
-                metrics = models.MetricInstance.objects.filter(vo__in=lookup).filter(profile__name__in=plookup).values('metric', 'service_flavour', 'fqan', 'profile__name')
-                profiles = set(models.MetricInstance.objects.filter(vo__in=lookup).filter(profile__name__in=plookup).values_list('profile__name', 'profile__description', 'profile__vo'))
+            if profile_lookup:
+                metrics = models.MetricInstance.objects.filter(vo__in=vo_lookup).filter(profile__name__in=profile_lookup).values('metric', 'service_flavour', 'fqan', 'profile__name')
+                profiles = set(models.MetricInstance.objects.filter(vo__in=vo_lookup).filter(profile__name__in=profile_lookup).values_list('profile__name', 'profile__description', 'profile__vo'))
             else:
-                metrics = models.MetricInstance.objects.filter(vo__in=lookup).values('metric', 'service_flavour', 'fqan', 'profile__name')
-                profiles = set(models.MetricInstance.objects.filter(vo__in=lookup).values_list('profile__name', 'profile__description', 'profile__vo'))
+                metrics = models.MetricInstance.objects.filter(vo__in=vo_lookup).values('metric', 'service_flavour', 'fqan', 'profile__name')
+                profiles = set(models.MetricInstance.objects.filter(vo__in=vo_lookup).values_list('profile__name', 'profile__description', 'profile__vo'))
             metrics_in_profiles = []
             for p in profiles:
                 metrics_in_profiles.append({'name' : p[0], \
@@ -101,7 +101,7 @@ class MetricsInProfiles(View):
                                                           'name': m['metric'], \
                                                           'fqan': m['fqan']} for m in metrics \
                                                         if m['profile__name'] == p[0]]})
-            result = {"name" : lookup, "profiles" : metrics_in_profiles}
+            result = {"name" : vo_lookup, "profiles" : metrics_in_profiles}
 
             return HttpResponse(json.dumps([result]), content_type='application/json')
 
