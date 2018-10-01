@@ -79,11 +79,18 @@ class MetricsInProfiles(View):
 
     def get(self, request):
         lookup = request.GET.getlist('vo_name')
-        plookup = request.GET.getlist('profile')
-        if lookup and plookup:
+        try:
+            plookup = request.GET.getlist('profile')
+        except NameError:
+            pass
+        if lookup:
             metrics = {}
-            metrics = models.MetricInstance.objects.filter(vo__in=lookup).filter(profile__name__in=plookup).values('metric', 'service_flavour', 'fqan', 'profile__name')
-            profiles = set(models.MetricInstance.objects.filter(vo__in=lookup).filter(profile__name__in=plookup).values_list('profile__name', 'profile__description', 'profile__vo'))
+            if plookup:
+                metrics = models.MetricInstance.objects.filter(vo__in=lookup).filter(profile__name__in=plookup).values('metric', 'service_flavour', 'fqan', 'profile__name')
+                profiles = set(models.MetricInstance.objects.filter(vo__in=lookup).filter(profile__name__in=plookup).values_list('profile__name', 'profile__description', 'profile__vo'))
+            else:
+                metrics = models.MetricInstance.objects.filter(vo__in=lookup).values('metric', 'service_flavour', 'fqan', 'profile__name')
+                profiles = set(models.MetricInstance.objects.filter(vo__in=lookup).values_list('profile__name', 'profile__description', 'profile__vo'))
             metrics_in_profiles = []
             for p in profiles:
                 metrics_in_profiles.append({'name' : p[0], \
@@ -99,7 +106,7 @@ class MetricsInProfiles(View):
             return HttpResponse(json.dumps([result]), content_type='application/json')
 
         else:
-            return HttpResponse("Need the name of VO and profile")
+            return HttpResponse("Need the name of VO")
 
 class MetricsInGroup(View):
     def get(self, request):
