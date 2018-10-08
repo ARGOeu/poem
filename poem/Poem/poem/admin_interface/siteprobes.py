@@ -113,12 +113,14 @@ class ProbeForm(ModelForm):
     repository = CharField(help_text='Probe repository URL',
                            max_length=100,
                            widget=TextInput(attrs={'maxlength': 100,
-                                                   'size': 61}),
+                                                   'size': 61,
+                                                   'type': 'url'}),
                            label='Repository')
     docurl = CharField(help_text='Documentation URL',
-                     max_length=100,
-                     widget=TextInput(attrs={'maxlength': 100, 'size': 61}),
-                     label='Documentation')
+                       max_length=100,
+                       widget=TextInput(attrs={'type': 'url', 'maxlength': 100,
+                                               'size': 61}),
+                       label='Documentation')
     comment = CharField(help_text='Short comment about this version.',
                      widget=Textarea(attrs={'style':'width:500px;height:100px'}),
                      label='Comment')
