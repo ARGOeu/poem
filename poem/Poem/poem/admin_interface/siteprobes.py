@@ -134,18 +134,20 @@ class ProbeForm(ModelForm):
     user = CharField(help_text='User that added the probe', max_length=64, required=False)
     datetime = CharField(help_text='Time when probe is added', max_length=64, required=False)
 
-    def clean_version(self):
-        ver = self.cleaned_data['version']
-        name = self.cleaned_data['name']
+    def clean(self):
+        cleaned_data = super(ProbeForm, self).clean()
+        new_ver = cleaned_data['new_version']
+        ver = cleaned_data['version']
+        name = cleaned_data['name']
 
         try:
             probe = Probe.objects.get(name=name)
-            if probe.version == ver:
+            if probe.version == ver and new_ver:
                 raise ValidationError("Version number should be raised")
         except Probe.DoesNotExist:
             pass
 
-        return ver
+        return cleaned_data
 
 class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
     """
