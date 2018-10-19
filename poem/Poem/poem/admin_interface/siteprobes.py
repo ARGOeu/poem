@@ -1,5 +1,5 @@
 from django.db import transaction
-from django.forms import ModelForm, CharField, Textarea, ValidationError, ModelChoiceField
+from django.forms import ModelForm, CharField, Textarea, ValidationError, ModelChoiceField, BooleanField
 from django.forms.widgets import TextInput, Select
 from django.contrib import admin
 from django.contrib.auth.models import Permission
@@ -106,6 +106,8 @@ class ProbeForm(ModelForm):
     Connects profile attributes to autocomplete widget (:py:mod:`poem.widgets`). Also
     adds media and does basic sanity checking for input.
     """
+    new_version = BooleanField(help_text='Is probe version the same', required=False, initial=True)
+
     name = CharField(help_text='Name of this probe.',
                      max_length=100,
                      widget=TextInput(attrs={'maxlength': 100, 'size': 45}),
@@ -216,7 +218,7 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
             else:
                 self._groupown_turn(request.user, 'del')
         if obj:
-            self.fieldsets = ((None, {'classes': ['infoone'], 'fields': (('name', 'version',), 'datetime', 'user', )}),
+            self.fieldsets = ((None, {'classes': ['infoone'], 'fields': (('name', 'version', 'new_version',), 'datetime', 'user', )}),
                               (None, {'classes': ['infotwo'], 'fields': ('repository', 'docurl', 'description','comment',)}),)
             self.readonly_fields = ('user', 'datetime',)
         else:
