@@ -233,19 +233,22 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         sh = SharedInfo()
 
-        if obj and sh.getgroup():
-            obj.group = sh.getgroup().name
-            sh.delgroup()
-        elif not obj and sh.getgroup():
-            obj.group = sh.getgroup()
-            sh.delgroup()
-        if request.user.has_perm('poem.groupown_probe') \
-                or request.user.is_superuser:
-            obj.user = request.user.username
-            obj.save()
-            return
+        if form.cleaned_data['new_version']:
+            if obj and sh.getgroup():
+                obj.group = sh.getgroup().name
+                sh.delgroup()
+            elif not obj and sh.getgroup():
+                obj.group = sh.getgroup()
+                sh.delgroup()
+            if request.user.has_perm('poem.groupown_probe') \
+                    or request.user.is_superuser:
+                obj.user = request.user.username
+                obj.save()
+                return
+            else:
+                raise PermissionDenied()
         else:
-            raise PermissionDenied()
+            pass
 
     def get_row_css(self, obj, index):
         if not obj.valid:
