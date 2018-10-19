@@ -106,7 +106,7 @@ class ProbeForm(ModelForm):
     Connects profile attributes to autocomplete widget (:py:mod:`poem.widgets`). Also
     adds media and does basic sanity checking for input.
     """
-    new_version = BooleanField(help_text='Is probe version the same', required=False, initial=True)
+    new_version = BooleanField(help_text='Create version for changes', required=False, initial=True)
 
     name = CharField(help_text='Name of this probe.',
                      max_length=100,
