@@ -10,6 +10,10 @@ fieldset.infoone input#id_version {
     width: 50px;
 }
 
+fieldset.infoone input#id_new_version {
+    width: 50px;
+}
+
 fieldset.infoone div.field-box.field-datetime {
     width: 220px;
 }
