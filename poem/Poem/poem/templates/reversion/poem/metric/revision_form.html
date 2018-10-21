@@ -72,11 +72,22 @@
 
 {% block after_field_sets %}{% endblock %}
 
+
+{% for inline in version_data %}
+  {% for k,v in inline.items %}
+    {{ k }}
+    {{ v }}
+  {% endfor %}
+{% endfor %}
+
+{{ custom_formsets }}
+
 {% block inline_field_sets %}
 {% for inline_admin_formset in inline_admin_formsets %}
     {% include inline_admin_formset.opts.template %}
 {% endfor %}
 {% endblock %}
+
 
 {% block after_related_objects %}{% endblock %}
 

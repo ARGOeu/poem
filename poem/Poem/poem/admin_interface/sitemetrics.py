@@ -5,8 +5,8 @@ from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied
 from django.urls import reverse
-from django.forms import ModelForm, CharField, Textarea, ModelChoiceField, ValidationError, ModelMultipleChoiceField
-from django.forms.models import BaseInlineFormSet
+from django.forms import ModelForm, Form, CharField, Textarea, ModelChoiceField, \
+    ValidationError, ModelMultipleChoiceField, formset_factory
 from django.forms.widgets import TextInput, Select
 from django.http import HttpResponse
 from django.utils.html import format_html
@@ -48,6 +48,15 @@ class SharedInfo:
             return self.__class__.user
         else:
             return None
+
+
+class RevisionTemplateTwoForm(Form):
+    key = CharField(label='key')
+    value = CharField(label='value')
+
+
+class RevisionTemplateOneForm(Form):
+    value = CharField(label='value')
 
 
 class MetricAddForm(ModelForm):
@@ -560,10 +569,46 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
 
     def revision_view(self, request, object_id, version_id, extra_context=None):
         currev = Version.objects.get(pk=version_id).revision.date_created
+        data = json.loads(Version.objects.get(pk=version_id).serialized_data)[0]['fields']
+        order = [(inline_name.__name__, inline_name.verbose_name) for inline_name in self.inlines]
+
+        version_data_order = list()
+        custom_formsets = list()
+
+        for e in order:
+            for d in data:
+                if e[0].lower().startswith('metric'+d.lower()):
+                    value = json.loads(data[d]) if data[d] else ''
+                    version_data_order.append({d: value})
+
+        for version in version_data_order:
+            element = [(k,v) for (k, v) in version.items()]
+            values = element[0]
+            settings = values[1]
+            if values[0] == 'probeexecutable' or values[0] == 'parent':
+                factory = formset_factory(RevisionTemplateOneForm, can_delete=True)
+                v = settings[0] if settings else ''
+                formset = factory(initial={'value': v})
+                formset.verbose_name = values[0]
+            else:
+                initial = list()
+                factory = formset_factory(RevisionTemplateTwoForm, can_delete=True)
+                for s in settings:
+                    k, v = s.split(' ', 1)
+                    initial.append({'key': k, 'value': v})
+                formset = factory(initial=initial)
+                formset.verbose_name = values[0]
+            custom_formsets.append(formset)
+
         if extra_context:
-            extra_context.update({'cursel': currev})
+            extra_context.update({'cursel': currev,
+                                  'version_data': version_data_order,
+                                  'custom_formsets': custom_formsets})
         else:
-            extra_context = {'cursel': currev}
+            extra_context = {'cursel': currev,
+                             'version_data': version_data_order,
+                             'custom_formsets': custom_formsets}
+
         return super(MetricAdmin, self).revision_view(request, object_id, version_id, extra_context)
 
     def has_change_permission(self, request, obj=None):
