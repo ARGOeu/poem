@@ -586,9 +586,9 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
             values = element[0]
             settings = values[1]
             if values[0] == 'probeexecutable' or values[0] == 'parent':
-                factory = formset_factory(RevisionTemplateOneForm, can_delete=True)
+                factory = formset_factory(RevisionTemplateOneForm, can_delete=True, extra=0)
                 v = settings[0] if settings else ''
-                formset = factory(initial={'value': v})
+                formset = factory(initial=[{'value': v}], prefix=values[0])
                 formset.verbose_name = values[0]
             else:
                 initial = list()
@@ -596,7 +596,7 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
                 for s in settings:
                     k, v = s.split(' ', 1)
                     initial.append({'key': k, 'value': v})
-                formset = factory(initial=initial)
+                formset = factory(initial=initial, prefix=values[0])
                 formset.verbose_name = values[0]
             custom_formsets.append(formset)
 
