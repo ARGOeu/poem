@@ -592,7 +592,7 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
                 formset.verbose_name = values[0]
             else:
                 initial = list()
-                factory = formset_factory(RevisionTemplateTwoForm, can_delete=True, extra=2)
+                factory = formset_factory(RevisionTemplateTwoForm, can_delete=True, extra=1)
                 for s in settings:
                     k, v = s.split(' ', 1)
                     initial.append({'key': k, 'value': v})
