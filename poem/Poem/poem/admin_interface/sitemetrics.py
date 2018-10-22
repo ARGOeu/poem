@@ -609,14 +609,13 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
                 formset.verbose_name = verbose_name[values[0]]
             custom_formsets.append(formset)
 
+        new_context = {'cursel': currev,
+                       'version_data': version_data_order,
+                       'custom_formsets': custom_formsets}
         if extra_context:
-            extra_context.update({'cursel': currev,
-                                  'version_data': version_data_order,
-                                  'custom_formsets': custom_formsets})
+            extra_context.update(new_context)
         else:
-            extra_context = {'cursel': currev,
-                             'version_data': version_data_order,
-                             'custom_formsets': custom_formsets}
+            extra_context = new_context
 
         return super(MetricAdmin, self).revision_view(request, object_id, version_id, extra_context)
 
