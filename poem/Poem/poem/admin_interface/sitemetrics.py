@@ -51,19 +51,21 @@ class SharedInfo:
 
 
 class RevisionTemplateTwoForm(Form):
+    """
+    Mimics the inlines with two fields.
+    """
     key = CharField(label='key')
     value = CharField(label='value')
 
 
 class RevisionTemplateOneForm(Form):
+    """
+    Mimics the inline with one field.
+    """
     value = CharField(label='value')
 
 
 class MetricAddForm(ModelForm):
-    """
-    Connects profile attributes to autocomplete widget (:py:mod:`poem.widgets`). Also
-    adds media and does basic sanity checking for input.
-    """
     def __init__(self, *args, **kwargs):
         super(MetricAddForm, self).__init__(*args, **kwargs)
         self.fields['group'].widget.can_add_related = False
@@ -568,6 +570,12 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
             return False
 
     def revision_view(self, request, object_id, version_id, extra_context=None):
+        """
+        Build custom formsets based on forms.Form and pass them to template
+        context. Forms will be populated with the data from corresponding
+        Version object bypassing ModelAdmin logic and mimicking ModelAdmin
+        change_view with inlines.
+        """
         currev = Version.objects.get(pk=version_id).revision.date_created
         data = json.loads(Version.objects.get(pk=version_id).serialized_data)[0]['fields']
         order = [(inline_name.__name__, inline_name.verbose_name) for inline_name in self.inlines]
@@ -610,7 +618,6 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
             custom_formsets.append(formset)
 
         new_context = {'cursel': currev,
-                       'version_data': version_data_order,
                        'custom_formsets': custom_formsets}
         if extra_context:
             extra_context.update(new_context)
