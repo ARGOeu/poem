@@ -14,6 +14,8 @@ from Poem.poem.models import MetricInstance, Probe, UserProfile, VO, ServiceFlav
 from reversion_compare.admin import CompareVersionAdmin
 from reversion.admin import VersionAdmin
 import reversion
+from reversion.models import Version
+import json
 
 class SharedInfo:
     def __init__(self, requser=None, grname=None):
@@ -233,22 +235,45 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         sh = SharedInfo()
 
-        if form.cleaned_data['new_version'] and change == True or change == False:
-            if obj and sh.getgroup():
-                obj.group = sh.getgroup().name
-                sh.delgroup()
-            elif not obj and sh.getgroup():
-                obj.group = sh.getgroup()
-                sh.delgroup()
-            if request.user.has_perm('poem.groupown_probe') \
-                    or request.user.is_superuser:
-                obj.user = request.user.username
+        if obj and sh.getgroup():
+            obj.group = sh.getgroup().name
+            sh.delgroup()
+        elif not obj and sh.getgroup():
+            obj.group = sh.getgroup()
+            sh.delgroup()
+        if request.user.has_perm('poem.groupown_probe') \
+                or request.user.is_superuser:
+            obj.user = request.user.username
+            if form.cleaned_data['new_version'] and change == True or change == False:
                 obj.save()
                 return
-            else:
-                raise PermissionDenied()
+            elif not form.cleaned_data['new_version'] and change == True:
+                version = Version.objects.get_for_object(obj)
+                pk = version[0].object_id
+                pk0 = version[0].id
+                data = json.loads(Version.objects.get(pk=pk0).serialized_data)
+                newfield = dict()
+                newfield['name'] = form.cleaned_data['name']
+                newfield['version'] = form.cleaned_data['version']
+                newfield['description'] = form.cleaned_data['description']
+                newfield['comment'] = form.cleaned_data['comment']
+                newfield['repository'] = form.cleaned_data['repository']
+                newfield['docurl'] = form.cleaned_data['docurl']
+                newfield['group'] = obj.group
+                newfield['user'] = obj.user
+                newdata = data
+                newdata[0]['fields'] = newfield
+                Version.objects.filter(pk=version[0].object_id).update(serialized_data=json.dumps(newdata))
+                Probe.objects.filter(pk=pk).update(name=form.cleaned_data['name'])
+                Probe.objects.filter(pk=pk).update(version=form.cleaned_data['version'])
+                Probe.objects.filter(pk=pk).update(description=form.cleaned_data['description'])
+                Probe.objects.filter(pk=pk).update(comment=form.cleaned_data['comment'])
+                Probe.objects.filter(pk=pk).update(repository=form.cleaned_data['repository'])
+                Probe.objects.filter(pk=pk).update(docurl=form.cleaned_data['docurl'])
+                Probe.objects.filter(pk=pk).update(group=obj.group)
+                Probe.objects.filter(pk=pk).update(user=obj.user)
         else:
-            pass
+            raise PermissionDenied()
 
     def get_row_css(self, obj, index):
         if not obj.valid:
