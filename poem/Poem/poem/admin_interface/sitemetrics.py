@@ -574,6 +574,15 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
 
         version_data_order = list()
         custom_formsets = list()
+        verbose_name = {'probeexecutable': 'Probe executable',
+                        'attribute': 'Attributes',
+                        'config': 'Config',
+                        'dependancy': 'Dependency',
+                        'parameter': 'Parameter',
+                        'flags': 'Flags',
+                        'files': 'File attributes',
+                        'fileparameter': 'File parameters',
+                        'parent': 'Parent metric'}
 
         for e in order:
             for d in data:
@@ -589,7 +598,7 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
                 factory = formset_factory(RevisionTemplateOneForm, can_delete=False, extra=1)
                 v = settings[0] if settings else ''
                 formset = factory(initial=[{'value': v}], prefix=values[0])
-                formset.verbose_name = values[0]
+                formset.verbose_name = verbose_name[values[0]]
             else:
                 initial = list()
                 factory = formset_factory(RevisionTemplateTwoForm, can_delete=True, extra=1)
@@ -597,7 +606,7 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
                     k, v = s.split(' ', 1)
                     initial.append({'key': k, 'value': v})
                 formset = factory(initial=initial, prefix=values[0])
-                formset.verbose_name = values[0]
+                formset.verbose_name = verbose_name[values[0]]
             custom_formsets.append(formset)
 
         if extra_context:
