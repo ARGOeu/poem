@@ -264,14 +264,7 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
                 newdata = data
                 newdata[0]['fields'] = newfield
                 Version.objects.filter(pk=version[0].object_id).update(serialized_data=json.dumps(newdata))
-                Probe.objects.filter(pk=pk).update(name=form.cleaned_data['name'])
-                Probe.objects.filter(pk=pk).update(version=form.cleaned_data['version'])
-                Probe.objects.filter(pk=pk).update(description=form.cleaned_data['description'])
-                Probe.objects.filter(pk=pk).update(comment=form.cleaned_data['comment'])
-                Probe.objects.filter(pk=pk).update(repository=form.cleaned_data['repository'])
-                Probe.objects.filter(pk=pk).update(docurl=form.cleaned_data['docurl'])
-                Probe.objects.filter(pk=pk).update(group=obj.group)
-                Probe.objects.filter(pk=pk).update(user=obj.user)
+                Probe.objects.filter(pk=pk).update(**newdata[0]['fields'])
         else:
             raise PermissionDenied()
 
