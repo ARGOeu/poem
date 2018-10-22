@@ -233,7 +233,7 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         sh = SharedInfo()
 
-        if form.cleaned_data['new_version']:
+        if form.cleaned_data['new_version'] and change == True or change == False:
             if obj and sh.getgroup():
                 obj.group = sh.getgroup().name
                 sh.delgroup()
