@@ -1,5 +1,5 @@
 from django.db import transaction
-from django.forms import ModelForm, CharField, Textarea, ValidationError, ModelChoiceField
+from django.forms import ModelForm, CharField, Textarea, ValidationError, ModelChoiceField, BooleanField
 from django.forms.widgets import TextInput, Select
 from django.contrib import admin
 from django.contrib.auth.models import Permission
@@ -14,6 +14,8 @@ from Poem.poem.models import MetricInstance, Probe, UserProfile, VO, ServiceFlav
 from reversion_compare.admin import CompareVersionAdmin
 from reversion.admin import VersionAdmin
 import reversion
+from reversion.models import Version
+import json
 
 class SharedInfo:
     def __init__(self, requser=None, grname=None):
@@ -106,6 +108,8 @@ class ProbeForm(ModelForm):
     Connects profile attributes to autocomplete widget (:py:mod:`poem.widgets`). Also
     adds media and does basic sanity checking for input.
     """
+    new_version = BooleanField(help_text='Create version for changes', required=False, initial=True)
+
     name = CharField(help_text='Name of this probe.',
                      max_length=100,
                      widget=TextInput(attrs={'maxlength': 100, 'size': 45}),
@@ -132,18 +136,20 @@ class ProbeForm(ModelForm):
     user = CharField(help_text='User that added the probe', max_length=64, required=False)
     datetime = CharField(help_text='Time when probe is added', max_length=64, required=False)
 
-    def clean_version(self):
-        ver = self.cleaned_data['version']
-        name = self.cleaned_data['name']
+    def clean(self):
+        cleaned_data = super(ProbeForm, self).clean()
+        new_ver = cleaned_data['new_version']
+        ver = cleaned_data['version']
+        name = cleaned_data['name']
 
         try:
             probe = Probe.objects.get(name=name)
-            if probe.version == ver:
+            if probe.version == ver and new_ver:
                 raise ValidationError("Version number should be raised")
         except Probe.DoesNotExist:
             pass
 
-        return ver
+        return cleaned_data
 
 class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
     """
@@ -216,7 +222,7 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
             else:
                 self._groupown_turn(request.user, 'del')
         if obj:
-            self.fieldsets = ((None, {'classes': ['infoone'], 'fields': (('name', 'version',), 'datetime', 'user', )}),
+            self.fieldsets = ((None, {'classes': ['infoone'], 'fields': (('name', 'version', 'new_version',), 'datetime', 'user', )}),
                               (None, {'classes': ['infotwo'], 'fields': ('repository', 'docurl', 'description','comment',)}),)
             self.readonly_fields = ('user', 'datetime',)
         else:
@@ -238,8 +244,27 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
         if request.user.has_perm('poem.groupown_probe') \
                 or request.user.is_superuser:
             obj.user = request.user.username
-            obj.save()
-            return
+            if form.cleaned_data['new_version'] and change or not change:
+                obj.save()
+                return
+            elif not form.cleaned_data['new_version'] and change:
+                version = Version.objects.get_for_object(obj)
+                pk = version[0].object_id
+                pk0 = version[0].id
+                data = json.loads(Version.objects.get(pk=pk0).serialized_data)
+                new_serialized_field = {
+                    'name': form.cleaned_data['name'],
+                    'version': form.cleaned_data['version'],
+                    'description': form.cleaned_data['description'],
+                    'comment': form.cleaned_data['comment'],
+                    'repository': form.cleaned_data['repository'],
+                    'docurl': form.cleaned_data['docurl'],
+                    'group': obj.group,
+                    'user': obj.user
+                }
+                data[0]['fields'] = new_serialized_field
+                Version.objects.filter(pk=pk0).update(serialized_data=json.dumps(data))
+                Probe.objects.filter(pk=pk).update(**new_serialized_field)
         else:
             raise PermissionDenied()
 
