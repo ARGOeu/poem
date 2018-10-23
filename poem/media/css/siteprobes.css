@@ -11,7 +11,7 @@ fieldset.infoone input#id_version {
 }
 
 fieldset.infoone input#id_new_version {
-    width: 50px;
+    width: 30px;
 }
 
 fieldset.infoone div.field-box.field-datetime {
