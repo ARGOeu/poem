@@ -252,17 +252,18 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
                 pk = version[0].object_id
                 pk0 = version[0].id
                 data = json.loads(Version.objects.get(pk=pk0).serialized_data)
-                newfield = dict()
-                newfield['name'] = form.cleaned_data['name']
-                newfield['version'] = form.cleaned_data['version']
-                newfield['description'] = form.cleaned_data['description']
-                newfield['comment'] = form.cleaned_data['comment']
-                newfield['repository'] = form.cleaned_data['repository']
-                newfield['docurl'] = form.cleaned_data['docurl']
-                newfield['group'] = obj.group
-                newfield['user'] = obj.user
+                new_serialized_field = {
+                    'name': form.cleaned_data['name'],
+                    'version': form.cleaned_data['version'],
+                    'description': form.cleaned_data['description'],
+                    'comment': form.cleaned_data['comment'],
+                    'repository': form.cleaned_data['repository'],
+                    'docurl': form.cleaned_data['docurl'],
+                    'group': obj.group,
+                    'user': obj.user
+                }
                 newdata = data
-                newdata[0]['fields'] = newfield
+                newdata[0]['fields'] = new_serialized_field
                 Version.objects.filter(pk=version[0].object_id).update(serialized_data=json.dumps(newdata))
                 Probe.objects.filter(pk=pk).update(**newdata[0]['fields'])
         else:
