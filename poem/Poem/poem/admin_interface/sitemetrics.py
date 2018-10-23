@@ -5,8 +5,8 @@ from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied
 from django.urls import reverse
-from django.forms import ModelForm, CharField, Textarea, ModelChoiceField, ValidationError, ModelMultipleChoiceField
-from django.forms.models import BaseInlineFormSet
+from django.forms import ModelForm, Form, CharField, Textarea, ModelChoiceField, \
+    ValidationError, ModelMultipleChoiceField, formset_factory
 from django.forms.widgets import TextInput, Select
 from django.http import HttpResponse
 from django.utils.html import format_html
@@ -50,11 +50,22 @@ class SharedInfo:
             return None
 
 
+class RevisionTemplateTwoForm(Form):
+    """
+    Mimics the inlines with two fields.
+    """
+    key = CharField(label='key')
+    value = CharField(label='value')
+
+
+class RevisionTemplateOneForm(Form):
+    """
+    Mimics the inline with one field.
+    """
+    value = CharField(label='value')
+
+
 class MetricAddForm(ModelForm):
-    """
-    Connects profile attributes to autocomplete widget (:py:mod:`poem.widgets`). Also
-    adds media and does basic sanity checking for input.
-    """
     def __init__(self, *args, **kwargs):
         super(MetricAddForm, self).__init__(*args, **kwargs)
         self.fields['group'].widget.can_add_related = False
@@ -559,11 +570,60 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
             return False
 
     def revision_view(self, request, object_id, version_id, extra_context=None):
+        """
+        Build custom formsets based on forms.Form and pass them to template
+        context. Forms will be populated with the data from corresponding
+        Version object bypassing ModelAdmin logic and mimicking ModelAdmin
+        change_view with inlines.
+        """
         currev = Version.objects.get(pk=version_id).revision.date_created
+        data = json.loads(Version.objects.get(pk=version_id).serialized_data)[0]['fields']
+        order = [(inline_name.__name__, inline_name.verbose_name) for inline_name in self.inlines]
+
+        version_data_order = list()
+        custom_formsets = list()
+        verbose_name = {'probeexecutable': 'Probe executable',
+                        'attribute': 'Attributes',
+                        'config': 'Config',
+                        'dependancy': 'Dependency',
+                        'parameter': 'Parameter',
+                        'flags': 'Flags',
+                        'files': 'File attributes',
+                        'fileparameter': 'File parameters',
+                        'parent': 'Parent metric'}
+
+        for e in order:
+            for d in data:
+                if e[0].lower().startswith('metric'+d.lower()):
+                    value = json.loads(data[d]) if data[d] else ''
+                    version_data_order.append({d: value})
+
+        for version in version_data_order:
+            element = [(k,v) for (k, v) in version.items()]
+            values = element[0]
+            settings = values[1]
+            if values[0] == 'probeexecutable' or values[0] == 'parent':
+                factory = formset_factory(RevisionTemplateOneForm, can_delete=False, extra=1)
+                v = settings[0] if settings else ''
+                formset = factory(initial=[{'value': v}], prefix=values[0])
+                formset.verbose_name = verbose_name[values[0]]
+            else:
+                initial = list()
+                factory = formset_factory(RevisionTemplateTwoForm, can_delete=True, extra=1)
+                for s in settings:
+                    k, v = s.split(' ', 1)
+                    initial.append({'key': k, 'value': v})
+                formset = factory(initial=initial, prefix=values[0])
+                formset.verbose_name = verbose_name[values[0]]
+            custom_formsets.append(formset)
+
+        new_context = {'cursel': currev,
+                       'custom_formsets': custom_formsets}
         if extra_context:
-            extra_context.update({'cursel': currev})
+            extra_context.update(new_context)
         else:
-            extra_context = {'cursel': currev}
+            extra_context = new_context
+
         return super(MetricAdmin, self).revision_view(request, object_id, version_id, extra_context)
 
     def has_change_permission(self, request, obj=None):

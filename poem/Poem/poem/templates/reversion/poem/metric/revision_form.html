@@ -70,11 +70,57 @@
 {% endfor %}
 {% endblock %}
 
-{% block after_field_sets %}{% endblock %}
+{% block after_field_sets %}
+<h2 style="font-weight: 400; padding:8px; color:white; font-size:12px; letter-spacing:0.5px; text-transform:uppercase; background:#79AEC8;">Metric configuration</h2>
+</br>
+{% endblock %}
 
 {% block inline_field_sets %}
-{% for inline_admin_formset in inline_admin_formsets %}
-    {% include inline_admin_formset.opts.template %}
+{% for formset in custom_formsets %}
+  <div class="inline-group" id="{{ formset.prefix }}-group">
+    <div class="tabular inline-related {% if forloop.last %}last-related{% endif %}">
+      <h2 style="font-weight:600; color:#202020; background:#FFFFFF;">{{ formset.verbose_name|capfirst }}</h2>
+      {{ formset.management_form }}
+      <fieldset class="module">
+        <table>
+          {% for form in formset %}
+            {% if formset.prefix != 'probeexecutable' and formset.prefix != 'parent' %}
+              <thead><tr>
+              {% if forloop.first %}
+                {% for f in form.declared_fields %}
+                  <th class="required">{{ f }}</th>
+                {% endfor %}
+                {% if formset.can_delete %}<th>{% trans "Delete?" %}</th>{% endif %}
+              {% endif %}
+              </tr></thead>
+            {% endif %}
+            <tbody>
+              <tr class="form-row {% cycle "row1" "row2" %} {% if forloop.last and formset|length != 1 %} empty-form{% endif %}" id="{{ formset.prefix }}-{% if not forloop.last %}{{ forloop.counter0 }}{% else %}empty{% endif %}">
+                {% if formset.prefix != 'probeexecutable' and formset.prefix != 'parent' %}
+                  {% for field in form %}
+                    {{ field.errors }}
+                    {% if not forloop.last %}
+                      <td{% if field.name %} class="field-{{ field.name }}"{% endif %}{% if forloop.first %} style="padding-left:6px" {% endif %}>
+                        {{ field }}
+                      </td>
+                    {% endif %}
+                    {% if formset.can_delete and forloop.last %}
+                      <td class="delete"> {{ form.DELETE }}</td>
+                    {% endif %}
+                  {% endfor %}
+                {% else %}
+                  {% for field in form %}
+                    <td class="field-{{ field.name }}">{{ field }}</td>
+                  {% endfor %}
+                {% endif %}
+              </tr>
+            </tbody>
+          {% endfor %}
+
+        </table>
+      </fieldset>
+    </div>
+  </div>
 {% endfor %}
 {% endblock %}
 
