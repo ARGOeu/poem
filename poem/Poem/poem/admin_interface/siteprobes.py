@@ -262,9 +262,8 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
                     'group': obj.group,
                     'user': obj.user
                 }
-                newdata = data
-                newdata[0]['fields'] = new_serialized_field
-                Version.objects.filter(pk=pk0).update(serialized_data=json.dumps(newdata))
+                data[0]['fields'] = new_serialized_field
+                Version.objects.filter(pk=pk0).update(serialized_data=json.dumps(data))
                 Probe.objects.filter(pk=pk).update(**new_serialized_field)
         else:
             raise PermissionDenied()
