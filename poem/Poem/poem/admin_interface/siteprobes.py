@@ -244,10 +244,10 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
         if request.user.has_perm('poem.groupown_probe') \
                 or request.user.is_superuser:
             obj.user = request.user.username
-            if form.cleaned_data['new_version'] and change == True or change == False:
+            if form.cleaned_data['new_version'] and change or not change:
                 obj.save()
                 return
-            elif not form.cleaned_data['new_version'] and change == True:
+            elif not form.cleaned_data['new_version'] and change:
                 version = Version.objects.get_for_object(obj)
                 pk = version[0].object_id
                 pk0 = version[0].id
