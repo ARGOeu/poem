@@ -174,7 +174,7 @@ TEMPLATE_DEBUG = DEBUG
 
 # Django development server settings
 # MEDIA_URL = '/poem_media/'
-# MEDIA_ROOT = '/usr/share/poem/media/'
+# MEDIA_ROOT = '{}/usr/share/poem/media/'.format(VENV)
 # STATIC_URL = '/static/'
 
 # Apache settings

@@ -161,12 +161,15 @@ def delete_entryfield(*args, **kwargs):
     i = kwargs['instance']
     deletedentry = '{0} {1}'.format(i.key, i.value)
     field = i.__class__.__name__.split('Metric')[1].lower()
-    fielddata = json.loads(eval('i.metric.%s' % field))
-    if deletedentry in fielddata:
-        fielddata.remove(deletedentry)
-        codestr = """i.metric.%s = json.dumps(fielddata)""" % field
-        exec(codestr)
-        i.metric.save()
+    try:
+        fielddata = json.loads(eval('i.metric.%s' % field))
+        if deletedentry in fielddata:
+            fielddata.remove(deletedentry)
+            codestr = """i.metric.%s = json.dumps(fielddata)""" % field
+            exec(codestr)
+            i.metric.save()
+    except Metric.DoesNotExist as e:
+        pass
 
 post_delete.connect(delete_entryfield, sender=MetricAttribute)
 post_delete.connect(delete_entryfield, sender=MetricConfig)
