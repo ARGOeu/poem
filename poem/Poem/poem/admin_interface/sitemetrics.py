@@ -25,6 +25,7 @@ from reversion.admin import VersionAdmin
 import reversion
 import json
 import modelclone
+from django.forms.models import BaseInlineFormSet
 
 
 class SharedInfo:
@@ -293,7 +294,7 @@ class MetricDependancyInline(admin.TabularInline):
 
 
 class MetricConfigForm(ModelForm):
-    key = CharField(label='key')
+    key = CharField(label='key', widget=TextInput(attrs={'readonly':'readonly'}))
     value = CharField(label='value')
 
     def clean(self):
@@ -301,6 +302,13 @@ class MetricConfigForm(ModelForm):
 
         return super(MetricConfigForm, self).clean()
 
+class MetricConfigInlineFormSet(BaseInlineFormSet):
+    def __init__(self, *args, **kwargs):
+        kwargs['initial'] = [
+            {'key': 'interval'}, {'key': 'maxCheckAttempts'}, {'key': 'path'}, {'key': 'retryInterval'}, \
+            {'key': 'timeout'},
+        ]
+        super(MetricConfigInlineFormSet, self).__init__(*args, **kwargs)
 
 class MetricConfigInline(admin.TabularInline):
     model = MetricConfig
@@ -308,7 +316,8 @@ class MetricConfigInline(admin.TabularInline):
     verbose_name_plural = 'Config'
     form = MetricConfigForm
     template = 'admin/edit_inline/tabular-attrs.html'
-    extra = 1
+    extra = 5
+    formset = MetricConfigInlineFormSet
 
     def has_add_permission(self, request):
         if request.user.has_perm('poem.groupown_metric') \
