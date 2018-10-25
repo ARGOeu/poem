@@ -515,6 +515,7 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
         rquser = SharedInfo(requser=request.user)
         if obj:
             self.form = MetricChangeForm
+            MetricConfigInline.extra = 0
             ug = request.user.groupsofmetrics.all().values_list('name', flat=True)
             if obj.group.name in ug:
                 self._groupown_turn(request.user, 'add')
