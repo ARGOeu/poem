@@ -58,6 +58,9 @@ fieldset.tagging > div > div > p.help {
     margin-left: 10px;
 }
 
+.inline-related.tabular fieldset.module table{
+    width: 80%;
+}
 
 .inline-group .tabular tr.has_original td {
     padding: 2px;
