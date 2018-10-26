@@ -521,11 +521,11 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
             else:
                 self._groupown_turn(request.user, 'del')
         else:
-            self.form = MetricAddForm
             if request.path.endswith('/clone/'):
                 MetricConfigInline.extra = 0
             else:
                 MetricConfigInline.formset = MetricConfigInlineFormSet
+            self.form = MetricAddForm
             if request.user.groupsofmetrics.count():
                 self._groupown_turn(request.user, 'add')
             else:
