@@ -317,7 +317,6 @@ class MetricConfigInline(admin.TabularInline):
     form = MetricConfigForm
     template = 'admin/edit_inline/tabular-attrs.html'
     extra = 5
-    formset = MetricConfigInlineFormSet
 
     def has_add_permission(self, request):
         if request.user.has_perm('poem.groupown_metric') \
@@ -523,6 +522,10 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
                 self._groupown_turn(request.user, 'del')
         else:
             self.form = MetricAddForm
+            if request.path.endswith('/clone/'):
+                MetricConfigInline.extra = 0
+            else:
+                MetricConfigInline.formset = MetricConfigInlineFormSet
             if request.user.groupsofmetrics.count():
                 self._groupown_turn(request.user, 'add')
             else:
