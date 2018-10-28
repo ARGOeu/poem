@@ -65,6 +65,22 @@ class RevisionTemplateOneForm(Form):
     value = CharField(label='value')
 
 
+class RevisionTemplateMetricForm(Form):
+    """
+    Mimics the adminform.
+    """
+    name = CharField(max_length=255, label='Name', help_text='Metric name',
+                     widget=TextInput(attrs={'class': 'metricautocomplete'}))
+    probeversion = make_ajax_field(Metric, 'probeversion', 'hintsprobes',
+                                   label='Probe', help_text='Probe name and version',
+                                   required=False)
+    qs = Tags.objects.all()
+    tag = ModelChoiceField(queryset=qs, label='Tag', help_text='Select one of the tags available.')
+    qs = GroupOfMetrics.objects.all()
+    group = ModelChoiceField(queryset=qs, widget=Select(),
+                             help_text='Metric is a member of selected group')
+
+
 class MetricAddForm(ModelForm):
     def __init__(self, *args, **kwargs):
         super(MetricAddForm, self).__init__(*args, **kwargs)
@@ -622,9 +638,15 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
                 formset.verbose_name = verbose_name[values[0]]
             custom_formsets.append(formset)
 
+        custom_adminform = RevisionTemplateMetricForm(initial={'name': data['name'],
+                                                               'tag': data['tag'],
+                                                               'probeversion': data['probeversion'],
+                                                               'group': data['group']})
+
         new_context = {'cursel': currev,
                        'custom_formsets': custom_formsets,
-                       'title': "{}s on {}s".format(version_obj.object_repr, currev)}
+                       'custom_adminform': custom_adminform,
+                       'title': "{} on {}".format(version_obj.object_repr, currev.strftime('%d/%m/%y %H:%m'))}
         if extra_context:
             extra_context.update(new_context)
         else:
