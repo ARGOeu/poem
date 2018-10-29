@@ -302,7 +302,11 @@ class MetricConfigForm(ModelForm):
 
         return super(MetricConfigForm, self).clean()
 
+
 class MetricConfigInlineFormSet(BaseInlineFormSet):
+    """
+    Formset that manually populates fields for form.
+    """
     def __init__(self, *args, **kwargs):
         kwargs['initial'] = [
             {'key': 'interval'}, {'key': 'maxCheckAttempts'}, {'key': 'path'}, {'key': 'retryInterval'}, \
@@ -310,13 +314,13 @@ class MetricConfigInlineFormSet(BaseInlineFormSet):
         ]
         super(MetricConfigInlineFormSet, self).__init__(*args, **kwargs)
 
+
 class MetricConfigInline(admin.TabularInline):
     model = MetricConfig
     verbose_name = 'Config'
     verbose_name_plural = 'Config'
     form = MetricConfigForm
     template = 'admin/edit_inline/tabular-attrs.html'
-    extra = 5
 
     def has_add_permission(self, request):
         if request.user.has_perm('poem.groupown_metric') \
@@ -479,6 +483,21 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
     compare_template = ''
     change_form_template = ''
 
+    def get_formsets_with_inlines(self, request, obj=None):
+        """
+        Control the extra attr value for MetricConfigInline. For change and clone view it is set to 0 as we don't want
+        extra empty fields additional to ones populated with values from model. For add view we explicitly set to 5 and
+        manually populate with MetricConfigInlineFormset that set it to needed static keys.
+        """
+        for inline in self.get_inline_instances(request, obj):
+            if isinstance(inline, MetricConfigInline):
+                if (request.path.endswith('change/') or request.path.endswith('clone/')):
+                    inline.extra = 0
+                else:
+                    inline.extra = 5
+                    inline.formset = MetricConfigInlineFormSet
+            yield inline.get_formset(request, obj), inline
+
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'group' and not request.user.is_superuser:
             lgi = request.user.groupsofmetrics.all().values_list('id', flat=True)
@@ -514,17 +533,12 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
         rquser = SharedInfo(requser=request.user)
         if obj:
             self.form = MetricChangeForm
-            MetricConfigInline.extra = 0
             ug = request.user.groupsofmetrics.all().values_list('name', flat=True)
             if obj.group.name in ug:
                 self._groupown_turn(request.user, 'add')
             else:
                 self._groupown_turn(request.user, 'del')
         else:
-            if request.path.endswith('/clone/'):
-                MetricConfigInline.extra = 0
-            else:
-                MetricConfigInline.formset = MetricConfigInlineFormSet
             self.form = MetricAddForm
             if request.user.groupsofmetrics.count():
                 self._groupown_turn(request.user, 'add')
