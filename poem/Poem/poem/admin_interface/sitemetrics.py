@@ -175,7 +175,11 @@ class MetricAttributeInline(admin.TabularInline):
             return False
 
     def has_delete_permission(self, request, obj=None):
-        return True
+        if request.user.has_perm('poem.groupown_metric') \
+                or request.user.is_superuser:
+            return True
+        else:
+            return False
 
     def has_change_permission(self, request, obj=None):
         return True
@@ -207,7 +211,11 @@ class MetricParameterInline(admin.TabularInline):
             return False
 
     def has_delete_permission(self, request, obj=None):
-        return True
+        if request.user.has_perm('poem.groupown_metric') \
+                or request.user.is_superuser:
+            return True
+        else:
+            return False
 
     def has_change_permission(self, request, obj=None):
         return True
@@ -239,7 +247,11 @@ class MetricFilesInline(admin.StackedInline):
             return False
 
     def has_delete_permission(self, request, obj=None):
-        return True
+        if request.user.has_perm('poem.groupown_metric') \
+                or request.user.is_superuser:
+            return True
+        else:
+            return False
 
     def has_change_permission(self, request, obj=None):
         return True
@@ -271,7 +283,11 @@ class MetricFlagsInline(admin.TabularInline):
             return False
 
     def has_delete_permission(self, request, obj=None):
-        return True
+        if request.user.has_perm('poem.groupown_metric') \
+                or request.user.is_superuser:
+            return True
+        else:
+            return False
 
     def has_change_permission(self, request, obj=None):
         return True
@@ -303,7 +319,11 @@ class MetricDependancyInline(admin.TabularInline):
             return False
 
     def has_delete_permission(self, request, obj=None):
-        return True
+        if request.user.has_perm('poem.groupown_metric') \
+                or request.user.is_superuser:
+            return True
+        else:
+            return False
 
     def has_change_permission(self, request, obj=None):
         return True
@@ -378,7 +398,11 @@ class MetricFileParameterInline(admin.TabularInline):
             return False
 
     def has_delete_permission(self, request, obj=None):
-        return True
+        if request.user.has_perm('poem.groupown_metric') \
+                or request.user.is_superuser:
+            return True
+        else:
+            return False
 
     def has_change_permission(self, request, obj=None):
         return True

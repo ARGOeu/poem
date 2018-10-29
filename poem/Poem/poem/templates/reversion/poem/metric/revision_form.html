@@ -81,7 +81,6 @@
                 {% for f in form.declared_fields %}
                   <th class="required">{{ f }}</th>
                 {% endfor %}
-                {% if formset.can_delete %}<th>{% trans "Delete?" %}</th>{% endif %}
               {% endif %}
               </tr></thead>
             {% endif %}
@@ -94,9 +93,6 @@
                       <td{% if field.name %} class="field-{{ field.name }}"{% endif %}{% if forloop.first %} style="padding-left:6px" {% endif %}>
                         {{ field }}
                       </td>
-                    {% endif %}
-                    {% if formset.can_delete and forloop.last %}
-                      <td class="delete"> {{ form.DELETE }}</td>
                     {% endif %}
                   {% endfor %}
                 {% else %}
