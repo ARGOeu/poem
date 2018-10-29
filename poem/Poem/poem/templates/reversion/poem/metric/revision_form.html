@@ -37,37 +37,28 @@
 {% if is_popup %}<input type="hidden" name="_popup" value="1" />{% endif %}
 
 {% block field_sets %}
-{% for fieldset in adminform %}
-<fieldset class="module aligned {{ fieldset.classes }}">
-    {% for line in fieldset %} 
-        <div class="form-row{% if line.fields|length_is:'1' and line.errors %} errors{% endif %}{% for field in line %}{% if field.field.name %} field-{{   field.field.name }}{% endif %}{% endfor %}">
-            {% if line.fields|length_is:'1' %}{{ line.errors }}{% endif %} 
-            {% for field in line %} 
-                <div{% if not line.fields|length_is:'1' %} class="field-box{% if field.field.name %} field-{{ field.field.name }}{% endif %}{% if not field.is_readonly and field.errors %} errors{% endif %}"{% elif field.is_checkbox %} class="checkbox-row"{% endif %}>
-                    {% if not line.fields|length_is:'1' and not field.is_readonly %}{{ field.errors }}{% endif %} 
-                    {% if field.is_checkbox %} 
-                        {{ field.field }}{{ field.label_tag }} 
-                    {% else %} 
-                        {{ field.label_tag }} 
-                        {% if field.is_readonly %} 
-                            {% if field.field.name == "datetime" %}
-                                <p>{{ datecreated }}</p>
-                            {% else %}
-                                <p>{{ field.contents|linebreaksbr }}</p>
-                            {% endif %}
-                        {% else %} 
-                            {{ field.field }}
-                        {% endif %} 
-                    {% endif %} 
-                    {% if field.field.help_text %} 
-                        <p class="help">{{ field.field.help_text|safe }}</p>
-                    {% endif %} 
-                </div>
-            {% endfor %} 
-        </div>
-    {% endfor %} 
+<fieldset class="module aligned tagging">
+    <div class="form-row {% if field.field.name %} field-{{ field.field.name }}{% endif %}">
+      {% for field in custom_adminform %}
+        {% if forloop.counter == 1 or forloop.counter <= 3 %}
+              <div class="field-box{% if field.field.name %} field-{{ field.field.name }}{% endif %}">
+                <label class="required" for={{ field.id_for_label }}>{{ field.label }}: </label> {{ field }} 
+                <p class="help"> {{ field.field.help_text }}</p>
+              </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+    <div class="form-row {% if field.field.name %} field-{{ field.field.name }}{% endif %}">
+      {% for field in custom_adminform %}
+          {% if forloop.last %}
+            <div class="field-box{% if field.field.name %} field-{{ field.field.name }}{% endif %}">
+              <label class="required" for={{ field.id_for_label }}>{{ field.label }}: </label> {{ field }} 
+              <p class="help"> {{ field.field.help_text }}</p>
+            </div>
+          {% endif %}
+      {% endfor %}
+    </div>
 </fieldset>
-{% endfor %}
 {% endblock %}
 
 {% block after_field_sets %}

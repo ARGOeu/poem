@@ -66,6 +66,22 @@ class RevisionTemplateOneForm(Form):
     value = CharField(label='value')
 
 
+class RevisionTemplateMetricForm(Form):
+    """
+    Mimics the adminform.
+    """
+    name = CharField(max_length=255, label='Name', help_text='Metric name',
+                     widget=TextInput(attrs={'class': 'metricautocomplete'}))
+    probeversion = make_ajax_field(Metric, 'probeversion', 'hintsprobes',
+                                   label='Probe', help_text='Probe name and version',
+                                   required=False)
+    qs = Tags.objects.all()
+    tag = ModelChoiceField(queryset=qs, label='Tag', help_text='Select one of the tags available.')
+    qs = GroupOfMetrics.objects.all()
+    group = ModelChoiceField(queryset=qs, widget=Select(),
+                             help_text='Metric is a member of selected group')
+
+
 class MetricAddForm(ModelForm):
     def __init__(self, *args, **kwargs):
         super(MetricAddForm, self).__init__(*args, **kwargs)
@@ -605,8 +621,13 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
         context. Forms will be populated with the data from corresponding
         Version object bypassing ModelAdmin logic and mimicking ModelAdmin
         change_view with inlines.
+
+        Also we do not call superclass method but rather override it since
+        we're not interested in original "revert to" behaviour. We just care for
+        view with proper form data.
         """
-        currev = Version.objects.get(pk=version_id).revision.date_created
+        version_obj = Version.objects.get(pk=version_id)
+        currev = version_obj.revision.date_created
         data = json.loads(Version.objects.get(pk=version_id).serialized_data)[0]['fields']
         order = [(inline_name.__name__, inline_name.verbose_name) for inline_name in self.inlines]
 
@@ -647,14 +668,32 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
                 formset.verbose_name = verbose_name[values[0]]
             custom_formsets.append(formset)
 
+        custom_adminform = RevisionTemplateMetricForm(initial={'name': data['name'],
+                                                               'tag': data['tag'],
+                                                               'probeversion': data['probeversion'],
+                                                               'group': data['group']})
+
         new_context = {'cursel': currev,
-                       'custom_formsets': custom_formsets}
+                       'custom_formsets': custom_formsets,
+                       'custom_adminform': custom_adminform,
+                       'title': "{} on {}".format(version_obj.object_repr, currev.strftime('%d/%m/%y %H:%m'))}
         if extra_context:
             extra_context.update(new_context)
         else:
             extra_context = new_context
 
-        return super(MetricAdmin, self).revision_view(request, object_id, version_id, extra_context)
+        # override revert() method as we don't really care if original object
+        # for revision exists in DB. Since we are copying revisions for derived
+        # metric on clone, original object for each revision might not even
+        # exist in DB.
+        version_obj.revision.revert = lambda **kw: True
+
+        return self._reversion_revisionform_view(
+            request,
+            version_obj,
+            self._reversion_get_template_list("revision_form.html"),
+            extra_context,
+        )
 
     def has_change_permission(self, request, obj=None):
         return True
