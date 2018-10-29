@@ -58,6 +58,9 @@ fieldset.tagging > div > div > p.help {
     margin-left: 10px;
 }
 
+.inline-related.tabular fieldset.module table{
+    width: 80%;
+}
 
 .inline-group .tabular tr.has_original td {
     padding: 2px;
@@ -97,7 +100,7 @@ div.tabular.inline-related thead th:nth-of-type(2) {
 
 div.tabular.inline-related thead th:last-of-type {
     width: 80px;
-    text-align: center;
+    text-align: left;
 }
 
 div.tabular.inline-related tbody tr td:last-of-type {
