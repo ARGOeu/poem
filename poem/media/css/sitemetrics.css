@@ -100,7 +100,7 @@ div.tabular.inline-related thead th:nth-of-type(2) {
 
 div.tabular.inline-related thead th:last-of-type {
     width: 80px;
-    text-align: center;
+    text-align: left;
 }
 
 div.tabular.inline-related tbody tr td:last-of-type {
