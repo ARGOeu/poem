@@ -485,13 +485,16 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
 
     def get_formsets_with_inlines(self, request, obj=None):
         """
-        Control the extra attr value for MetricConfigInline. For change and clone view it is set to 0 as we don't want
-        extra empty fields additional to ones populated with values from model. For add view we explicitly set to 5 and
-        manually populate with MetricConfigInlineFormset that set it to needed static keys.
+        Control the extra attr value for MetricConfigInline. For change and
+        clone view it is set to 0 as we don't want extra empty fields additional
+        to ones populated with values from model. For add view we explicitly set
+        to 5 and manually populate with MetricConfigInlineFormset that set it to
+        needed static keys.
         """
         for inline in self.get_inline_instances(request, obj):
             if isinstance(inline, MetricConfigInline):
-                if (request.path.endswith('change/') or request.path.endswith('clone/')):
+                if (request.path.endswith('change/')
+                        or request.path.endswith('clone/')):
                     inline.extra = 0
                 else:
                     inline.extra = 5
