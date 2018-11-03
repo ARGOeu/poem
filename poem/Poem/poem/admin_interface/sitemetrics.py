@@ -16,7 +16,8 @@ from Poem.poem.lookups import check_cache
 from Poem.poem.admin_interface.formmodel import MyModelMultipleChoiceField, MyModelChoiceField
 from Poem.poem.models import Metric, Probe, UserProfile, VO, ServiceFlavour,GroupOfProbes,\
                              CustUser, Tags, Metrics, GroupOfMetrics, MetricAttribute, MetricConfig, MetricParameter,\
-                             MetricFlags, MetricDependancy, MetricProbeExecutable, MetricFiles, MetricParent, MetricFileParameter
+                             MetricFlags, MetricDependancy, MetricProbeExecutable, MetricFiles, MetricParent, MetricFileParameter,\
+                             MetricType
 
 from ajax_select import make_ajax_field
 from reversion_compare.admin import CompareVersionAdmin
@@ -70,6 +71,12 @@ class RevisionTemplateMetricForm(Form):
     """
     Mimics the adminform.
     """
+    def __init__(self, *args, **kwargs):
+        super(RevisionTemplateMetricForm, self).__init__(*args, **kwargs)
+        self.fields['group'].empty_label = None
+        self.fields['tag'].empty_label = None
+        self.fields['mtype'].empty_label = None
+
     name = CharField(max_length=255, label='Name', help_text='Metric name',
                      widget=TextInput(attrs={'class': 'metricautocomplete'}))
     probeversion = make_ajax_field(Metric, 'probeversion', 'hintsprobes',
@@ -77,9 +84,11 @@ class RevisionTemplateMetricForm(Form):
                                    required=False)
     qs = Tags.objects.all()
     tag = ModelChoiceField(queryset=qs, label='Tag', help_text='Select one of the tags available.')
+    qs = MetricType.objects.all()
+    mtype = ModelChoiceField(queryset=qs, widget=Select(), label='Type', help_text='Metric is of given type')
     qs = GroupOfMetrics.objects.all()
     group = ModelChoiceField(queryset=qs, widget=Select(),
-                             help_text='Metric is a member of selected group')
+                             help_text='Metric is member of selected group')
 
 
 class MetricAddForm(ModelForm):
@@ -88,18 +97,21 @@ class MetricAddForm(ModelForm):
         self.fields['group'].widget.can_add_related = False
         self.fields['group'].widget.can_change_related = False
         self.fields['group'].empty_label = None
+        self.fields['tag'].empty_label = None
+        self.fields['mtype'].empty_label = None
 
     class Meta:
         labels = {
             'group': _('Group'),
+            'mtype': _('Type'),
+            'tag': _('Tag'),
         }
         help_texts = {
             'group': _('Metric is member of selected group'),
+            'mtype': _('Metric is of given type'),
+            'tag': _('Select one of the tags available'),
         }
 
-    qs = Tags.objects.all()
-    tag = ModelChoiceField(queryset=qs, label='Tag', help_text='Select one of the tags available.')
-    tag.empty_label = None
     name = CharField(max_length=255, label='Name', help_text='Metric name',
                      widget=TextInput(attrs={'class': 'metricautocomplete'}))
     probeversion = make_ajax_field(Metric, 'probeversion', 'hintsprobes',
@@ -134,11 +146,17 @@ class MetricChangeForm(MetricAddForm):
         self.usergroups = self.user.groupsofmetrics.all()
         super(MetricChangeForm, self).__init__(*args, **kwargs)
 
-    qs = GroupOfMetrics.objects.all()
-    group = ModelChoiceField(queryset=qs, widget=Select(),
-                                     help_text='Metric is a member of selected group')
-    group.empty_label = '----------------'
-    group.label = 'Group'
+    class Meta:
+        labels = {
+            'group': _('Group'),
+            'mtype': _('Type'),
+            'tag': _('Tag'),
+        }
+        help_texts = {
+            'group': _('Metric is member of selected group'),
+            'mtype': _('Metric is of given type'),
+            'tag': _('Select one of the tags available'),
+        }
 
     def clean_group(self):
         groupsel = self.cleaned_data['group']
@@ -507,7 +525,7 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
     probeversion_url.short_description = 'Probeversion'
 
     list_display = ('name', 'tag', 'probeversion_url', 'group')
-    fieldsets = ((None, {'classes' : ['tagging'], 'fields' : (('name', 'probeversion', 'tag'), 'group')}),)
+    fieldsets = ((None, {'classes' : ['tagging'], 'fields' : (('name', 'probeversion', 'tag'), ('mtype', 'group'))}),)
     list_filter = ('tag', GroupMetricsListFilter,)
     inlines = (MetricProbeExecutableInline, MetricConfigInline,
                MetricAttributeInline, MetricDependancyInline,
@@ -695,6 +713,7 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
         custom_adminform = RevisionTemplateMetricForm(initial={'name': data['name'],
                                                                'tag': data['tag'],
                                                                'probeversion': data['probeversion'],
+                                                               'mtype': data['mtype'],
                                                                'group': data['group']})
 
         new_context = {'cursel': currev,

@@ -1,5 +1,24 @@
 from django.db import migrations, models
 import django.db.models.deletion
+import json
+from django.contrib.contenttypes.models import ContentType
+
+
+def set_versions_passive(apps, schema_editor):
+    Version = apps.get_model('reversion', 'Version')
+    Metric = apps.get_model('poem', 'Metric')
+    ct = ContentType.objects.get_for_model(Metric)
+    versions = Version.objects.filter(content_type_id=ct.id)
+    for version in versions:
+        data = json.loads(version.serialized_data)
+        fields = json.loads(version.serialized_data)[0]['fields']
+        if 'PASSIVE 1' in fields['flags']:
+            fields.update(mtype=2)
+        else:
+            fields.update(mtype=1)
+        data[0]['fields'] = fields
+        version.serialized_data = json.dumps(data)
+        version.save()
 
 
 def set_passive(apps, schema_editor):
@@ -20,5 +39,6 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RunPython(set_passive),
+        migrations.RunPython(set_versions_passive)
     ]
 

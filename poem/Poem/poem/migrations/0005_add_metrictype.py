@@ -21,7 +21,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='metric',
             name='mtype',
-            field=models.ForeignKey(default=1, on_delete=django.db.models.deletion.CASCADE, to='poem.MetricType'),
+            field=models.ForeignKey(default=1, null=False, on_delete=django.db.models.deletion.CASCADE, to='poem.MetricType'),
             preserve_default=False,
         ),
     ]

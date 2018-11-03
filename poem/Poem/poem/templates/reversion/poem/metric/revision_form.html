@@ -40,21 +40,21 @@
 <fieldset class="module aligned tagging">
     <div class="form-row {% if field.field.name %} field-{{ field.field.name }}{% endif %}">
       {% for field in custom_adminform %}
-        {% if forloop.counter == 1 or forloop.counter <= 3 %}
+          {% if forloop.counter == 1 or forloop.counter <= 3 %}
               <div class="field-box{% if field.field.name %} field-{{ field.field.name }}{% endif %}">
                 <label class="required" for={{ field.id_for_label }}>{{ field.label }}: </label> {{ field }} 
                 <p class="help"> {{ field.field.help_text }}</p>
               </div>
-        {% endif %}
+          {% endif %}
       {% endfor %}
     </div>
     <div class="form-row {% if field.field.name %} field-{{ field.field.name }}{% endif %}">
       {% for field in custom_adminform %}
-          {% if forloop.last %}
-            <div class="field-box{% if field.field.name %} field-{{ field.field.name }}{% endif %}">
-              <label class="required" for={{ field.id_for_label }}>{{ field.label }}: </label> {{ field }} 
-              <p class="help"> {{ field.field.help_text }}</p>
-            </div>
+          {% if forloop.counter > 3 or forloop.counter == 4 %}
+              <div class="field-box{% if field.field.name %} field-{{ field.field.name }}{% endif %}">
+                <label class="required" for={{ field.id_for_label }}>{{ field.label }}: </label> {{ field }} 
+                <p class="help"> {{ field.field.help_text }}</p>
+              </div>
           {% endif %}
       {% endfor %}
     </div>
