@@ -13,6 +13,7 @@ usage()
 	printf "       [-l] - list migrations\n" >&2
 	printf "       [-s] - clear stale login sessions\n" >&2
 	printf "       [-o] - apply migrations from other apps\n" >&2
+	printf "       [-x] - just load fixtures\n" >&2
 	printf "       [-h] - usage\n" >&2
     exit 2
 }
@@ -22,7 +23,7 @@ then
     usage
 fi
 
-while getopts 'cafmlhso' OPTION
+while getopts 'cafmlhsox' OPTION
 do
     case $OPTION in
         c)
@@ -67,6 +68,11 @@ do
             su -m -s /bin/sh $RUNASUSER -c \
             "export DJANGO_SETTINGS_MODULE=Poem.settings && \
             python $SITEPACK/Poem/manage.py migrate"
+            ;;
+        x)
+            su -m -s /bin/sh $RUNASUSER -c \
+            "export DJANGO_SETTINGS_MODULE=Poem.settings && \
+            python $SITEPACK/Poem/manage.py loaddata initial_data.json"
             ;;
         h)
             usage
