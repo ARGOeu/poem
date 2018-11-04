@@ -366,7 +366,12 @@ def isvalid_metricconfig(data):
     needed_keys = ['interval', 'maxCheckAttempts', 'path', 'retryInterval', 'timeout']
     sh = SharedInfo()
     metric_type = sh.get_metrictype().name.lower()
-    missing_keys = False
+
+    found_keys = set([d.get('key', None) for d in data])
+    diff = set(needed_keys).difference(found_keys)
+    if diff:
+        raise ValidationError('Missing fields %s' % ', '.join(diff))
+
     missing_values = list()
     if metric_type == 'active':
         for d in data:
