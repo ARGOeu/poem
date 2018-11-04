@@ -30,22 +30,21 @@ from django.forms.models import BaseInlineFormSet
 
 
 class SharedInfo:
-    def __init__(self, requser=None, grname=None):
+    def __init__(self, requser=None, grname=None, metrictype=None):
         if requser:
             self.__class__.user = requser
         if grname:
             self.__class__.group = grname
+        if metrictype:
+            self.__class__.metrictype = metrictype
 
-    def getgroup(self):
-        if getattr(self.__class__, 'group', None):
-            return self.__class__.group
+    def get_metrictype(self):
+        if getattr(self.__class__, 'metrictype', None):
+            return self.__class__.metrictype
         else:
             return None
 
-    def delgroup(self):
-        self.__class__.group = None
-
-    def getuser(self):
+    def get_user(self):
         if getattr(self.__class__, 'user', None):
             return self.__class__.user
         else:
@@ -120,8 +119,10 @@ class MetricAddForm(ModelForm):
 
     def clean(self):
         try:
-            metric = self.cleaned_data['name']
             group = self.cleaned_data.get('group')
+            metrictype = self.cleaned_data.get('mtype')
+            gr = SharedInfo(grname=group, metrictype=metrictype)
+            metric = self.cleaned_data['name']
         except KeyError as e:
             raise ValidationError('')
         else:
@@ -142,7 +143,7 @@ class MetricAddForm(ModelForm):
 class MetricChangeForm(MetricAddForm):
     def __init__(self, *args, **kwargs):
         sh = SharedInfo()
-        self.user = sh.getuser()
+        self.user = sh.get_user()
         self.usergroups = self.user.groupsofmetrics.all()
         super(MetricChangeForm, self).__init__(*args, **kwargs)
 
@@ -160,7 +161,8 @@ class MetricChangeForm(MetricAddForm):
 
     def clean_group(self):
         groupsel = self.cleaned_data['group']
-        gr = SharedInfo(grname=groupsel)
+        metrictype = self.cleaned_data['mtype']
+        gr = SharedInfo(grname=groupsel, metrictype=metrictype)
         ugid = [f.id for f in self.usergroups]
         if groupsel.id not in ugid and not self.user.is_superuser:
             raise ValidationError("You are not member of group %s." % (str(groupsel)))
@@ -357,7 +359,30 @@ class MetricConfigForm(ModelForm):
         return super(MetricConfigForm, self).clean()
 
 
-class MetricConfigInlineFormSet(BaseInlineFormSet):
+def isvalid_metricconfig(data):
+    """
+        Validation for Active metric types. All keys need to have values.
+    """
+    needed_keys = ['interval', 'maxCheckAttempts', 'path', 'retryInterval', 'timeout']
+    sh = SharedInfo()
+    metric_type = sh.get_metrictype().name.lower()
+    missing_keys = False
+    missing_values = list()
+    if metric_type == 'active':
+        for d in data:
+            key = d.get('key', 0)
+            if key and key in needed_keys:
+                v = d.get('value', 0)
+                if not v:
+                    missing_values.append(key)
+
+    if missing_values:
+        raise ValidationError('Missing values for fields %s' % ', '.join(missing_values))
+
+    return True
+
+
+class MetricConfigInlineAddFormSet(BaseInlineFormSet):
     """
     Formset that manually populates fields for form.
     """
@@ -366,7 +391,23 @@ class MetricConfigInlineFormSet(BaseInlineFormSet):
             {'key': 'interval'}, {'key': 'maxCheckAttempts'}, {'key': 'path'}, {'key': 'retryInterval'}, \
             {'key': 'timeout'},
         ]
-        super(MetricConfigInlineFormSet, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
+
+    def clean(self):
+        super().clean()
+        data = list()
+        for form in self.forms:
+            data.append(form.cleaned_data)
+        isvalid_metricconfig(data)
+
+
+class MetricConfigInlineChangeFormSet(BaseInlineFormSet):
+    def clean(self):
+        super().clean()
+        data = list()
+        for form in self.forms:
+            data.append(form.cleaned_data)
+        isvalid_metricconfig(data)
 
 
 class MetricConfigInline(admin.TabularInline):
@@ -374,6 +415,7 @@ class MetricConfigInline(admin.TabularInline):
     verbose_name = 'Config'
     verbose_name_plural = 'Config'
     form = MetricConfigForm
+    formset = MetricConfigInlineChangeFormSet
     template = 'admin/edit_inline/tabular-attrs.html'
 
     def has_add_permission(self, request):
@@ -551,9 +593,10 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
                 if (request.path.endswith('change/')
                         or request.path.endswith('clone/')):
                     inline.extra = 0
+                    inline.formset = MetricConfigInlineChangeFormSet
                 else:
                     inline.extra = 5
-                    inline.formset = MetricConfigInlineFormSet
+                    inline.formset = MetricConfigInlineAddFormSet
             yield inline.get_formset(request, obj), inline
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
