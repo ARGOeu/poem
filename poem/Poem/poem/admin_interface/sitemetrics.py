@@ -427,7 +427,7 @@ class MetricFileParameterInline(admin.TabularInline):
 
 
 class MetricParentForm(ModelForm):
-    value = CharField(max_length=255)
+    value = make_ajax_field(Metric, 'name', 'hintsmetricsall')
 
     def clean(self):
         update_field('parent', self.cleaned_data, MetricParent)
