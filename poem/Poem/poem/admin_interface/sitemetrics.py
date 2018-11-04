@@ -491,9 +491,6 @@ class MetricProbeExecutableInline(admin.TabularInline):
 
 
 class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
-    """
-    POEM admin core class that customizes its look and feel.
-    """
     class Media:
         css = { "all" : ("/poem_media/css/sitemetrics.css",) }
 
@@ -709,6 +706,15 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
                 formset = factory(initial=initial, prefix=values[0])
                 formset.verbose_name = verbose_name[values[0]]
             custom_formsets.append(formset)
+
+        undisplay_passive = list(['probeexecutable', 'attribute', 'dependancy',
+                                  'config', 'parameter', 'files',
+                                  'fileparameter']);
+
+        # only flags and parent form for Passive metric type
+        # mtype = 2 (Passive) is hardcoded in fixture
+        if data['mtype'] == 2:
+            custom_formsets = filter(lambda f: f.prefix not in undisplay_passive, custom_formsets)
 
         custom_adminform = RevisionTemplateMetricForm(initial={'name': data['name'],
                                                                'tag': data['tag'],
