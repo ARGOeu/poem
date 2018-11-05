@@ -168,6 +168,13 @@ class MetricChangeForm(MetricAddForm):
             raise ValidationError("You are not member of group %s." % (str(groupsel)))
         return groupsel
 
+    def clean(self):
+        group = self.cleaned_data.get('group')
+        metric = Metrics.objects.get(name=self.cleaned_data.get('name'))
+        metric.groupofmetrics_set.clear()
+        metric.groupofmetrics_set.add(group)
+        return self.cleaned_data
+
 
 class MetricAttributeForm(ModelForm):
     key = CharField(label='key')
@@ -661,7 +668,8 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
         ids = map(lambda x: x.revision_id, lver)
         reversion.models.Revision.objects.filter(pk__in=ids).delete()
 
-        import ipdb; ipdb.set_trace()
+        Metrics.objects.get(name=obj.name).delete()
+
         return super(MetricAdmin, self).delete_model(request, obj)
 
     @reversion.create_revision()
