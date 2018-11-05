@@ -363,17 +363,18 @@ def isvalid_metricconfig(data):
     """
         Validation for Active metric types. All keys need to have values.
     """
-    needed_keys = ['interval', 'maxCheckAttempts', 'path', 'retryInterval', 'timeout']
     sh = SharedInfo()
     metric_type = sh.get_metrictype().name.lower()
 
-    found_keys = set([d.get('key', None) for d in data])
-    diff = set(needed_keys).difference(found_keys)
-    if diff:
-        raise ValidationError('Missing fields %s' % ', '.join(diff))
-
-    missing_values = list()
     if metric_type == 'active':
+        needed_keys = ['interval', 'maxCheckAttempts', 'path', 'retryInterval', 'timeout']
+
+        found_keys = set([d.get('key', None) for d in data])
+        diff = set(needed_keys).difference(found_keys)
+        if diff:
+            raise ValidationError('Missing fields %s' % ', '.join(diff))
+
+        missing_values = list()
         for d in data:
             key = d.get('key', 0)
             if key and key in needed_keys:
@@ -381,8 +382,8 @@ def isvalid_metricconfig(data):
                 if not v:
                     missing_values.append(key)
 
-    if missing_values:
-        raise ValidationError('Missing values for fields %s' % ', '.join(missing_values))
+        if missing_values:
+            raise ValidationError('Missing values for fields %s' % ', '.join(missing_values))
 
     return True
 
@@ -660,6 +661,7 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
         ids = map(lambda x: x.revision_id, lver)
         reversion.models.Revision.objects.filter(pk__in=ids).delete()
 
+        import ipdb; ipdb.set_trace()
         return super(MetricAdmin, self).delete_model(request, obj)
 
     @reversion.create_revision()
