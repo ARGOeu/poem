@@ -178,7 +178,7 @@ class MetricChangeForm(MetricAddForm):
 
 class MetricAttributeForm(ModelForm):
     key = CharField(label='key')
-    value = CharField(label='value')
+    value = CharField(label='value', required=False)
 
     def clean(self):
         update_field('attribute', self.cleaned_data, MetricAttribute)
@@ -214,7 +214,7 @@ class MetricAttributeInline(admin.TabularInline):
 
 class MetricParameterForm(ModelForm):
     key = CharField(label='key')
-    value = CharField(label='value')
+    value = CharField(label='value', required=False)
 
     def clean(self):
         update_field('parameter', self.cleaned_data, MetricParameter)
@@ -250,7 +250,7 @@ class MetricParameterInline(admin.TabularInline):
 
 class MetricFilesForm(ModelForm):
     key = CharField(label='key')
-    value = CharField(label='value')
+    value = CharField(label='value', required=False)
 
     def clean(self):
         update_field('files', self.cleaned_data, MetricFiles)
@@ -313,7 +313,7 @@ class MetricFlagsInlineFormset(BaseInlineFormSet):
 
 class MetricFlagsForm(ModelForm):
     key = CharField(label='key')
-    value = CharField(label='value')
+    value = CharField(label='value', required=False)
 
     def clean(self):
         update_field('flags', self.cleaned_data, MetricFlags)
@@ -350,7 +350,7 @@ class MetricFlagsInline(admin.TabularInline):
 
 class MetricDependancyForm(ModelForm):
     key = CharField(label='key')
-    value = CharField(label='value')
+    value = CharField(label='value', required=False)
 
     def clean(self):
         update_field('dependancy', self.cleaned_data, MetricDependancy)
