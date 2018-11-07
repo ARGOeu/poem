@@ -284,6 +284,33 @@ class MetricFilesInline(admin.StackedInline):
         return True
 
 
+def isvalid_metricflags(data):
+    """
+        Validation for Passive metric types. There should be at least
+        key = PASSIVE and value = 1 defined.
+    """
+    sh = SharedInfo()
+    metric_type = sh.get_metrictype().name.lower()
+
+    if metric_type == 'passive':
+        keys_values = [(d.get('key', None), d.get('value', None)) for d in data]
+        passive_found = [(k, v) for k, v in keys_values if k and k.lower() == 'passive']
+        if not passive_found:
+            raise ValidationError('Missing PASSIVE key')
+        elif passive_found[0][1] not in ['1', 'True']:
+            raise ValidationError('PASSIVE key should be set to 1')
+
+        return True
+
+class MetricFlagsInlineFormset(BaseInlineFormSet):
+    def clean(self):
+        super().clean()
+        data = list()
+        for form in self.forms:
+            data.append(form.cleaned_data)
+        return isvalid_metricflags(data)
+
+
 class MetricFlagsForm(ModelForm):
     key = CharField(label='key')
     value = CharField(label='value')
@@ -299,6 +326,7 @@ class MetricFlagsInline(admin.TabularInline):
     verbose_name = 'Flags'
     verbose_name_plural = 'Flags'
     form = MetricFlagsForm
+    formset = MetricFlagsInlineFormset
     template = 'admin/edit_inline/tabular-attrs.html'
     extra = 1
 
@@ -411,7 +439,7 @@ class MetricConfigInlineAddFormSet(BaseInlineFormSet):
         data = list()
         for form in self.forms:
             data.append(form.cleaned_data)
-        isvalid_metricconfig(data)
+        return isvalid_metricconfig(data)
 
 
 class MetricConfigInlineChangeFormSet(BaseInlineFormSet):
