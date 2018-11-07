@@ -9,9 +9,9 @@ from django.contrib.admin.widgets import FilteredSelectMultiple
 
 class GroupOfProfilesAdminForm(ModelForm):
     qs = Profile.objects.filter(groupofprofiles__id__isnull=True).order_by('name')
-    profiles = ModelMultipleChoiceField(queryset=qs, required=False,
-                                        widget=MyFilteredSelectMultiple('profiles',
-                                                                        False))
+    profiles = MyModelMultipleChoiceField(queryset=qs,
+                                          required=False,
+                                          widget=MyFilteredSelectMultiple('profiles', False), ftype='profiles')
 
 
 class GroupOfProfilesAdmin(GroupAdmin):
@@ -28,5 +28,4 @@ class GroupOfProfilesAdmin(GroupAdmin):
         obj.save()
         perm = Permission.objects.get(codename__startswith='profile')
         obj.permissions.add(perm)
-
-        return
+        form.cleaned_data['profiles'].update(groupname=obj.name)

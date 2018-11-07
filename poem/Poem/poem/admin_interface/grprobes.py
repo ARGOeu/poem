@@ -24,6 +24,11 @@ class GroupOfProbesAdmin(GroupAdmin):
                  ('Settings', {'fields': ['probes']})]
 
     def save_model(self, request, obj, form, change):
+        """
+           Save group changes and also update Probe.group field name in case
+           group is renamed.
+        """
         obj.save()
         perm = Permission.objects.get(codename__startswith='probe')
         obj.permissions.add(perm)
+        form.cleaned_data['probes'].update(group=obj.name)

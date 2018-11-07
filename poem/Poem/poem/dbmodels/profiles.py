@@ -1,4 +1,3 @@
-import copy
 from django.contrib.auth.models import GroupManager, Permission
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
@@ -49,18 +48,9 @@ class GroupOfProfiles(models.Model):
     def natural_key(self):
         return (self.name,)
 
-wasprofiles = []
-def gpprofile_presave(sender, instance, **kwargs):
-    global wasprofiles
-    if instance.pk:
-        wasprofiles = copy.copy(instance.profiles.values_list('pk', flat=True))
-    else:
-       wasprofiles = []
-pre_save.connect(gpprofile_presave, sender=GroupOfProfiles)
 def gpprofile_m2m(sender, action, pk_set, instance, **kwargs):
-    global wasprofiles
-    if action == 'post_clear':
-        for m in wasprofiles:
+    if action == 'post_remove':
+        for m in pk_set:
            Profile.objects.filter(id=m).update(groupname='')
     if action == 'post_add':
         for m in pk_set:

@@ -33,6 +33,17 @@ class Tags(models.Model):
         return u'%s' % (self.name)
 
 
+class MetricType(models.Model):
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=128)
+
+    class Meta:
+        app_label = 'poem'
+
+    def __str__(self):
+        return u'%s' % (self.name)
+
+
 class GroupOfMetrics(models.Model):
     name = models.CharField(_('name'), max_length=80, unique=True)
     permissions = models.ManyToManyField(Permission,
@@ -56,9 +67,10 @@ class Metric(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=128)
     tag = models.ForeignKey(Tags, on_delete=models.CASCADE)
+    mtype = models.ForeignKey(MetricType, on_delete=models.CASCADE)
     probeversion = models.CharField(max_length=128)
     probekey = models.ForeignKey(Version, blank=True, null=True, on_delete=models.CASCADE)
-    group = models.ForeignKey(GroupOfMetrics, on_delete=models.CASCADE)
+    group = models.ForeignKey(GroupOfMetrics, null=True, on_delete=models.CASCADE)
     parent = models.CharField(max_length=128)
     probeexecutable = models.CharField(max_length=128)
     config = models.CharField(max_length=1024)

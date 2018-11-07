@@ -32,8 +32,8 @@
               {% if field.is_readonly %}
                   <p>{{ field.contents|linebreaksbr }}</p>
               {% else %}
-                  {{ field.field.errors.as_ul }}
                   {{ field.field }}
+                  {{ field.field.errors.as_ul }}
               {% endif %}
               </td>
             {% endfor %}

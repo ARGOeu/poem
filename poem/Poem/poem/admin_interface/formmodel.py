@@ -10,15 +10,19 @@ from django.utils.encoding import force_str, force_text
 from django.utils.html import escape
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext as _
-from itertools import chain
+
 
 class MyModelChoiceField(ModelChoiceField):
     def label_from_instance(self, obj):
         return str(obj.name)
 
+
 class MyModelMultipleChoiceField(ModelMultipleChoiceField):
     def __init__(self, *args, **kwargs):
         self.ftype = kwargs.pop('ftype', None)
+        self.name_to_model = {'profiles': Profile,
+                              'probes': Probe,
+                              'metrics': Metrics}
         super(ModelMultipleChoiceField, self).__init__(*args, **kwargs)
 
     def label_from_instance(self, obj):
@@ -26,6 +30,15 @@ class MyModelMultipleChoiceField(ModelMultipleChoiceField):
             return str(obj.nameversion)
         else:
             return str(obj.name)
+
+    def clean(self, value):
+        """
+            Override default validation by having all entries in queryset, not
+            just the elements on left part of widget that are not assigned to
+            any group.
+        """
+        self.queryset = self.name_to_model[self.ftype].objects.all()
+        return super().clean(value)
 
 
 class MyUserChangeForm(UserChangeForm):
@@ -50,6 +63,10 @@ class MyFilteredSelectMultiple(FilteredSelectMultiple):
         super(MyFilteredSelectMultiple, self).__init__(verbose_name, is_stacked, attrs, choices)
 
     def render(self, name, value, attrs=None, renderer=None):
+        """
+            Value contains ids of elements selected to be added to group. For
+            those, explicitly say that they are selected to show up on right part of widget.
+        """
         html = super(MyFilteredSelectMultiple, self).render(name, value, attrs, renderer)
 
         if value:
@@ -64,4 +81,3 @@ class MyFilteredSelectMultiple(FilteredSelectMultiple):
 
         else:
             return html
-

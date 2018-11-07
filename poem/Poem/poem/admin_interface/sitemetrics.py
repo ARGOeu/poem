@@ -16,7 +16,8 @@ from Poem.poem.lookups import check_cache
 from Poem.poem.admin_interface.formmodel import MyModelMultipleChoiceField, MyModelChoiceField
 from Poem.poem.models import Metric, Probe, UserProfile, VO, ServiceFlavour,GroupOfProbes,\
                              CustUser, Tags, Metrics, GroupOfMetrics, MetricAttribute, MetricConfig, MetricParameter,\
-                             MetricFlags, MetricDependancy, MetricProbeExecutable, MetricFiles, MetricParent, MetricFileParameter
+                             MetricFlags, MetricDependancy, MetricProbeExecutable, MetricFiles, MetricParent, MetricFileParameter,\
+                             MetricType
 
 from ajax_select import make_ajax_field
 from reversion_compare.admin import CompareVersionAdmin
@@ -29,22 +30,21 @@ from django.forms.models import BaseInlineFormSet
 
 
 class SharedInfo:
-    def __init__(self, requser=None, grname=None):
+    def __init__(self, requser=None, grname=None, metrictype=None):
         if requser:
             self.__class__.user = requser
         if grname:
             self.__class__.group = grname
+        if metrictype:
+            self.__class__.metrictype = metrictype
 
-    def getgroup(self):
-        if getattr(self.__class__, 'group', None):
-            return self.__class__.group
+    def get_metrictype(self):
+        if getattr(self.__class__, 'metrictype', None):
+            return self.__class__.metrictype
         else:
             return None
 
-    def delgroup(self):
-        self.__class__.group = None
-
-    def getuser(self):
+    def get_user(self):
         if getattr(self.__class__, 'user', None):
             return self.__class__.user
         else:
@@ -70,6 +70,12 @@ class RevisionTemplateMetricForm(Form):
     """
     Mimics the adminform.
     """
+    def __init__(self, *args, **kwargs):
+        super(RevisionTemplateMetricForm, self).__init__(*args, **kwargs)
+        self.fields['group'].empty_label = None
+        self.fields['tag'].empty_label = None
+        self.fields['mtype'].empty_label = None
+
     name = CharField(max_length=255, label='Name', help_text='Metric name',
                      widget=TextInput(attrs={'class': 'metricautocomplete'}))
     probeversion = make_ajax_field(Metric, 'probeversion', 'hintsprobes',
@@ -77,9 +83,11 @@ class RevisionTemplateMetricForm(Form):
                                    required=False)
     qs = Tags.objects.all()
     tag = ModelChoiceField(queryset=qs, label='Tag', help_text='Select one of the tags available.')
+    qs = MetricType.objects.all()
+    mtype = ModelChoiceField(queryset=qs, widget=Select(), label='Type', help_text='Metric is of given type')
     qs = GroupOfMetrics.objects.all()
     group = ModelChoiceField(queryset=qs, widget=Select(),
-                             help_text='Metric is a member of selected group')
+                             help_text='Metric is member of selected group')
 
 
 class MetricAddForm(ModelForm):
@@ -88,18 +96,21 @@ class MetricAddForm(ModelForm):
         self.fields['group'].widget.can_add_related = False
         self.fields['group'].widget.can_change_related = False
         self.fields['group'].empty_label = None
+        self.fields['tag'].empty_label = None
+        self.fields['mtype'].empty_label = None
 
     class Meta:
         labels = {
             'group': _('Group'),
+            'mtype': _('Type'),
+            'tag': _('Tag'),
         }
         help_texts = {
             'group': _('Metric is member of selected group'),
+            'mtype': _('Metric is of given type'),
+            'tag': _('Select one of the tags available'),
         }
 
-    qs = Tags.objects.all()
-    tag = ModelChoiceField(queryset=qs, label='Tag', help_text='Select one of the tags available.')
-    tag.empty_label = None
     name = CharField(max_length=255, label='Name', help_text='Metric name',
                      widget=TextInput(attrs={'class': 'metricautocomplete'}))
     probeversion = make_ajax_field(Metric, 'probeversion', 'hintsprobes',
@@ -108,8 +119,10 @@ class MetricAddForm(ModelForm):
 
     def clean(self):
         try:
-            metric = self.cleaned_data['name']
             group = self.cleaned_data.get('group')
+            metrictype = self.cleaned_data.get('mtype')
+            gr = SharedInfo(grname=group, metrictype=metrictype)
+            metric = self.cleaned_data['name']
         except KeyError as e:
             raise ValidationError('')
         else:
@@ -130,23 +143,37 @@ class MetricAddForm(ModelForm):
 class MetricChangeForm(MetricAddForm):
     def __init__(self, *args, **kwargs):
         sh = SharedInfo()
-        self.user = sh.getuser()
+        self.user = sh.get_user()
         self.usergroups = self.user.groupsofmetrics.all()
         super(MetricChangeForm, self).__init__(*args, **kwargs)
 
-    qs = GroupOfMetrics.objects.all()
-    group = ModelChoiceField(queryset=qs, widget=Select(),
-                                     help_text='Metric is a member of selected group')
-    group.empty_label = '----------------'
-    group.label = 'Group'
+    class Meta:
+        labels = {
+            'group': _('Group'),
+            'mtype': _('Type'),
+            'tag': _('Tag'),
+        }
+        help_texts = {
+            'group': _('Metric is member of selected group'),
+            'mtype': _('Metric is of given type'),
+            'tag': _('Select one of the tags available'),
+        }
 
     def clean_group(self):
         groupsel = self.cleaned_data['group']
-        gr = SharedInfo(grname=groupsel)
+        metrictype = self.cleaned_data['mtype']
+        gr = SharedInfo(grname=groupsel, metrictype=metrictype)
         ugid = [f.id for f in self.usergroups]
         if groupsel.id not in ugid and not self.user.is_superuser:
             raise ValidationError("You are not member of group %s." % (str(groupsel)))
         return groupsel
+
+    def clean(self):
+        group = self.cleaned_data.get('group')
+        metric = Metrics.objects.get(name=self.cleaned_data.get('name'))
+        metric.groupofmetrics_set.clear()
+        metric.groupofmetrics_set.add(group)
+        return self.cleaned_data
 
 
 class MetricAttributeForm(ModelForm):
@@ -175,7 +202,11 @@ class MetricAttributeInline(admin.TabularInline):
             return False
 
     def has_delete_permission(self, request, obj=None):
-        return True
+        if request.user.has_perm('poem.groupown_metric') \
+                or request.user.is_superuser:
+            return True
+        else:
+            return False
 
     def has_change_permission(self, request, obj=None):
         return True
@@ -207,7 +238,11 @@ class MetricParameterInline(admin.TabularInline):
             return False
 
     def has_delete_permission(self, request, obj=None):
-        return True
+        if request.user.has_perm('poem.groupown_metric') \
+                or request.user.is_superuser:
+            return True
+        else:
+            return False
 
     def has_change_permission(self, request, obj=None):
         return True
@@ -239,10 +274,41 @@ class MetricFilesInline(admin.StackedInline):
             return False
 
     def has_delete_permission(self, request, obj=None):
-        return True
+        if request.user.has_perm('poem.groupown_metric') \
+                or request.user.is_superuser:
+            return True
+        else:
+            return False
 
     def has_change_permission(self, request, obj=None):
         return True
+
+
+def isvalid_metricflags(data):
+    """
+        Validation for Passive metric types. There should be at least
+        key = PASSIVE and value = 1 defined.
+    """
+    sh = SharedInfo()
+    metric_type = sh.get_metrictype().name.lower()
+
+    if metric_type == 'passive':
+        keys_values = [(d.get('key', None), d.get('value', None)) for d in data]
+        passive_found = [(k, v) for k, v in keys_values if k and k.lower() == 'passive']
+        if not passive_found:
+            raise ValidationError('Missing PASSIVE key')
+        elif passive_found[0][1] not in ['1', 'True']:
+            raise ValidationError('PASSIVE key should be set to 1')
+
+        return True
+
+class MetricFlagsInlineFormset(BaseInlineFormSet):
+    def clean(self):
+        super().clean()
+        data = list()
+        for form in self.forms:
+            data.append(form.cleaned_data)
+        return isvalid_metricflags(data)
 
 
 class MetricFlagsForm(ModelForm):
@@ -260,6 +326,7 @@ class MetricFlagsInline(admin.TabularInline):
     verbose_name = 'Flags'
     verbose_name_plural = 'Flags'
     form = MetricFlagsForm
+    formset = MetricFlagsInlineFormset
     template = 'admin/edit_inline/tabular-attrs.html'
     extra = 1
 
@@ -271,7 +338,11 @@ class MetricFlagsInline(admin.TabularInline):
             return False
 
     def has_delete_permission(self, request, obj=None):
-        return True
+        if request.user.has_perm('poem.groupown_metric') \
+                or request.user.is_superuser:
+            return True
+        else:
+            return False
 
     def has_change_permission(self, request, obj=None):
         return True
@@ -303,7 +374,11 @@ class MetricDependancyInline(admin.TabularInline):
             return False
 
     def has_delete_permission(self, request, obj=None):
-        return True
+        if request.user.has_perm('poem.groupown_metric') \
+                or request.user.is_superuser:
+            return True
+        else:
+            return False
 
     def has_change_permission(self, request, obj=None):
         return True
@@ -319,7 +394,36 @@ class MetricConfigForm(ModelForm):
         return super(MetricConfigForm, self).clean()
 
 
-class MetricConfigInlineFormSet(BaseInlineFormSet):
+def isvalid_metricconfig(data):
+    """
+        Validation for Active metric types. All keys need to have values.
+    """
+    sh = SharedInfo()
+    metric_type = sh.get_metrictype().name.lower()
+
+    if metric_type == 'active':
+        needed_keys = ['interval', 'maxCheckAttempts', 'path', 'retryInterval', 'timeout']
+
+        found_keys = set([d.get('key', None) for d in data])
+        diff = set(needed_keys).difference(found_keys)
+        if diff:
+            raise ValidationError('Missing fields %s' % ', '.join(diff))
+
+        missing_values = list()
+        for d in data:
+            key = d.get('key', 0)
+            if key and key in needed_keys:
+                v = d.get('value', 0)
+                if not v:
+                    missing_values.append(key)
+
+        if missing_values:
+            raise ValidationError('Missing values for fields %s' % ', '.join(missing_values))
+
+    return True
+
+
+class MetricConfigInlineAddFormSet(BaseInlineFormSet):
     """
     Formset that manually populates fields for form.
     """
@@ -328,7 +432,23 @@ class MetricConfigInlineFormSet(BaseInlineFormSet):
             {'key': 'interval'}, {'key': 'maxCheckAttempts'}, {'key': 'path'}, {'key': 'retryInterval'}, \
             {'key': 'timeout'},
         ]
-        super(MetricConfigInlineFormSet, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
+
+    def clean(self):
+        super().clean()
+        data = list()
+        for form in self.forms:
+            data.append(form.cleaned_data)
+        return isvalid_metricconfig(data)
+
+
+class MetricConfigInlineChangeFormSet(BaseInlineFormSet):
+    def clean(self):
+        super().clean()
+        data = list()
+        for form in self.forms:
+            data.append(form.cleaned_data)
+        isvalid_metricconfig(data)
 
 
 class MetricConfigInline(admin.TabularInline):
@@ -336,6 +456,7 @@ class MetricConfigInline(admin.TabularInline):
     verbose_name = 'Config'
     verbose_name_plural = 'Config'
     form = MetricConfigForm
+    formset = MetricConfigInlineChangeFormSet
     template = 'admin/edit_inline/tabular-attrs.html'
 
     def has_add_permission(self, request):
@@ -378,14 +499,18 @@ class MetricFileParameterInline(admin.TabularInline):
             return False
 
     def has_delete_permission(self, request, obj=None):
-        return True
+        if request.user.has_perm('poem.groupown_metric') \
+                or request.user.is_superuser:
+            return True
+        else:
+            return False
 
     def has_change_permission(self, request, obj=None):
         return True
 
 
 class MetricParentForm(ModelForm):
-    value = CharField(max_length=255)
+    value = make_ajax_field(Metric, 'name', 'hintsmetricsall')
 
     def clean(self):
         update_field('parent', self.cleaned_data, MetricParent)
@@ -449,9 +574,6 @@ class MetricProbeExecutableInline(admin.TabularInline):
 
 
 class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
-    """
-    POEM admin core class that customizes its look and feel.
-    """
     class Media:
         css = { "all" : ("/poem_media/css/sitemetrics.css",) }
 
@@ -483,7 +605,7 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
     probeversion_url.short_description = 'Probeversion'
 
     list_display = ('name', 'tag', 'probeversion_url', 'group')
-    fieldsets = ((None, {'classes' : ['tagging'], 'fields' : (('name', 'probeversion', 'tag'), 'group')}),)
+    fieldsets = ((None, {'classes' : ['tagging'], 'fields' : (('name', 'probeversion', 'tag'), ('mtype', 'group'))}),)
     list_filter = ('tag', GroupMetricsListFilter,)
     inlines = (MetricProbeExecutableInline, MetricConfigInline,
                MetricAttributeInline, MetricDependancyInline,
@@ -512,9 +634,10 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
                 if (request.path.endswith('change/')
                         or request.path.endswith('clone/')):
                     inline.extra = 0
+                    inline.formset = MetricConfigInlineChangeFormSet
                 else:
                     inline.extra = 5
-                    inline.formset = MetricConfigInlineFormSet
+                    inline.formset = MetricConfigInlineAddFormSet
             yield inline.get_formset(request, obj), inline
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
@@ -572,6 +695,8 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
                                                        content_type_id=ct.id)
         ids = map(lambda x: x.revision_id, lver)
         reversion.models.Revision.objects.filter(pk__in=ids).delete()
+
+        Metrics.objects.get(name=obj.name).delete()
 
         return super(MetricAdmin, self).delete_model(request, obj)
 
@@ -668,9 +793,19 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
                 formset.verbose_name = verbose_name[values[0]]
             custom_formsets.append(formset)
 
+        undisplay_passive = list(['probeexecutable', 'attribute', 'dependancy',
+                                  'config', 'parameter', 'files',
+                                  'fileparameter']);
+
+        # only flags and parent form for Passive metric type
+        # mtype = 2 (Passive) is hardcoded in fixture
+        if data['mtype'] == 2:
+            custom_formsets = filter(lambda f: f.prefix not in undisplay_passive, custom_formsets)
+
         custom_adminform = RevisionTemplateMetricForm(initial={'name': data['name'],
                                                                'tag': data['tag'],
                                                                'probeversion': data['probeversion'],
+                                                               'mtype': data['mtype'],
                                                                'group': data['group']})
 
         new_context = {'cursel': currev,

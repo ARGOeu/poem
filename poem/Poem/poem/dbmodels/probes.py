@@ -49,20 +49,11 @@ class GroupOfProbes(models.Model):
     def natural_key(self):
         return (self.name,)
 
-wasprobes = []
-def gpprobes_presave(sender, instance, **kwargs):
-    global wasprobes
-    if instance.pk:
-        wasprobes = copy.copy(instance.probes.values_list('pk', flat=True))
-    else:
-        wasprobes = []
-pre_save.connect(gpprobes_presave, sender=GroupOfProbes)
 def gpprobes_m2m(sender, action, pk_set, instance, **kwargs):
-    global wasprobes
-    if action == 'post_clear':
-        for m in wasprobes:
-            Probe.objects.filter(nameversion=m).update(group='')
+    if action == 'post_remove':
+        for m in pk_set:
+            Probe.objects.filter(id=m).update(group='')
     if action == 'post_add':
         for m in pk_set:
-            Probe.objects.filter(nameversion=m).update(group=instance.name)
+            Probe.objects.filter(id=m).update(group=instance.name)
 m2m_changed.connect(gpprobes_m2m, sender=GroupOfProbes.probes.through)
