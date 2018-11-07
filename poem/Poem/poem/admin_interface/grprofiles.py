@@ -28,5 +28,4 @@ class GroupOfProfilesAdmin(GroupAdmin):
         obj.save()
         perm = Permission.objects.get(codename__startswith='profile')
         obj.permissions.add(perm)
-
-        return
+        form.cleaned_data['profiles'].update(groupname=obj.name)
