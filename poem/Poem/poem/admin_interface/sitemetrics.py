@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.contrib import auth
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
 from django.urls import reverse
 from django.forms import ModelForm, Form, CharField, Textarea, ModelChoiceField, \
     ValidationError, ModelMultipleChoiceField, formset_factory
@@ -11,6 +11,7 @@ from django.forms.widgets import TextInput, Select
 from django.http import HttpResponse
 from django.utils.html import format_html
 from django.utils.translation import ugettext as _
+from django.utils.text import get_text_list
 from Poem.poem import widgets
 from Poem.poem.lookups import check_cache
 from Poem.poem.admin_interface.formmodel import MyModelMultipleChoiceField, MyModelChoiceField
@@ -20,12 +21,14 @@ from Poem.poem.models import Metric, Probe, UserProfile, VO, ServiceFlavour,Grou
 
 from ajax_select import make_ajax_field
 from reversion_compare.admin import CompareVersionAdmin
-from reversion.models import Version
+from reversion.models import Version, VersionQuerySet
 from reversion.admin import VersionAdmin
 import reversion
 import json
 import modelclone
 from django.forms.models import BaseInlineFormSet
+from django.contrib.admin.utils import unquote, quote
+from gettext import gettext
 
 
 class SharedInfo:
@@ -594,6 +597,154 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
             return
         else:
             raise PermissionDenied()
+
+    def get_obj_from_db(self, objname, version, object_id):
+        """Get object name from the database by its id. In case the object is
+        deleted (id = None, ObjectDoesNotExist exception), version queryset is
+        loaded for that object and object name is obtained from previous
+        version."""
+
+        objname = objname.split(' ')
+        try:
+            fieldname = eval("%s.objects.get(id=%s)" % (objname[0],
+                                                        objname[2][1:-1]
+                                                        )
+                             )
+            if objname[0] == 'MetricProbeExecutable' or objname[0] == \
+                    'MetricParent':
+                return fieldname.value
+            else:
+                return fieldname.key
+        except ObjectDoesNotExist:
+            versionset = self._order_version_queryset(
+                Version.objects.get_for_object_reference(self.model,
+                                                         object_id))
+            versionid = [i.id for i in versionset if i == version]
+            allversionid = [i.id for i in versionset]
+            olderversionid = versionset[allversionid.index(versionid[0]) + 1]
+            fieldnameold = eval("json.loads(Version.objects.get("
+                             "id=%s).serialized_data)[0]['fields']" %
+                                olderversionid.id)
+            fieldname = eval("json.loads(Version.objects.get("
+                                "id=%s).serialized_data)[0]['fields']" %
+                                version.id)
+            names = {'MetricProbeExecutable': 'probeexecutable',
+                     'MetricAttribute': 'attribute',
+                     'MetricConfig': 'config',
+                     'MetricDependancy': 'dependancy',
+                     'MetricParameter': 'parameter',
+                     'MetricFlags': 'flags',
+                     'MetricFiles': 'files',
+                     'MetricFileParameter': 'fileparameter',
+                     'MetricParent': 'parent'}
+            value = json.loads(fieldname[names[objname[0]]])
+            valueold = json.loads(fieldnameold[names[objname[0]]])
+            diff_fieldname = list(set(valueold) - set(value))[0].split(' ')[0]
+            return diff_fieldname
+
+    def get_new_comment(self, version, object_id):
+        """
+        Function was made as modified version of LogEntry.get_change_message(
+        ) function. It makes string change messages from default json in
+        reversion_revision database. get_obj_from_db() function is used to
+        get the names of changed attributes from database.
+        """
+        new_comment = version.revision.comment
+        if new_comment and new_comment[0] == '[':
+            try:
+                new_comment = json.loads(new_comment)
+            except json.JSONDecodeError:
+                return new_comment
+
+        if 'Derived' in new_comment:
+            pass
+
+        else:
+            messages = []
+            for sub_message in new_comment:
+                if 'added' in sub_message:
+                    if sub_message['added']:
+                        sub_message['added']['name'] = gettext(sub_message[
+                                                                   'added']
+                                                               ['name'])
+                        messages.append('Added %s "%s".'
+                                        % (
+                                            sub_message['added']['name'],
+                                            self.get_obj_from_db(
+                                                gettext(
+                                                    sub_message['added']
+                                                    ['object']
+                                                ), version, object_id
+                                            )
+                                        )
+                                        )
+                    else:
+                        messages.append('Initial version.')
+                        break
+
+                elif 'changed' in sub_message:
+                    sub_message['changed']['fields'] = get_text_list\
+                        (
+                            sub_message['changed']['fields'], gettext('and')
+                        )
+                    if 'name' in sub_message['changed']:
+                        sub_message['changed']['name'] = gettext(
+                            sub_message['changed']['name']
+                        )
+                        messages.append('Changed %s for %s "%s".'
+                                        % (sub_message['changed']['fields'],
+                                           gettext(
+                                               sub_message['changed']['name']
+                                           ),
+                                           self.get_obj_from_db(gettext(
+                                               sub_message['changed']['object']
+                                           ), version, object_id)))
+                    else:
+                        messages.append(gettext('Changed {fields}.').format(
+                            **sub_message['changed']
+                        )
+                        )
+
+                elif 'deleted' in sub_message:
+                    sub_message['deleted']['name'] = gettext(
+                        sub_message['deleted']['name']
+                    )
+                    messages.append(
+                        'Deleted %s "%s".' % (
+                            sub_message['deleted']['name'],
+                            self.get_obj_from_db(gettext(sub_message['deleted'][
+                                                     'object']), version,
+                                                 object_id)
+                        )
+                    )
+
+            new_comment = ' '.join(msg[0].upper() + msg[1:] for msg in messages)
+
+        return new_comment or gettext('No fields changed.')
+
+
+    def _get_action_list(self, request, object_id, extra_context=None):
+        """Adding new entry to action_list (used for history_view). It is
+        overriding the method in reversion_compare/admin.py"""
+        object_id = unquote(object_id)
+        opts = self.model._meta
+        action_list = [
+            {
+                "version": version,
+                "revision": version.revision,
+                "url": reverse("%s:%s_%s_revision" % (self.admin_site.name,
+                                                      opts.app_label,
+                                                      opts.model_name),
+                               args=(quote(version.object_id), version.id)),
+                "new_comment": self.get_new_comment(version, object_id),
+            }
+            for version in self._order_version_queryset(
+                Version.objects.get_for_object_reference(self.model,
+                                                         object_id,
+                                                         ).select_related(
+                    "revision__user"))
+        ]
+        return action_list
 
     def get_row_css(self, obj, index):
         if not obj.valid:
