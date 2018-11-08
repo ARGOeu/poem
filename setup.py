@@ -18,14 +18,14 @@ def get_files(install_prefix, directory):
 poem_media_files = get_files("usr/share", "poem/media") + get_files("usr/share/", "poem/static")
 
 setup(name=NAME,
-    version='2.0.0',
+    version='2.0.1',
     description='Profile, Probes and Metric Configuration Management (POEM) for ARGO Monitoring framework.',
     author='SRCE',
     author_email='dvrcic@srce.hr',
     license='Apache License 2.0',
     long_description=open('README.md').read(),
     long_description_content_type = 'text/markdown',
-    install_requires=['django>=2',
+    install_requires=['django>=2.0,<2.1',
                       'django-ajax-selects',
                       'django-reversion',
                       'djangosaml2',
