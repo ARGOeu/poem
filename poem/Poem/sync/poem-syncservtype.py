@@ -53,8 +53,9 @@ def main():
 
         headers = dict()
         if settings.HTTPAUTH:
-            userpass = base64.b64encode(settings.HTTPUSER + ':' + settings.HTTPPASS)
-            headers={'Authorization': 'Basic ' + userpass}
+            userpass_ascii = '{0}:{1}'.format(settings.HTTPUSER, settings.HTTPPASS)
+            userpass = base64.b64encode(userpass_ascii.encode())
+            headers={'Authorization': 'Basic ' + userpass.decode()}
 
         conn.request('GET', o.path + '?' + o.query, headers=headers)
         ret = conn.getresponse().read()
