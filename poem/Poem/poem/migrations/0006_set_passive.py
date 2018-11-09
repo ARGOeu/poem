@@ -4,6 +4,19 @@ import json
 from django.contrib.contenttypes.models import ContentType
 
 
+def fill_metrictypes(apps, schema_editor):
+    """
+        Fill MetricType model to predefined values if not already filled with
+        fixtures.
+    """
+    MetricType = apps.get_model('poem', 'MetricType')
+    if MetricType.objects.count() == 0:
+        m = MetricType(name='Active')
+        m.save()
+        m = MetricType(name='Passive')
+        m.save()
+
+
 def set_versions_passive(apps, schema_editor):
     Version = apps.get_model('reversion', 'Version')
     Metric = apps.get_model('poem', 'Metric')
@@ -38,7 +51,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RunPython(fill_metrictypes),
         migrations.RunPython(set_passive),
         migrations.RunPython(set_versions_passive)
     ]
-
