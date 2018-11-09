@@ -696,7 +696,9 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
         ids = map(lambda x: x.revision_id, lver)
         reversion.models.Revision.objects.filter(pk__in=ids).delete()
 
-        Metrics.objects.get(name=obj.name).delete()
+        # Don't delete metrics for now from Metrics model that is needed by
+        # GroupAdmin
+        # Metrics.objects.get(name=obj.name).delete()
 
         return super(MetricAdmin, self).delete_model(request, obj)
 
