@@ -42,17 +42,10 @@ def get_obj_from_db(objname, object_id, version_id):
                             olderversionid.id)
         fieldname = eval("json.loads(Version.objects.get("
                          "id=%s).serialized_data)[0]['fields']" % version_id)
-        names = {'MetricProbeExecutable': 'probeexecutable',
-                 'MetricAttribute': 'attribute',
-                 'MetricConfig': 'config',
-                 'MetricDependancy': 'dependancy',
-                 'MetricParameter': 'parameter',
-                 'MetricFlags': 'flags',
-                 'MetricFiles': 'files',
-                 'MetricFileParameter': 'fileparameter',
-                 'MetricParent': 'parent'}
-        value = json.loads(fieldname[names[objname[0]]])
-        valueold = json.loads(fieldnameold[names[objname[0]]])
+        if objname[0].startswith('Metric'):
+            objname[0] = objname[0][6:]
+        value = json.loads(fieldname[objname[0].lower()])
+        valueold = json.loads(fieldnameold[objname[0].lower()])
         diff_fieldname = list(set(valueold) - set(value))[0].split(' ')[0]
 
         return diff_fieldname
