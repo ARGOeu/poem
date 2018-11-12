@@ -28,7 +28,6 @@ import json
 import modelclone
 from django.forms.models import BaseInlineFormSet
 from django.contrib.admin.utils import unquote, quote
-from Poem.poem.admin_interface.plaintext_comments import get_new_comment
 
 
 class SharedInfo:
