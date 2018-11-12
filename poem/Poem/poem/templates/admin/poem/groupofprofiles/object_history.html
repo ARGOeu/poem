@@ -1,5 +1,6 @@
 {% extends "admin/base_site.html" %}
 {% load i18n admin_urls %}
+{% load plaintext_comments %}
 
 {% block breadcrumbs %}
 <div class="breadcrumbs">
@@ -34,7 +35,7 @@
         <tr>
             <th scope="row">{{ action.action_time|date:"DATETIME_FORMAT" }}</th>
             <td>{{ action.user.get_username }}{% if action.user.get_full_name %} ({{ action.user.get_full_name }}){% endif %}</td>
-            <td>{{ action.change_message }}</td>
+            <td>{% get_new_comment action.change_message %}</td>
         </tr>
         {% endfor %}
         </tbody>
