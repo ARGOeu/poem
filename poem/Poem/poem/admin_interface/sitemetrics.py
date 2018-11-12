@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.contrib import auth
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
+from django.core.exceptions import PermissionDenied
 from django.urls import reverse
 from django.forms import ModelForm, Form, CharField, Textarea, ModelChoiceField, \
     ValidationError, ModelMultipleChoiceField, formset_factory
@@ -27,7 +27,6 @@ import reversion
 import json
 import modelclone
 from django.forms.models import BaseInlineFormSet
-from django.contrib.admin.utils import unquote, quote
 
 
 class SharedInfo:
@@ -722,29 +721,6 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
             return
         else:
             raise PermissionDenied()
-
-    def _get_action_list(self, request, object_id, extra_context=None):
-        """Adding new entry to action_list (used for history_view). It is
-        overriding the method in reversion_compare/admin.py"""
-        object_id = unquote(object_id)
-        opts = self.model._meta
-        action_list = [
-            {
-                "version": version,
-                "revision": version.revision,
-                "url": reverse("%s:%s_%s_revision" % (self.admin_site.name,
-                                                      opts.app_label,
-                                                      opts.model_name),
-                               args=(quote(version.object_id), version.id)),
-                "new_comment": get_new_comment(version, self.model, object_id),
-            }
-            for version in self._order_version_queryset(
-                Version.objects.get_for_object_reference(self.model,
-                                                         object_id,
-                                                         ).select_related(
-                    "revision__user"))
-        ]
-        return action_list
 
     def get_row_css(self, obj, index):
         if not obj.valid:
