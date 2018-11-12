@@ -76,9 +76,6 @@
             </div>
         {% endfor %}
 
-        <h4>{% trans "Edit comment:" %}</h4>
-        <blockquote>{{ version2.revision.comment|default:"(there exist not comment)" }}</blockquote>
-
         {% if has_unfollowed_fields %}
         <h4 class="follow">{% trans "Note:" %}</h4>
         <p class="follow">
