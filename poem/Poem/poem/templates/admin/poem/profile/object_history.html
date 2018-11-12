@@ -34,7 +34,7 @@
         <tr>
             <th scope="row">{{ action.action_time|date:"DATETIME_FORMAT" }}</th>
             <td>{{ action.user.get_username }}</td>
-            <td>{{ action.change_message|get_new_comment }}</td>
+            <td>{% get_new_comment action.change_message %}</td>
         </tr>
         {% endfor %}
         </tbody>
