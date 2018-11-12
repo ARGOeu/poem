@@ -68,7 +68,7 @@ class ProbeLookup(LookupChannel):
         ct = ContentType.objects.get_for_model(Probe)
         proberevs = self.model.objects.filter(content_type_id=ct.id)
         match = [proberev for proberev in proberevs if q.lower() in proberev.object_repr.lower()]
-        return match
+        return sorted(match, key=lambda m: m.object_repr.lower())
 
 
 class TagsLookup(LookupChannel):

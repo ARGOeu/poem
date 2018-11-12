@@ -73,9 +73,10 @@ class MyFilteredSelectMultiple(FilteredSelectMultiple):
             obj = self.name_to_model[self.verbose_name]
             values_selected = [(sel, obj.objects.get(id=int(sel)).name) for sel in value]
             # sort selected values by name
-            values_sorted = sorted(values_selected, key=lambda v: v[1])
+            values_sorted = sorted(values_selected, key=lambda v: v[1].lower())
             hs = html.split('\n')
-            selected = ['<option value="%s" selected="selected">' % (str(v[0])) + v[1] + '</option>' for v in values_sorted]
+            selected = ['<option value="%s" selected="selected">' % (str(v[0])) + \
+                        v[1] + '</option>' for v in values_sorted]
             hs = hs[:-1] + selected + ['</select>']
 
             return u'/n'.join(filter(lambda x: 9*'-' not in x, hs))
