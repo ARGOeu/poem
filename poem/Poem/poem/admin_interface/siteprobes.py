@@ -4,14 +4,12 @@ from django.forms.widgets import TextInput, Select
 from django.contrib import admin
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.admin.utils import unquote, quote
 from django.core.exceptions import PermissionDenied
 from django.urls import reverse
 from django.utils.html import format_html
 
 from Poem.poem.admin_interface.formmodel import MyModelMultipleChoiceField
 from Poem.poem.models import MetricInstance, Probe, UserProfile, VO, ServiceFlavour, GroupOfProbes, CustUser, ExtRevision
-from Poem.poem.admin_interface.plaintext_comments import get_new_comment
 
 from reversion_compare.admin import CompareVersionAdmin
 from reversion.admin import VersionAdmin
@@ -271,29 +269,6 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
                 Probe.objects.filter(pk=pk).update(**new_serialized_field)
         else:
             raise PermissionDenied()
-
-    def _get_action_list(self, request, object_id, extra_context=None):
-        """Adding new entry to action_list (used for history_view). It is
-        overriding the method in reversion_compare/admin.py"""
-        object_id = unquote(object_id)
-        opts = self.model._meta
-        action_list = [
-            {
-                "version": version,
-                "revision": version.revision,
-                "url": reverse("%s:%s_%s_revision" % (self.admin_site.name,
-                                                      opts.app_label,
-                                                      opts.model_name),
-                               args=(quote(version.object_id), version.id)),
-                "new_comment": get_new_comment(version, self.model, object_id),
-            }
-            for version in self._order_version_queryset(
-                Version.objects.get_for_object_reference(self.model,
-                                                         object_id,
-                                                         ).select_related(
-                    "revision__user"))
-        ]
-        return action_list
 
     def get_row_css(self, obj, index):
         if not obj.valid:
