@@ -123,4 +123,7 @@ def get_new_comment(comment, obj_id=None, version_id=None):
 
         new_comment = ' '.join(msg[0].upper() + msg[1:] for msg in messages)
 
+    if new_comment == '':
+        new_comment = 'Initial version.'
+
     return new_comment or gettext('No fields changed.')
