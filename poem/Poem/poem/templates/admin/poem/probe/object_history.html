@@ -1,5 +1,6 @@
 {% extends "admin/object_history.html" %}
 {% load i18n admin_urls staticfiles %}
+{% load plaintext_comments %}
 
 {% block usertools %}
   <div id="user-tools">
@@ -84,7 +85,7 @@
                                         {{action.revision.user.username}}
                                     {% endif %}
                                 </td>
-                                <td>{{action.revision.comment|default:""}}</td>
+                                <td>{% get_new_comment action.revision.comment action.version.object_id action.version.id %}</td>
                             </tr>
                         {% endfor %}
                     </tbody>

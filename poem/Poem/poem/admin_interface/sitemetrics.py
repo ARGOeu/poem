@@ -21,7 +21,7 @@ from Poem.poem.models import Metric, Probe, UserProfile, VO, ServiceFlavour,Grou
 
 from ajax_select import make_ajax_field
 from reversion_compare.admin import CompareVersionAdmin
-from reversion.models import Version
+from reversion.models import Version, VersionQuerySet
 from reversion.admin import VersionAdmin
 import reversion
 import json
