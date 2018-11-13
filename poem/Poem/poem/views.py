@@ -112,7 +112,8 @@ class MetricsInGroup(View):
     def get(self, request):
         gr = request.GET.get('group')
         metrics = models.Metrics.objects.filter(groupofmetrics__name__exact=gr).values_list('name', flat=True)
-        return HttpResponse(json.dumps({'result': [met for met in metrics]}), content_type='application/json')
+        results = sorted(metrics, key=lambda m: m.lower())
+        return HttpResponse(json.dumps({'result': results}), content_type='application/json')
 
 class Metrics(View):
     def get(self, request):
