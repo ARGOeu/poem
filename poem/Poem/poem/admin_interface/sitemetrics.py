@@ -475,7 +475,7 @@ class MetricConfigInline(admin.TabularInline):
 
 class MetricFileParameterForm(ModelForm):
     key = CharField(label='key')
-    value = CharField(label='value')
+    value = CharField(label='value', required=False)
 
     def clean(self):
         update_field('fileparameter', self.cleaned_data, MetricFileParameter)
