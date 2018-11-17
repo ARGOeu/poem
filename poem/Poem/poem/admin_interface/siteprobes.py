@@ -278,7 +278,7 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
     def has_add_permission(self, request):
         if request.user.is_superuser and GroupOfProbes.objects.count():
             return True
-        if request.user.groupsofprobes.count():
+        if request.user.is_authenticated and request.user.groupsofprobes.count():
             return True
         else:
             return False

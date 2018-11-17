@@ -29,18 +29,29 @@ class MyAdminSite(AdminSite):
     def login(self, request, extra_context=None):
         extra_context = extra_context if extra_context else dict()
         extra_context.update(samlloginstring=SAMLLOGINSTRING)
-        return super(MyAdminSite, self).login(request, extra_context)
+        return super().login(request, extra_context)
 
     def app_index(self, request, app_label, extra_context=None):
         if request.user.is_authenticated:
             if request.user.is_superuser:
-                return super(MyAdminSite, self).app_index(request, app_label, extra_context)
+                return super().app_index(request, app_label, extra_context)
             else:
                 return HttpResponseRedirect(request.path + 'profile')
 
+    def get_urls(self):
+        from django.urls import path
+
+        urls = super().get_urls()
+        my_urls = [path('poem/public_probe/', self.public_view)]
+        return my_urls + urls
+
+    def public_view(self, request):
+        context = dict(self.each_context(request))
+        return self._registry[Probe].changelist_view(request, extra_context=context)
+
     @never_cache
     def logout(self, request, extra_context=None):
-        super(MyAdminSite,self).logout(request, extra_context=extra_context)
+        super().logout(request, extra_context=extra_context)
         return HttpResponseRedirect(reverse('admin:index'))
 
 
