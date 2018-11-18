@@ -16,6 +16,8 @@ from Poem.poem.admin_interface.siteprofile import *
 from Poem.poem.admin_interface.siteprobes import *
 from Poem.poem.admin_interface.sitemetrics import *
 
+import re
+
 class MyAdminSite(AdminSite):
     @never_cache
     def index(self, request, extra_context=None):
@@ -29,6 +31,19 @@ class MyAdminSite(AdminSite):
     def login(self, request, extra_context=None):
         extra_context = extra_context if extra_context else dict()
         extra_context.update(samlloginstring=SAMLLOGINSTRING)
+
+        prev = request.META.get('HTTP_REFERER', None)
+        if prev:
+            if prev.endswith('public_probe/') or prev.endswith('public_probe/?all='):
+                context = dict(self.each_context(request))
+                next_url = request.GET.get('next')
+                objid = re.search('([0-9]+)', next_url)
+                if objid:
+                    objid = objid.group(1)
+                    url = reverse('admin:poem_probe_change', args=(objid,))
+                    if next_url == url:
+                        return self._registry[Probe].change_view(request, objid, form_url='', extra_context=context)
+
         return super().login(request, extra_context)
 
     def app_index(self, request, app_label, extra_context=None):
@@ -40,7 +55,6 @@ class MyAdminSite(AdminSite):
 
     def get_urls(self):
         from django.urls import path
-
         urls = super().get_urls()
         my_urls = [path('poem/public_probe/', self.public_view)]
         return my_urls + urls

@@ -44,7 +44,8 @@ class GroupOfProbesInlineChangeForm(ModelForm):
     def __init__(self, *args, **kwargs):
         rquser = SharedInfo()
         self.user = rquser.getuser()
-        self.usergroups = self.user.groupsofprobes.all()
+        if self.user.is_authenticated:
+            self.usergroups = self.user.groupsofprobes.all()
         super(GroupOfProbesInlineChangeForm, self).__init__(*args, **kwargs)
 
     qs = GroupOfProbes.objects.all()
@@ -97,7 +98,7 @@ class GroupOfProbesInline(admin.TabularInline):
         return True
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if not request.user.is_superuser:
+        if request.user.is_authenticated and not request.user.is_superuser:
             lgi = request.user.groupsofprobes.all().values_list('id', flat=True)
             kwargs["queryset"] = GroupOfProbes.objects.filter(pk__in=lgi)
         return super(GroupOfProbesInline, self).formfield_for_foreignkey(db_field, request, **kwargs)
@@ -215,7 +216,7 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
 
     def get_form(self, request, obj=None, **kwargs):
         rquser = SharedInfo(requser=request.user)
-        if not request.user.is_superuser:
+        if request.user.is_authenticated and not request.user.is_superuser:
             ug = request.user.groupsofprobes.all().values_list('name', flat=True)
             if obj and obj.group in ug:
                 self._groupown_turn(request.user, 'add')
