@@ -57,9 +57,8 @@ class MyAdminSite(AdminSite):
 
     def get_urls(self):
         """
-        Add public Probe changelist_view, that is bypass permission checks
-        implied in admin_view()
-
+        Add public Probe changelist_view, that bypass permission checks implied
+        in admin_view()
         """
         from django.urls import path
         urls = super().get_urls()
