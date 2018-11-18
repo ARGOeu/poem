@@ -27,9 +27,11 @@ class Probe(models.Model):
     def __str__(self):
         return u'%s (%s)' % (self.name, self.version)
 
+
 @receiver(pre_save, sender=Probe)
 def probe_handler(sender, instance, **kwargs):
     instance.nameversion = u'%s (%s)' % (str(instance.name), str(instance.version))
+
 
 class GroupOfProbes(models.Model):
     name = models.CharField(_('name'), max_length=80, unique=True)

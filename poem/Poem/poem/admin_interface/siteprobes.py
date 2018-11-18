@@ -8,7 +8,7 @@ from django.core.exceptions import PermissionDenied
 from django.urls import reverse
 from django.utils.html import format_html
 
-from Poem.poem.models import Probe, GroupOfProbes, ExtRevision
+from Poem.poem.models import Probe, GroupOfProbes, ExtRevision, Metric
 
 from reversion_compare.admin import CompareVersionAdmin
 import reversion
@@ -317,6 +317,8 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
                                                        content_type_id=ct.id)
         for v in lver:
             reversion.models.Revision.objects.get(pk=v.revision_id).delete()
+
+        Metric.objects.filter(probeversion=obj.nameversion).update(probeversion='')
 
         return super(ProbeAdmin, self).delete_model(request, obj)
 

@@ -594,7 +594,7 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
                 return queryset
 
     def probeversion_url(self, obj):
-        if obj and obj.probeversion:
+        if obj and obj.probeversion and obj.probekey:
             return format_html('<a href="{0}">{1}</a>',
                                reverse('admin:poem_probe_revision',
                                        args=(obj.probekey.object_id,
