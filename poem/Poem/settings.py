@@ -112,7 +112,6 @@ INSTALLED_APPS = (
 )
 
 MIDDLEWARE = [
-    'Poem.poem.middleware.PublicPage',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',

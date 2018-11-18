@@ -32,6 +32,8 @@ class MyAdminSite(AdminSite):
         extra_context = extra_context if extra_context else dict()
         extra_context.update(samlloginstring=SAMLLOGINSTRING)
 
+        # If we are coming from /poem/public_probe/ and ask for individual
+        # change_view for Probe, then proceed. Otherwise, we must authenticate.
         prev = request.META.get('HTTP_REFERER', None)
         if prev:
             if prev.endswith('public_probe/') or prev.endswith('public_probe/?all='):
@@ -54,12 +56,17 @@ class MyAdminSite(AdminSite):
                 return HttpResponseRedirect(request.path + 'profile')
 
     def get_urls(self):
+        """
+        Add public Probe changelist_view, that is bypass permission checks
+        implied in admin_view()
+
+        """
         from django.urls import path
         urls = super().get_urls()
-        my_urls = [path('poem/public_probe/', self.public_view)]
+        my_urls = [path('poem/public_probe/', self.publicprobe_view)]
         return my_urls + urls
 
-    def public_view(self, request):
+    def publicprobe_view(self, request):
         context = dict(self.each_context(request))
         return self._registry[Probe].changelist_view(request, extra_context=context)
 
