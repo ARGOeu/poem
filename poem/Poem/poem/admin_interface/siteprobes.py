@@ -323,13 +323,26 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
         return super(ProbeAdmin, self).delete_model(request, obj)
 
     def revision_view(self, request, object_id, version_id, extra_context=None):
-        currev = reversion.models.Version.objects.get(pk=version_id).object_repr
+        """
+        Override original view to remove original title
+        """
+        currev = reversion.models.Version.objects.get(pk=version_id)
         datecreated = reversion.models.Revision.objects.get(pk=version_id).date_created
+
+        new_context = {'title': currev.object_repr}
         if extra_context:
-            extra_context.update({'cursel': currev, 'datecreated': datecreated})
+            extra_context.update({'cursel': currev.object_repr, 'datecreated': datecreated})
+            extra_context.update(new_context)
         else:
-            extra_context = {'cursel': currev, 'datecreated': datecreated}
-        return super(ProbeAdmin, self).revision_view(request, object_id, version_id, extra_context)
+            extra_context = {'cursel': currev.object_repr, 'datecreated': datecreated}
+            extra_context.update(new_context)
+
+        return self._reversion_revisionform_view(
+            request,
+            currev,
+            self._reversion_get_template_list("revision_form.html"),
+            extra_context,
+        )
 
 
 reversion.register(Probe, exclude=["nameversion", "datetime"])
