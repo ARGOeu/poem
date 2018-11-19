@@ -9,7 +9,7 @@ YESNO_CHOICE=((u'Y', u'Yes'), (u'N', u'No'), )
 
 class Probe(models.Model):
     name = models.CharField(max_length=128, null=False,
-                            help_text='Name of the probe.')
+                            help_text='Name of the probe.', unique=True)
     version = models.CharField(max_length=28, help_text='Version of the probe.')
     nameversion = models.CharField(max_length=128, null=False, help_text='Name, version tuple.')
     description = models.CharField(max_length=1024)
@@ -27,9 +27,11 @@ class Probe(models.Model):
     def __str__(self):
         return u'%s (%s)' % (self.name, self.version)
 
+
 @receiver(pre_save, sender=Probe)
 def probe_handler(sender, instance, **kwargs):
     instance.nameversion = u'%s (%s)' % (str(instance.name), str(instance.version))
+
 
 class GroupOfProbes(models.Model):
     name = models.CharField(_('name'), max_length=80, unique=True)

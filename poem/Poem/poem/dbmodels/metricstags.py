@@ -69,7 +69,7 @@ class Metric(models.Model):
     tag = models.ForeignKey(Tags, on_delete=models.CASCADE)
     mtype = models.ForeignKey(MetricType, on_delete=models.CASCADE)
     probeversion = models.CharField(max_length=128)
-    probekey = models.ForeignKey(Version, blank=True, null=True, on_delete=models.CASCADE)
+    probekey = models.ForeignKey(Version, blank=True, null=True, on_delete=models.SET_NULL)
     group = models.ForeignKey(GroupOfMetrics, null=True, on_delete=models.CASCADE)
     parent = models.CharField(max_length=128)
     probeexecutable = models.CharField(max_length=128)

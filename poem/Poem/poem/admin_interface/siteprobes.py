@@ -1,6 +1,6 @@
 from django.db import transaction
 from django.forms import ModelForm, CharField, Textarea, ValidationError, ModelChoiceField, BooleanField
-from django.forms.widgets import TextInput, Select
+from django.forms.widgets import TextInput
 from django.contrib import admin
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
@@ -8,14 +8,14 @@ from django.core.exceptions import PermissionDenied
 from django.urls import reverse
 from django.utils.html import format_html
 
-from Poem.poem.admin_interface.formmodel import MyModelMultipleChoiceField
-from Poem.poem.models import MetricInstance, Probe, UserProfile, VO, ServiceFlavour, GroupOfProbes, CustUser, ExtRevision
+from Poem.poem.models import Probe, GroupOfProbes, ExtRevision, Metric
 
 from reversion_compare.admin import CompareVersionAdmin
-from reversion.admin import VersionAdmin
 import reversion
 from reversion.models import Version
+
 import json
+
 
 class SharedInfo:
     def __init__(self, requser=None, grname=None):
@@ -40,6 +40,7 @@ class SharedInfo:
         else:
             return None
 
+
 class GroupOfProbesInlineChangeForm(ModelForm):
     def __init__(self, *args, **kwargs):
         rquser = SharedInfo()
@@ -61,6 +62,7 @@ class GroupOfProbesInlineChangeForm(ModelForm):
             raise ValidationError("You are not member of group %s." % (str(groupsel)))
         return groupsel
 
+
 class GroupOfProbesInlineAddForm(ModelForm):
     def __init__(self, *args, **kwargs):
         super(GroupOfProbesInlineAddForm, self).__init__(*args, **kwargs)
@@ -74,6 +76,7 @@ class GroupOfProbesInlineAddForm(ModelForm):
         groupsel = self.cleaned_data['groupofprobes']
         gr = SharedInfo(grname=groupsel)
         return groupsel
+
 
 class GroupOfProbesInline(admin.TabularInline):
     model = GroupOfProbes.probes.through
@@ -104,7 +107,7 @@ class GroupOfProbesInline(admin.TabularInline):
         return super(GroupOfProbesInline, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
 
-class ProbeForm(ModelForm):
+class ProbeAddForm(ModelForm):
     """
     Connects profile attributes to autocomplete widget (:py:mod:`poem.widgets`). Also
     adds media and does basic sanity checking for input.
@@ -140,7 +143,7 @@ class ProbeForm(ModelForm):
     datetime = CharField(help_text='Time when probe is added', max_length=64, required=False)
 
     def clean(self):
-        cleaned_data = super(ProbeForm, self).clean()
+        cleaned_data = super().clean()
         new_ver = cleaned_data['new_version']
         ver = cleaned_data['version']
         name = cleaned_data['name']
@@ -154,9 +157,22 @@ class ProbeForm(ModelForm):
 
         return cleaned_data
 
+
+class ProbeChangeForm(ProbeAddForm):
+    """
+    Form rendered on change_view and derived from ProbeAddForm with name field
+    kept readonly. If user wants to change the name of probe, he must create
+    new one.
+    """
+    name = CharField(help_text='Name of this probe.',
+                     max_length=100,
+                     widget=TextInput(attrs={'maxlength': 100, 'size': 45, 'readonly': 'readonly'}),
+                     label='Name')
+
+
 class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
     """
-    POEM admin core class that customizes its look and feel.
+    Probe admin core class that customizes its look and feel.
     """
     class Media:
         css = { "all" : ("/poem_media/css/siteprobes.css",) }
@@ -185,12 +201,10 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
         return format_html('<a href="{0}">{1}</a>', reverse('admin:poem_probe_history', args=(obj.id,)), num)
     num_versions.short_description = '# versions'
 
-
     list_display = ('name', 'num_versions', 'description', groupname)
     list_filter= (GroupProbesListFilter, )
     search_fields = ('name',)
     inlines = (GroupOfProbesInline, )
-    form = ProbeForm
     actions = None
     list_per_page = 20
 
@@ -225,10 +239,12 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
             else:
                 self._groupown_turn(request.user, 'del')
         if obj:
+            self.form = ProbeChangeForm
             self.fieldsets = ((None, {'classes': ['infoone'], 'fields': (('name', 'version', 'new_version',), 'datetime', 'user', )}),
                               (None, {'classes': ['infotwo'], 'fields': ('repository', 'docurl', 'description','comment',)}),)
             self.readonly_fields = ('user', 'datetime',)
         else:
+            self.form = ProbeAddForm
             self.fieldsets = ((None, {'classes': ['infoone'], 'fields': (('name', 'version',),)}),
                               (None, {'classes': ['infotwo'], 'fields': ('repository', 'docurl', 'description','comment', )}),)
             self.readonly_fields = ()
@@ -302,16 +318,31 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
         for v in lver:
             reversion.models.Revision.objects.get(pk=v.revision_id).delete()
 
+        Metric.objects.filter(probeversion=obj.nameversion).update(probeversion='')
+
         return super(ProbeAdmin, self).delete_model(request, obj)
 
     def revision_view(self, request, object_id, version_id, extra_context=None):
-        currev = reversion.models.Version.objects.get(pk=version_id).object_repr
+        """
+        Override original view to remove original title
+        """
+        currev = reversion.models.Version.objects.get(pk=version_id)
         datecreated = reversion.models.Revision.objects.get(pk=version_id).date_created
+
+        new_context = {'title': currev.object_repr}
         if extra_context:
-            extra_context.update({'cursel': currev, 'datecreated': datecreated})
+            extra_context.update({'cursel': currev.object_repr, 'datecreated': datecreated})
+            extra_context.update(new_context)
         else:
-            extra_context = {'cursel': currev, 'datecreated': datecreated}
-        return super(ProbeAdmin, self).revision_view(request, object_id, version_id, extra_context)
+            extra_context = {'cursel': currev.object_repr, 'datecreated': datecreated}
+            extra_context.update(new_context)
+
+        return self._reversion_revisionform_view(
+            request,
+            currev,
+            self._reversion_get_template_list("revision_form.html"),
+            extra_context,
+        )
 
 
 reversion.register(Probe, exclude=["nameversion", "datetime"])
