@@ -97,7 +97,7 @@ ROOT_URLCONF = 'Poem.urls'
 APPEND_SLASH = True
 
 INSTALLED_APPS = (
-    'django.contrib.admin',
+    'django.contrib.admin.apps.SimpleAdminConfig',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.staticfiles',

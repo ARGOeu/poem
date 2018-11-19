@@ -23,6 +23,8 @@ fieldset.tagging input#id_probeversion {
 
 fieldset.tagging label {
     width: 50px;
+    font-weight: bold;
+    color: #000000;
 }
 
 fieldset.docurl label {
@@ -68,6 +70,7 @@ fieldset.tagging > div > div > p.help {
 
 .inline-group thead th {
     padding: 8px 10px;
+    color: #000000;
 }
 
 td.field-key, td.field-value {
