@@ -5,6 +5,13 @@ from django.views.generic import View
 from Poem.poem import models
 import json
 
+def none_to_emptystr(val):
+    if val is None:
+        return ''
+    else:
+        return val
+
+
 class Profiles(View):
     """
     Dumps the list of profiles available in this namespace. This API call is used by the
@@ -31,10 +38,10 @@ class Profiles(View):
         for profile in models.Profile.objects.all():
             mi = list(profile.metric_instances.all().\
                  values('metric', 'fqan', 'vo', 'service_flavour'))
-            mi = list(map(lambda e: {'metric': e['metric'],\
-                                'fqan': e['fqan'],\
-                                'vo': e['vo'],\
-                                'atp_service_type_flavour': e['service_flavour']}, mi))
+            mi = list(map(lambda e: {'metric': none_to_emptystr(e['metric']),\
+                                'fqan': none_to_emptystr(e['fqan']),\
+                                'vo': none_to_emptystr(e['vo']),\
+                                'atp_service_type_flavour': none_to_emptystr(e['service_flavour'])}, mi))
             lp.append({"name": profile.name, "atp_vo" : profile.vo,
                     "version": profile.version,
                     "description": profile.description,
@@ -94,12 +101,12 @@ class MetricsInProfiles(View):
             metrics_in_profiles = []
             for p in profiles:
                 metrics_in_profiles.append({'name' : p[0], \
-                                            'namespace' : settings.POEM_NAMESPACE, \
-                                            'description' : p[1], \
-                                            'vo' : p[2],\
-                                            'metrics' : [{'service_flavour': m['service_flavour'], \
-                                                          'name': m['metric'], \
-                                                          'fqan': m['fqan']} for m in metrics \
+                                            'namespace' : none_to_emptystr(settings.POEM_NAMESPACE), \
+                                            'description' : none_to_emptystr(p[1]), \
+                                            'vo' : none_to_emptystr(p[2]),\
+                                            'metrics' : [{'service_flavour': none_to_emptystr(m['service_flavour']), \
+                                                          'name': none_to_emptystr(m['metric']), \
+                                                          'fqan': none_to_emptystr(m['fqan'])} for m in metrics \
                                                         if m['profile__name'] == p[0]]})
             result = {"name" : vo_lookup, "profiles" : metrics_in_profiles}
 
@@ -131,7 +138,7 @@ class Metrics(View):
                         exe = models.MetricProbeExecutable.objects.get(metric=m)
                         mdict[m.name].update({'probe': exe.value})
                     except models.MetricProbeExecutable.DoesNotExist:
-                        mdict[m.name].update({'probe': None})
+                        mdict[m.name].update({'probe': ''})
 
                     mc = models.MetricConfig.objects.filter(metric=m)
                     mdict[m.name].update({'config': dict()})
@@ -172,13 +179,13 @@ class Metrics(View):
                         parent = models.MetricParent.objects.get(metric=m)
                         mdict[m.name].update({'parent': parent.value})
                     except models.MetricParent.DoesNotExist:
-                        mdict[m.name].update({'parent': None})
+                        mdict[m.name].update({'parent': ''})
 
                     if m.probekey:
                         version_fields = json.loads(m.probekey.serialized_data)
                         mdict[m.name].update({'docurl': version_fields[0]['fields']['docurl']})
                     else:
-                        mdict[m.name].update({'docurl': None})
+                        mdict[m.name].update({'docurl': ''})
 
                     api.append(mdict)
             except models.Tags.DoesNotExist:
