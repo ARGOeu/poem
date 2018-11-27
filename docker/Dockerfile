@@ -18,7 +18,7 @@ RUN yum -y install \
       xmlsec1-openssl
 RUN yum -y makecache && yum -y install \
       rh-python36-python-pip \
-			rh-python36-mod_wsgi \
+      rh-python36-mod_wsgi \
       httpd24-mod_ssl
 RUN scl enable rh-python36 'pip install -U pip' && \
     scl enable rh-python36 'pip3 install virtualenv virtualenvwrapper'
