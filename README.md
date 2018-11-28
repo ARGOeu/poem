@@ -12,7 +12,6 @@ POEM service is based on Django 2.x framework and following Django packages from
 * `django-modelclone` - simplify deriving of Profiles and Metric configuration from existing data 
 * `django-ajax-selects` - ease the creation of auto-complete fields
 * `djangosaml2` - enable SAML2 login feature
-* `mod-wsgi`, `mod-wsgi-httpd` - WSGI interface that will be automatically build and linked against needed Python 3.x version 
 
 Devel instance: https://poem-devel.argo.grnet.gr/
 
@@ -22,14 +21,12 @@ More info: http://argoeu.github.io/guides/poem
 
 ## Installation
 
-POEM web service is meant to be running with Django 2.x driven by Python 3.x on CentOS 7 and served by system-wide installation of Apache from base repository. Setting up Python virtual environment based on Python 3.x is prerequisite. Once the virtual environment is set up, installation of the service simply narrows down to creating and installing wheel package that will also pull and install all needed dependencies. Beside wheel dependencies, service also needs some packages to be installed from CentOS 7 repositories as it will be served by default Apache installation:
+POEM web service is meant to be running with Django 2.x driven by Python 3.x on CentOS 7 and served by installation of Apache from Software Collections. Setting up Python virtual environment based on Python 3.x is prerequisite. Once the virtual environment is set up, installation of the service simply narrows down to creating and installing wheel package that will also pull and install all needed dependencies. Beside wheel dependencies, service also needs some packages to be installed from CentOS 7 repositories:
 
 ```sh
 % yum -y install ca-certificates \
-		gcc git make which \
-		xmlsec1 xmlsec1-openssl \
-		httpd httpd-devel \
-		mod_ssl
+		git which \
+		xmlsec1 xmlsec1-openssl
 ```
 
 Layout of POEM web service files on the filesystem depends on the location of virtual environment. By the default, service assumes it is:
@@ -42,7 +39,7 @@ VENV = /home/pyvenv/poem/
 |------------------------------|-----------------------------------------------------|
 | Configuration - General		   | `VENV/etc/poem/poem.conf`                           |
 | Configuration - Logging		   | `VENV/etc/poem/poem_logging.conf`                   |
-| Configuration - Apache		   | `/etc/httpd/conf.d/poem.conf`                       |
+| Configuration - Apache		   | `/opt/rh/httpd24/root/etc/httpd/conf.d/`            |
 | Configuration - SAML2			   | `VENV/etc/poem/saml2.conf`                          |
 | Cron jobs									   | `/etc/cron.d/poem-clearsessions, poem-syncvosf`     |
 | Database handler					   | `VENV/bin/poem-db`                                  |
@@ -57,12 +54,18 @@ If the default location of virtual environment is inappropriate and needs to be 
 
 ### Setting up virtual environment based on Python 3.6
 
-CentOS 7 operating system delivers Python 3.6 through [Software Collections service](https://www.softwarecollections.org/en/scls/rhscl/rh-python36/) that is installed with the following instructions:
+CentOS 7 operating system delivers [Python 3.6 through Software Collections service](https://www.softwarecollections.org/en/scls/rhscl/rh-python36/) that is installed with the following instructions:
 
 ```sh
 % yum -y install centos-release-scl
 % yum -y install scl-utils
-% yum -y install rh-python36 rh-python36-python-pip rh-python36-python-devel
+% yum -y install rh-python36 rh-python36-python-pip
+```
+
+Prebuilt mod-wsgi that is linked against Python 3.6 and [Apache from Software Collections service](https://wwws.oftwarecollections.org/en/scls/rhscl/httpd24/) can be installed:
+
+```sh
+% yum -y install rh-python36-mod_wsgi httpd24-httpd httpd24-mod_ssl
 ```
 
 Once the Python 3.6 is installed, it needs to be used to create a new virtual environment named _poem_:
@@ -84,7 +87,7 @@ Afterward, the context of virtual environment can be started:
 
 As virtual environment is tied to Python 3.6 versions, it's *advisable* to put `helpers/venv_poem.sh` into `/etc/profile.d` as it will configure login shell automatically.
 
-### Installing the service
+### Installing the POEM service
 
 Creation and installation of wheel package is done in the context of virtual environment which needs to be loaded prior.
 
@@ -94,14 +97,12 @@ Creation and installation of wheel package is done in the context of virtual env
 % (poem) pip3 install dist/*
 % (poem) pip3 install -r requirements_ext.txt
 ```
-> Installation could take awhile as `mod-wsgi` needs to be compiled and linked against Python 3.6. That is also the reason why some development packages needs to be installed prior like `gcc`, `httpd-devel` and `make`.
-
-wheel package ships cron jobs and Apache configuration and as it is installed in virtual environment, it can **not** actually layout files outside of it meaning that system-wide files should be placed manually:
+wheel package ships cron jobs and Apache configuration and as it is installed in virtual environment, it can **not** actually layout files outside of it meaning that system-wide files should be placed manually or by configuration management system:
 
 ```sh
 % (poem) cp $VIRTUAL_ENV/etc/cron.d/poem-clearsessions /etc/cron.d/
 % (poem) cp $VIRTUAL_ENV/etc/cron.d/poem-syncvosf /etc/cron.d/
-% (poem) ln -f -s $VIRTUAL_ENV/etc/httpd/conf.d/poem.conf /etc/httpd/conf.d/
+% (poem) ln -f -s $VIRTUAL_ENV/etc/httpd/conf.d/poem.conf /opt/rh/httpd24/root/etc/httpd/conf.d/
 ```
 
 Next, the correct permission needs to be set on virtual environment directory:
@@ -182,7 +183,7 @@ Prerequisites for creating the empty database are:
 1) `[SUPERUSER]` section is set with desired credentials
 2) `SECRET_KEY` is generated and placed in `$VIRTUAL_ENV/etc/poem/secret_key`
 3) `$VIRTUAL_ENV` has permissions set to `apache:apache`
-4) `poem.conf` Apache configuration is presented in `/etc/httpd/conf.d/`
+4) `poem.conf` Apache configuration is presented in `/opt/rh/httpd24/root/etc/httpd/conf.d/`
 
 Once all is set, database can be created with provided tool `poem-db`:
 
@@ -217,7 +218,7 @@ Installed 3 object(s) from 1 fixture(s)
 
 Afterward, Apache server needs to be started:
 ```sh
-% systemctl start httpd.service
+% systemctl start httpd24-httpd.service
 ```
 
 POEM web application should be now served at https://fqdn/poem
