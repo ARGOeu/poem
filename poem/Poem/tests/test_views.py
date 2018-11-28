@@ -76,3 +76,106 @@ class ProfileViewsTests(TestCase):
                 }
             ]
         )
+
+class MetricsInProfilesVIewTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        profile1 = Profile.objects.create(
+            name='ARGO_MON_CRITICAL',
+            description='Central ARGO-MON_CRITICAL profile.',
+            vo='ops',
+            groupname='ARGO',
+        )
+
+        profile2 = Profile.objects.create(
+            name='ARGO_MON_BIOMED',
+            description='Central ARGO-MON profile used for Biomed VO.',
+            vo='biomed',
+            groupname='ARGO',
+        )
+
+        profile3 = Profile.objects.create(
+            name='ARGO_MON',
+            description='Central ARGO-MON profile.',
+            vo='ops',
+            groupname='ARGO',
+        )
+
+        MetricInstance.objects.create(
+            profile=profile1,
+            service_flavour='ARC-CE',
+            metric='org.nordugrid.ARC-CE-ARIS',
+            fqan=None,
+        )
+
+        MetricInstance.objects.create(
+            profile=profile1,
+            service_flavour='APEL',
+            metric='org.apel.APEL-Pub',
+            fqan=None,
+        )
+
+        MetricInstance.objects.create(
+            profile=profile2,
+            service_flavour='CREAM-CE',
+            metric='emi.cream.CREAMCE-AllowedSubmission',
+            fqan=None,
+        )
+
+        MetricInstance.objects.create(
+            profile=profile3,
+            service_flavour='APEL',
+            metric='org.apel.APEL-Pub',
+            fqan=None,
+        )
+
+    def test_get_metrics_for_a_given_vo(self):
+        response = self.client.get(
+            '/api/0.2/json/metrics_in_profiles/?vo_name=ops')
+        data = json.loads(response.content)
+
+        # sorting list of profiles because they are not always obtained in
+        # the same order from api
+        data[0]['profiles'] = sorted(data[0]['profiles'], key=lambda k: k[
+            'name'])
+        self.assertEqual(
+            data,
+            [
+                {
+                    'name': ['ops'],
+                    'profiles': [
+                        {
+                            'name': 'ARGO_MON',
+                            'namespace': 'hr.cro-ngi.TEST',
+                            'description': 'Central ARGO-MON profile.',
+                            'vo': 'ops',
+                            'metrics': [
+                                {
+                                    'service_flavour': 'APEL',
+                                    'name': 'org.apel.APEL-Pub',
+                                    'fqan': ''
+                                }
+                            ]
+                        },
+                        {
+                            'name': 'ARGO_MON_CRITICAL',
+                            'namespace': 'hr.cro-ngi.TEST',
+                            'description': 'Central ARGO-MON_CRITICAL profile.',
+                            'vo': 'ops',
+                            'metrics': [
+                                {
+                                    'service_flavour': 'APEL',
+                                    'name': 'org.apel.APEL-Pub',
+                                    'fqan': ''
+                                },
+                                {
+                                    'service_flavour': 'ARC-CE',
+                                    'name': 'org.nordugrid.ARC-CE-ARIS',
+                                    'fqan': ''
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        )
