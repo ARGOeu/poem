@@ -379,3 +379,9 @@ class MetricsInProfilesVIewTests(TestCase):
         response = self.client.get('/api/0.2/json/metrics_in_profiles/')
 
         self.assertEqual(response.content, b'Need the name of VO')
+
+    def test_get_metric_with_no_valid_vo(self):
+        response = self.client.get(
+            '/api/0.2/json/metrics_in_profiles/?vo_name=bla')
+
+        self.assertEqual(response.content, b'Not valid VO')
