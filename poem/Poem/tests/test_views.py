@@ -246,3 +246,32 @@ class MetricsInProfilesVIewTests(TestCase):
                 }
             ]
         )
+
+    def test_get_metrics_for_a_given_vo_and_a_given_profile(self):
+        response = self.client.get(
+            '/api/0.2/json/metrics_in_profiles/?vo_name=ops&profile=ARGO_MON')
+        data = json.loads(response.content)
+
+        self.assertEqual(
+            data,
+            [
+                {
+                    'name': ['ops'],
+                    'profiles': [
+                        {
+                            'name': 'ARGO_MON',
+                            'namespace': 'hr.cro-ngi.TEST',
+                            'description': 'Central ARGO-MON profile.',
+                            'vo': 'ops',
+                            'metrics': [
+                                {
+                                    'service_flavour': 'APEL',
+                                    'name': 'org.apel.APEL-Pub',
+                                    'fqan': ''
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        )
