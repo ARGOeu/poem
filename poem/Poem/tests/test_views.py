@@ -374,3 +374,8 @@ class MetricsInProfilesVIewTests(TestCase):
                 }
             ]
         )
+
+    def test_get_metrics_without_vo(self):
+        response = self.client.get('/api/0.2/json/metrics_in_profiles/')
+
+        self.assertEqual(response.content, b'Need the name of VO')
