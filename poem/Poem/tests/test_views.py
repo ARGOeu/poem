@@ -179,3 +179,70 @@ class MetricsInProfilesVIewTests(TestCase):
                 }
             ]
         )
+
+    def test_get_metrics_for_multiple_vos(self):
+        response = self.client.get(
+            '/api/0.2/json/metrics_in_profiles/?vo_name=ops&vo_name=biomed')
+        data = json.loads(response.content)
+
+        # sorting list of profiles because they are not always obtained in
+        # the same order from api
+        data[0]['profiles'] = sorted(data[0]['profiles'], key=lambda k: k[
+            'name'])
+
+        self.assertEqual(
+            data,
+            [
+                {
+                    'name': ['ops', 'biomed'],
+                    'profiles': [
+                        {
+                            'name': 'ARGO_MON',
+                            'namespace': 'hr.cro-ngi.TEST',
+                            'description': 'Central ARGO-MON profile.',
+                            'vo': 'ops',
+                            'metrics': [
+                                {
+                                    'service_flavour': 'APEL',
+                                    'name': 'org.apel.APEL-Pub',
+                                    'fqan': ''
+                                }
+                            ]
+                        },
+                        {
+                            'name': 'ARGO_MON_BIOMED',
+                            'namespace': 'hr.cro-ngi.TEST',
+                            'description': 'Central ARGO-MON profile used for '
+                                           'Biomed VO.',
+                            'vo': 'biomed',
+                            'metrics': [
+                                {
+                                    'service_flavour': 'CREAM-CE',
+                                    'name':
+                                        'emi.cream.CREAMCE-AllowedSubmission',
+                                    'fqan': ''
+                                }
+                            ]
+                        },
+                        {
+                            'name': 'ARGO_MON_CRITICAL',
+                            'namespace': 'hr.cro-ngi.TEST',
+                            'description': 'Central ARGO-MON_CRITICAL profile.',
+                            'vo': 'ops',
+                            'metrics': [
+                                {
+                                    'service_flavour': 'APEL',
+                                    'name': 'org.apel.APEL-Pub',
+                                    'fqan': ''
+                                },
+                                {
+                                    'service_flavour': 'ARC-CE',
+                                    'name': 'org.nordugrid.ARC-CE-ARIS',
+                                    'fqan': ''
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        )
