@@ -90,7 +90,11 @@ class MetricsInProfiles(View):
             profile_lookup = request.GET.getlist('profile')
         except NameError:
             pass
-        if vo_lookup:
+
+        if vo_lookup and not models.Profile.objects.filter(vo__in=vo_lookup):
+            return HttpResponse("Not valid VO")
+
+        elif vo_lookup:
             metrics = {}
             if profile_lookup:
                 metrics = models.MetricInstance.objects.filter(vo__in=vo_lookup).filter(profile__name__in=profile_lookup).values('metric', 'service_flavour', 'fqan', 'profile__name')
