@@ -123,9 +123,12 @@ class MetricsInGroup(View):
     def get(self, request):
         gr = request.GET.get('group')
         if gr:
-            metrics = models.Metrics.objects.filter(groupofmetrics__name__exact=gr).values_list('name', flat=True)
-            results = sorted(metrics, key=lambda m: m.lower())
-            return HttpResponse(json.dumps({'result': results}), content_type='application/json')
+            if models.GroupOfMetrics.objects.filter(name__exact=gr):
+                metrics = models.Metrics.objects.filter(groupofmetrics__name__exact=gr).values_list('name', flat=True)
+                results = sorted(metrics, key=lambda m: m.lower())
+                return HttpResponse(json.dumps({'result': results}), content_type='application/json')
+            else:
+                return HttpResponse("Not a valid group.")
         else:
             return HttpResponse("Need the name of group")
 
