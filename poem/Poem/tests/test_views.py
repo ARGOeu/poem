@@ -398,3 +398,54 @@ class MetricsInProfilesVIewTests(TestCase):
                 '/api/0.2/json/metrics_in_profiles/?vo_name=bla')
 
             self.assertEqual(response.content, b'Not valid VO')
+
+    def test_get_metric_with_no_namespace(self):
+        with self.settings(POEM_NAMESPACE=None):
+            response=self.client.get(
+                '/api/0.2/json/metrics_in_profiles/?vo_name=ops')
+
+            data = json.loads(response.content)
+            data[0]['profiles'] = sorted(data[0]['profiles'], key=lambda k: k[
+                'name'])
+            self.assertEqual(
+                data,
+                [
+                    {
+                        'name': ['ops'],
+                        'profiles': [
+                            {
+                                'name': 'ARGO_MON',
+                                'namespace': '',
+                                'description': 'Central ARGO-MON profile.',
+                                'vo': 'ops',
+                                'metrics': [
+                                    {
+                                        'service_flavour': 'APEL',
+                                        'name': 'org.apel.APEL-Pub',
+                                        'fqan': ''
+                                    }
+                                ]
+                            },
+                            {
+                                'name': 'ARGO_MON_CRITICAL',
+                                'namespace': '',
+                                'description': 'Central ARGO-MON_CRITICAL '
+                                               'profile.',
+                                'vo': 'ops',
+                                'metrics': [
+                                    {
+                                        'service_flavour': 'APEL',
+                                        'name': 'org.apel.APEL-Pub',
+                                        'fqan': ''
+                                    },
+                                    {
+                                        'service_flavour': 'ARC-CE',
+                                        'name': 'org.nordugrid.ARC-CE-ARIS',
+                                        'fqan': ''
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            )
