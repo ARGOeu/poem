@@ -107,7 +107,7 @@ class MetricsInProfiles(View):
                 metrics_in_profiles.append({'name' : p[0], \
                                             'namespace' : none_to_emptystr(settings.POEM_NAMESPACE), \
                                             'description' : none_to_emptystr(p[1]), \
-                                            'vo' : none_to_emptystr(p[2]),\
+                                            'vo' : p[2],\
                                             'metrics' : [{'service_flavour': none_to_emptystr(m['service_flavour']), \
                                                           'name': none_to_emptystr(m['metric']), \
                                                           'fqan': none_to_emptystr(m['fqan'])} for m in metrics \
