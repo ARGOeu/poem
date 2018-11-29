@@ -108,8 +108,8 @@ class MetricsInProfiles(View):
                                             'namespace' : none_to_emptystr(settings.POEM_NAMESPACE), \
                                             'description' : none_to_emptystr(p[1]), \
                                             'vo' : p[2],\
-                                            'metrics' : [{'service_flavour': none_to_emptystr(m['service_flavour']), \
-                                                          'name': none_to_emptystr(m['metric']), \
+                                            'metrics' : [{'service_flavour': m['service_flavour'], \
+                                                          'name': m['metric'], \
                                                           'fqan': none_to_emptystr(m['fqan'])} for m in metrics \
                                                         if m['profile__name'] == p[0]]})
             result = {"name" : vo_lookup, "profiles" : metrics_in_profiles}
