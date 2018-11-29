@@ -5,9 +5,8 @@ from Poem.poem.models import Profile, MetricInstance
 import json
 
 class ProfileViewsTests(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        profile1 = Profile.objects.create(
+    def setUp(self):
+        self.profile = Profile.objects.create(
             name='ARGO_MON',
             version='1.0',
             vo='ops',
@@ -15,31 +14,16 @@ class ProfileViewsTests(TestCase):
             groupname='ARGO',
         )
 
-        profile2 = Profile.objects.create(
-            name='ARGO_MON_BIOMED',
-            version='1.0',
-            vo='biomed',
-            description='Central ARGO-MON profile used for Biomed VO.',
-            groupname='ARGO',
-        )
+
+    def test_get_profiles(self):
 
         MetricInstance.objects.create(
-            profile=profile1,
+            profile=self.profile,
             service_flavour='APEL',
             metric='org.apel.APEL-Pub',
             vo='ops',
             fqan='fqan_text',
         )
-
-        MetricInstance.objects.create(
-            profile=profile2,
-            service_flavour='ARC-CE',
-            metric='org.nordugrid.ARC-CE-ARIS',
-            vo='biomed',
-            fqan=None,
-        )
-
-    def test_get_profiles(self):
         response = self.client.get('/api/0.2/json/profiles')
         data = json.loads(response.content)
         self.assertEqual(
@@ -58,24 +42,42 @@ class ProfileViewsTests(TestCase):
                             'atp_service_type_flavour': 'APEL'
                         }
                     ]
-                },
+                }
+            ]
+        )
+
+    def test_get_profiles_with_no_fqan(self):
+
+        MetricInstance.objects.create(
+            profile=self.profile,
+            service_flavour='APEL',
+            metric='org.apel.APEL-Pub',
+            vo='ops',
+            fqan=None,
+        )
+        response = self.client.get('/api/0.2/json/profiles')
+        data = json.loads(response.content)
+
+        self.assertEqual(
+            data,
+            [
                 {
-                    'name': 'ARGO_MON_BIOMED',
-                    'atp_vo': 'biomed',
+                    'name': 'ARGO_MON',
+                    'atp_vo': 'ops',
                     'version': '1.0',
-                    'description': 'Central ARGO-MON profile used for Biomed '
-                                   'VO.',
+                    'description': 'Central ARGO-MON profile.',
                     'metric_instances': [
                         {
-                            'metric': 'org.nordugrid.ARC-CE-ARIS',
+                            'metric': 'org.apel.APEL-Pub',
                             'fqan': '',
-                            'vo': 'biomed',
-                            'atp_service_type_flavour': 'ARC-CE',
+                            'vo': 'ops',
+                            'atp_service_type_flavour': 'APEL'
                         }
                     ]
                 }
             ]
         )
+
 
 class MetricsInProfilesVIewTests(TestCase):
     @classmethod
