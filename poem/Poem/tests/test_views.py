@@ -101,6 +101,13 @@ class MetricsInProfilesVIewTests(TestCase):
             groupname='ARGO',
         )
 
+        profile4 = Profile.objects.create(
+            name='TEST_PROFILE',
+            description=None,
+            vo='test',
+            groupname='ARGO',
+        )
+
         MetricInstance.objects.create(
             profile=profile1,
             service_flavour='ARC-CE',
@@ -129,7 +136,13 @@ class MetricsInProfilesVIewTests(TestCase):
             fqan=None,
         )
 
-    # @mock.patch('settings.POEM_NAMESPACE', mocked_POEM_NAMESPACE)
+        MetricInstance.objects.create(
+            profile=profile4,
+            service_flavour='TEST-FLAVOUR',
+            metric='metric.for.testing',
+            fqan=None,
+        )
+
     def test_get_metrics_for_a_given_vo(self):
         with self.settings(POEM_NAMESPACE='hr.cro-ngi.TEST'):
             response = self.client.get(
@@ -441,6 +454,37 @@ class MetricsInProfilesVIewTests(TestCase):
                                     {
                                         'service_flavour': 'ARC-CE',
                                         'name': 'org.nordugrid.ARC-CE-ARIS',
+                                        'fqan': ''
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            )
+
+    def test_get_metrics_with_no_profile_description(self):
+        with self.settings(POEM_NAMESPACE='hr.cro-ngi.TEST'):
+            response = self.client.get(
+                '/api/0.2/json/metrics_in_profiles/?vo_name=test')
+
+            data = json.loads(response.content)
+
+            self.assertEqual(
+                data,
+                [
+                    {
+                        'name': ['test'],
+                        'profiles': [
+                            {
+                                'name': 'TEST_PROFILE',
+                                'namespace': 'hr.cro-ngi.TEST',
+                                'description': '',
+                                'vo': 'test',
+                                'metrics': [
+                                    {
+                                        'service_flavour': 'TEST-FLAVOUR',
+                                        'name': 'metric.for.testing',
                                         'fqan': ''
                                     }
                                 ]
