@@ -601,4 +601,12 @@ class MetricsInGroupViewTests(TestCase):
 
         self.assertEqual(data, b'Need the name of group')
 
+    def test_get_metrics_in_group_if_invalid_group_name(self):
+
+        response = self.client.get(
+            '/api/0.2/json/metrics_in_group/?group=invalidname')
+
+        data = response.content
+
+        self.assertEqual(data, b'Not a valid group.')
 
