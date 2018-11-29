@@ -122,9 +122,12 @@ class MetricsInProfiles(View):
 class MetricsInGroup(View):
     def get(self, request):
         gr = request.GET.get('group')
-        metrics = models.Metrics.objects.filter(groupofmetrics__name__exact=gr).values_list('name', flat=True)
-        results = sorted(metrics, key=lambda m: m.lower())
-        return HttpResponse(json.dumps({'result': results}), content_type='application/json')
+        if gr:
+            metrics = models.Metrics.objects.filter(groupofmetrics__name__exact=gr).values_list('name', flat=True)
+            results = sorted(metrics, key=lambda m: m.lower())
+            return HttpResponse(json.dumps({'result': results}), content_type='application/json')
+        else:
+            return HttpResponse("Need the name of group")
 
 class Metrics(View):
     def get(self, request):
