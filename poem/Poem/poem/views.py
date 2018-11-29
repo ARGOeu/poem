@@ -38,10 +38,10 @@ class Profiles(View):
         for profile in models.Profile.objects.all():
             mi = list(profile.metric_instances.all().\
                  values('metric', 'fqan', 'vo', 'service_flavour'))
-            mi = list(map(lambda e: {'metric': none_to_emptystr(e['metric']),\
+            mi = list(map(lambda e: {'metric': e['metric'],\
                                 'fqan': none_to_emptystr(e['fqan']),\
                                 'vo': none_to_emptystr(e['vo']),\
-                                'atp_service_type_flavour': none_to_emptystr(e['service_flavour'])}, mi))
+                                'atp_service_type_flavour': e['service_flavour']}, mi))
             lp.append({"name": profile.name, "atp_vo" : profile.vo,
                     "version": profile.version,
                     "description": profile.description,
@@ -109,7 +109,7 @@ class MetricsInProfiles(View):
                                             'description' : none_to_emptystr(p[1]), \
                                             'vo' : p[2],\
                                             'metrics' : [{'service_flavour': m['service_flavour'], \
-                                                          'name': m['metric'], \
+                                                          'name': none_to_emptystr(m['metric']), \
                                                           'fqan': none_to_emptystr(m['fqan'])} for m in metrics \
                                                         if m['profile__name'] == p[0]]})
             result = {"name" : vo_lookup, "profiles" : metrics_in_profiles}
