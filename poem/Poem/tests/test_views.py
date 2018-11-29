@@ -78,6 +78,71 @@ class ProfileViewsTests(TestCase):
             ]
         )
 
+    def test_get_profiles_with_no_profile_description(self):
+        profile2 = Profile.objects.create(
+            name='ARGO_MON_BIOMED',
+            version='1.0',
+            vo='biomed',
+            description=None,
+            groupname='ARGO',
+        )
+
+        MetricInstance.objects.create(
+            profile=self.profile,
+            service_flavour='APEL',
+            metric='org.apel.APEL-Pub',
+            vo='ops',
+            fqan='fqan_text',
+        )
+
+        MetricInstance.objects.create(
+            profile=profile2,
+            service_flavour='APEL',
+            metric='org.apel.APEL-Sync',
+            fqan='something',
+        )
+
+        response = self.client.get('/api/0.2/json/profiles')
+        data = json.loads(response.content)
+
+        # sorting list of profiles because they are not always obtained in
+        # the same order from api
+        data = sorted(data, key=lambda k: k['name'])
+
+        self.assertEqual(
+            data,
+            [
+                {
+                    'name': 'ARGO_MON',
+                    'atp_vo': 'ops',
+                    'version': '1.0',
+                    'description': 'Central ARGO-MON profile.',
+                    'metric_instances': [
+                        {
+                            'metric': 'org.apel.APEL-Pub',
+                            'fqan': 'fqan_text',
+                            'vo': 'ops',
+                            'atp_service_type_flavour': 'APEL'
+                        }
+                    ]
+                },
+                {
+                    'name': 'ARGO_MON_BIOMED',
+                    'atp_vo': 'biomed',
+                    'version': '1.0',
+                    'description': '',
+                    'metric_instances': [
+                        {
+                            'metric': 'org.apel.APEL-Sync',
+                            'fqan': 'something',
+                            'vo': 'biomed',
+                            'atp_service_type_flavour': 'APEL'
+                        }
+                    ]
+                }
+            ]
+        )
+
 
 class MetricsInProfilesVIewTests(TestCase):
     @classmethod
