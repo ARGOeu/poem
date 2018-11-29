@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from Poem.poem.models import Profile, MetricInstance
+from Poem.poem.models import Profile, MetricInstance, Metrics, GroupOfMetrics
 
 import json
 
@@ -560,3 +560,35 @@ class MetricsInProfilesVIewTests(TestCase):
                     }
                 ]
             )
+
+class MetricsInGroupViewTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        metric1 = Metrics.objects.create(
+            name='org.apel.APEL-Pub',
+        )
+
+        metric2 = Metrics.objects.create(
+            name='org.apel.APEL-Sync',
+        )
+
+        group = GroupOfMetrics.objects.create(
+            name='EOSC',
+        )
+        group.metrics.create(name=metric1.name)
+        group.metrics.create(name=metric2.name)
+
+    def test_get_metrics_in_group_for_a_given_group(self):
+
+        response = self.client.get('/api/0.2/json/metrics_in_group/?group=EOSC')
+
+        data = json.loads(response.content)
+
+        self.assertEqual(
+            data,
+            {
+                'result': [
+                    'org.apel.APEL-Pub', 'org.apel.APEL-Sync'
+                ]
+            }
+        )
