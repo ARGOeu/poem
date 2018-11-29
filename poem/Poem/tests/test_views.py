@@ -129,259 +129,272 @@ class MetricsInProfilesVIewTests(TestCase):
             fqan=None,
         )
 
+    # @mock.patch('settings.POEM_NAMESPACE', mocked_POEM_NAMESPACE)
     def test_get_metrics_for_a_given_vo(self):
-        response = self.client.get(
-            '/api/0.2/json/metrics_in_profiles/?vo_name=ops')
-        data = json.loads(response.content)
+        with self.settings(POEM_NAMESPACE='hr.cro-ngi.TEST'):
+            response = self.client.get(
+                '/api/0.2/json/metrics_in_profiles/?vo_name=ops')
+            data = json.loads(response.content)
 
-        # sorting list of profiles because they are not always obtained in
-        # the same order from api
-        data[0]['profiles'] = sorted(data[0]['profiles'], key=lambda k: k[
-            'name'])
-        self.assertEqual(
-            data,
-            [
-                {
-                    'name': ['ops'],
-                    'profiles': [
-                        {
-                            'name': 'ARGO_MON',
-                            'namespace': 'hr.cro-ngi.TEST',
-                            'description': 'Central ARGO-MON profile.',
-                            'vo': 'ops',
-                            'metrics': [
-                                {
-                                    'service_flavour': 'APEL',
-                                    'name': 'org.apel.APEL-Pub',
-                                    'fqan': ''
-                                }
-                            ]
-                        },
-                        {
-                            'name': 'ARGO_MON_CRITICAL',
-                            'namespace': 'hr.cro-ngi.TEST',
-                            'description': 'Central ARGO-MON_CRITICAL profile.',
-                            'vo': 'ops',
-                            'metrics': [
-                                {
-                                    'service_flavour': 'APEL',
-                                    'name': 'org.apel.APEL-Pub',
-                                    'fqan': ''
-                                },
-                                {
-                                    'service_flavour': 'ARC-CE',
-                                    'name': 'org.nordugrid.ARC-CE-ARIS',
-                                    'fqan': ''
-                                }
-                            ]
-                        }
-                    ]
-                }
-            ]
-        )
+            # sorting list of profiles because they are not always obtained in
+            # the same order from api
+            data[0]['profiles'] = sorted(data[0]['profiles'], key=lambda k: k[
+                'name'])
+            self.assertEqual(
+                data,
+                [
+                    {
+                        'name': ['ops'],
+                        'profiles': [
+                            {
+                                'name': 'ARGO_MON',
+                                'namespace': 'hr.cro-ngi.TEST',
+                                'description': 'Central ARGO-MON profile.',
+                                'vo': 'ops',
+                                'metrics': [
+                                    {
+                                        'service_flavour': 'APEL',
+                                        'name': 'org.apel.APEL-Pub',
+                                        'fqan': ''
+                                    }
+                                ]
+                            },
+                            {
+                                'name': 'ARGO_MON_CRITICAL',
+                                'namespace': 'hr.cro-ngi.TEST',
+                                'description': 'Central ARGO-MON_CRITICAL '
+                                               'profile.',
+                                'vo': 'ops',
+                                'metrics': [
+                                    {
+                                        'service_flavour': 'APEL',
+                                        'name': 'org.apel.APEL-Pub',
+                                        'fqan': ''
+                                    },
+                                    {
+                                        'service_flavour': 'ARC-CE',
+                                        'name': 'org.nordugrid.ARC-CE-ARIS',
+                                        'fqan': ''
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            )
 
     def test_get_metrics_for_multiple_vos(self):
-        response = self.client.get(
-            '/api/0.2/json/metrics_in_profiles/?vo_name=ops&vo_name=biomed')
-        data = json.loads(response.content)
+        with self.settings(POEM_NAMESPACE='hr.cro-ngi.TEST'):
+            response = self.client.get(
+                '/api/0.2/json/metrics_in_profiles/?vo_name=ops&vo_name=biomed')
+            data = json.loads(response.content)
 
-        # sorting list of profiles because they are not always obtained in
-        # the same order from api
-        data[0]['profiles'] = sorted(data[0]['profiles'], key=lambda k: k[
-            'name'])
+            # sorting list of profiles because they are not always obtained in
+            # the same order from api
+            data[0]['profiles'] = sorted(data[0]['profiles'], key=lambda k: k[
+                'name'])
 
-        self.assertEqual(
-            data,
-            [
-                {
-                    'name': ['ops', 'biomed'],
-                    'profiles': [
-                        {
-                            'name': 'ARGO_MON',
-                            'namespace': 'hr.cro-ngi.TEST',
-                            'description': 'Central ARGO-MON profile.',
-                            'vo': 'ops',
-                            'metrics': [
-                                {
-                                    'service_flavour': 'APEL',
-                                    'name': 'org.apel.APEL-Pub',
-                                    'fqan': ''
-                                }
-                            ]
-                        },
-                        {
-                            'name': 'ARGO_MON_BIOMED',
-                            'namespace': 'hr.cro-ngi.TEST',
-                            'description': 'Central ARGO-MON profile used for '
-                                           'Biomed VO.',
-                            'vo': 'biomed',
-                            'metrics': [
-                                {
-                                    'service_flavour': 'CREAM-CE',
-                                    'name':
-                                        'emi.cream.CREAMCE-AllowedSubmission',
-                                    'fqan': ''
-                                }
-                            ]
-                        },
-                        {
-                            'name': 'ARGO_MON_CRITICAL',
-                            'namespace': 'hr.cro-ngi.TEST',
-                            'description': 'Central ARGO-MON_CRITICAL profile.',
-                            'vo': 'ops',
-                            'metrics': [
-                                {
-                                    'service_flavour': 'APEL',
-                                    'name': 'org.apel.APEL-Pub',
-                                    'fqan': ''
-                                },
-                                {
-                                    'service_flavour': 'ARC-CE',
-                                    'name': 'org.nordugrid.ARC-CE-ARIS',
-                                    'fqan': ''
-                                }
-                            ]
-                        }
-                    ]
-                }
-            ]
-        )
+            self.assertEqual(
+                data,
+                [
+                    {
+                        'name': ['ops', 'biomed'],
+                        'profiles': [
+                            {
+                                'name': 'ARGO_MON',
+                                'namespace': 'hr.cro-ngi.TEST',
+                                'description': 'Central ARGO-MON profile.',
+                                'vo': 'ops',
+                                'metrics': [
+                                    {
+                                        'service_flavour': 'APEL',
+                                        'name': 'org.apel.APEL-Pub',
+                                        'fqan': ''
+                                    }
+                                ]
+                            },
+                            {
+                                'name': 'ARGO_MON_BIOMED',
+                                'namespace': 'hr.cro-ngi.TEST',
+                                'description': 'Central ARGO-MON profile used '
+                                               'for Biomed VO.',
+                                'vo': 'biomed',
+                                'metrics': [
+                                    {
+                                        'service_flavour': 'CREAM-CE',
+                                        'name':
+                                            'emi.cream.CREAMCE-'
+                                            'AllowedSubmission',
+                                        'fqan': ''
+                                    }
+                                ]
+                            },
+                            {
+                                'name': 'ARGO_MON_CRITICAL',
+                                'namespace': 'hr.cro-ngi.TEST',
+                                'description': 'Central ARGO-MON_CRITICAL '
+                                               'profile.',
+                                'vo': 'ops',
+                                'metrics': [
+                                    {
+                                        'service_flavour': 'APEL',
+                                        'name': 'org.apel.APEL-Pub',
+                                        'fqan': ''
+                                    },
+                                    {
+                                        'service_flavour': 'ARC-CE',
+                                        'name': 'org.nordugrid.ARC-CE-ARIS',
+                                        'fqan': ''
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            )
 
     def test_get_metrics_for_a_given_vo_and_a_given_profile(self):
-        response = self.client.get(
-            '/api/0.2/json/metrics_in_profiles/?vo_name=ops&profile=ARGO_MON')
-        data = json.loads(response.content)
+        with self.settings(POEM_NAMESPACE='hr.cro-ngi.TEST'):
+            response = self.client.get('/api/0.2/json/metrics_in_profiles/'
+                                       '?vo_name=ops&profile=ARGO_MON')
+            data = json.loads(response.content)
 
-        self.assertEqual(
-            data,
-            [
-                {
-                    'name': ['ops'],
-                    'profiles': [
-                        {
-                            'name': 'ARGO_MON',
-                            'namespace': 'hr.cro-ngi.TEST',
-                            'description': 'Central ARGO-MON profile.',
-                            'vo': 'ops',
-                            'metrics': [
-                                {
-                                    'service_flavour': 'APEL',
-                                    'name': 'org.apel.APEL-Pub',
-                                    'fqan': ''
-                                }
-                            ]
-                        }
-                    ]
-                }
-            ]
-        )
+            self.assertEqual(
+                data,
+                [
+                    {
+                        'name': ['ops'],
+                        'profiles': [
+                            {
+                                'name': 'ARGO_MON',
+                                'namespace': 'hr.cro-ngi.TEST',
+                                'description': 'Central ARGO-MON profile.',
+                                'vo': 'ops',
+                                'metrics': [
+                                    {
+                                        'service_flavour': 'APEL',
+                                        'name': 'org.apel.APEL-Pub',
+                                        'fqan': ''
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            )
 
     def test_get_metrics_for_a_given_vo_and_multiple_profiles(self):
-        response = self.client.get(
-            '/api/0.2/json/metrics_in_profiles/?vo_name=ops&profile=ARGO_MON'
-            '&profile=ARGO_MON_CRITICAL')
-        data = json.loads(response.content)
+        with self.settings(POEM_NAMESPACE='hr.cro-ngi.TEST'):
+            response = self.client.get(
+                '/api/0.2/json/metrics_in_profiles/?vo_name=ops&profile='
+                'ARGO_MON&profile=ARGO_MON_CRITICAL')
+            data = json.loads(response.content)
 
-        data[0]['profiles'] = sorted(data[0]['profiles'], key=lambda k: k[
-            'name'])
+            data[0]['profiles'] = sorted(data[0]['profiles'], key=lambda k: k[
+                'name'])
 
-        self.assertEqual(
-            data,
-            [
-                {
-                    'name': ['ops'],
-                    'profiles':[
-                        {
-                            'name': 'ARGO_MON',
-                            'namespace': 'hr.cro-ngi.TEST',
-                            'description': 'Central ARGO-MON profile.',
-                            'vo': 'ops',
-                            'metrics': [
-                                {
-                                    'service_flavour': 'APEL',
-                                    'name': 'org.apel.APEL-Pub',
-                                    'fqan': ''
-                                }
-                            ]
-                        },
-                        {
-                            'name': 'ARGO_MON_CRITICAL',
-                            'namespace': 'hr.cro-ngi.TEST',
-                            'description': 'Central ARGO-MON_CRITICAL profile.',
-                            'vo': 'ops',
-                            'metrics': [
-                                {
-                                    'service_flavour': 'APEL',
-                                    'name': 'org.apel.APEL-Pub',
-                                    'fqan': ''
-                                },
-                                {
-                                    'service_flavour': 'ARC-CE',
-                                    'name': 'org.nordugrid.ARC-CE-ARIS',
-                                    'fqan': ''
-                                }
-                            ]
-                        }
-                    ]
-                }
-            ]
-        )
+            self.assertEqual(
+                data,
+                [
+                    {
+                        'name': ['ops'],
+                        'profiles':[
+                            {
+                                'name': 'ARGO_MON',
+                                'namespace': 'hr.cro-ngi.TEST',
+                                'description': 'Central ARGO-MON profile.',
+                                'vo': 'ops',
+                                'metrics': [
+                                    {
+                                        'service_flavour': 'APEL',
+                                        'name': 'org.apel.APEL-Pub',
+                                        'fqan': ''
+                                    }
+                                ]
+                            },
+                            {
+                                'name': 'ARGO_MON_CRITICAL',
+                                'namespace': 'hr.cro-ngi.TEST',
+                                'description': 'Central ARGO-MON_CRITICAL '
+                                               'profile.',
+                                'vo': 'ops',
+                                'metrics': [
+                                    {
+                                        'service_flavour': 'APEL',
+                                        'name': 'org.apel.APEL-Pub',
+                                        'fqan': ''
+                                    },
+                                    {
+                                        'service_flavour': 'ARC-CE',
+                                        'name': 'org.nordugrid.ARC-CE-ARIS',
+                                        'fqan': ''
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            )
 
     def test_get_metrics_for_multiple_vos_and_multiple_profiles(self):
-        response = self.client.get(
-            '/api/0.2/json/metrics_in_profiles/?vo_name=ops&vo_name=biomed'
-            '&profile=ARGO_MON&profile=ARGO_MON_BIOMED')
-        data = json.loads(response.content)
+        with self.settings(POEM_NAMESPACE='hr.cro-ngi.TEST'):
+            response = self.client.get(
+                '/api/0.2/json/metrics_in_profiles/?vo_name=ops&vo_name=biomed'
+                '&profile=ARGO_MON&profile=ARGO_MON_BIOMED')
+            data = json.loads(response.content)
 
-        data[0]['profiles'] = sorted(data[0]['profiles'], key=lambda k: k[
-            'name'])
+            data[0]['profiles'] = sorted(data[0]['profiles'], key=lambda k: k[
+                'name'])
 
-        self.assertEqual(
-            data,
-            [
-                {
-                    'name': ['ops', 'biomed'],
-                    'profiles': [
-                        {
-                            'name': 'ARGO_MON',
-                            'namespace': 'hr.cro-ngi.TEST',
-                            'description': 'Central ARGO-MON profile.',
-                            'vo': 'ops',
-                            'metrics': [
-                                {
-                                    'service_flavour': 'APEL',
-                                    'name': 'org.apel.APEL-Pub',
-                                    'fqan': ''
-                                }
-                            ]
-                        },
-                        {
-                            'name': 'ARGO_MON_BIOMED',
-                            'namespace': 'hr.cro-ngi.TEST',
-                            'description': 'Central ARGO-MON profile used for '
-                                           'Biomed VO.',
-                            'vo': 'biomed',
-                            'metrics': [
-                                {
-                                    'service_flavour': 'CREAM-CE',
-                                    'name':
-                                        'emi.cream.CREAMCE-AllowedSubmission',
-                                    'fqan': ''
-                                }
-                            ]
-                        }
-                    ]
-                }
-            ]
-        )
+            self.assertEqual(
+                data,
+                [
+                    {
+                        'name': ['ops', 'biomed'],
+                        'profiles': [
+                            {
+                                'name': 'ARGO_MON',
+                                'namespace': 'hr.cro-ngi.TEST',
+                                'description': 'Central ARGO-MON profile.',
+                                'vo': 'ops',
+                                'metrics': [
+                                    {
+                                        'service_flavour': 'APEL',
+                                        'name': 'org.apel.APEL-Pub',
+                                        'fqan': ''
+                                    }
+                                ]
+                            },
+                            {
+                                'name': 'ARGO_MON_BIOMED',
+                                'namespace': 'hr.cro-ngi.TEST',
+                                'description': 'Central ARGO-MON profile '
+                                               'used for Biomed VO.',
+                                'vo': 'biomed',
+                                'metrics': [
+                                    {
+                                        'service_flavour': 'CREAM-CE',
+                                        'name':
+                                            'emi.cream.CREAMCE-Allowed'
+                                            'Submission',
+                                        'fqan': ''
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            )
 
     def test_get_metrics_without_vo(self):
-        response = self.client.get('/api/0.2/json/metrics_in_profiles/')
+        with self.settings(POEM_NAMESPACE='hr.cro-ngi.TEST'):
+            response = self.client.get('/api/0.2/json/metrics_in_profiles/')
 
-        self.assertEqual(response.content, b'Need the name of VO')
+            self.assertEqual(response.content, b'Need the name of VO')
 
     def test_get_metric_with_no_valid_vo(self):
-        response = self.client.get(
-            '/api/0.2/json/metrics_in_profiles/?vo_name=bla')
+        with self.settings(POEM_NAMESPACE='hr.cro-ngi.TEST'):
+            response = self.client.get(
+                '/api/0.2/json/metrics_in_profiles/?vo_name=bla')
 
-        self.assertEqual(response.content, b'Not valid VO')
+            self.assertEqual(response.content, b'Not valid VO')
