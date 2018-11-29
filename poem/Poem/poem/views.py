@@ -44,7 +44,7 @@ class Profiles(View):
                                 'atp_service_type_flavour': e['service_flavour']}, mi))
             lp.append({"name": profile.name, "atp_vo" : profile.vo,
                     "version": profile.version,
-                    "description": profile.description,
+                    "description": none_to_emptystr(profile.description),
                     "metric_instances": mi})
 
         return HttpResponse(json.dumps(lp), content_type='application/json')
