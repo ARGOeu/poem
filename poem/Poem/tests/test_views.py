@@ -592,3 +592,13 @@ class MetricsInGroupViewTests(TestCase):
                 ]
             }
         )
+
+    def test_get_metrics_in_group_if_no_group(self):
+
+        response = self.client.get(
+            '/api/0.2/json/metrics_in_group/')
+        data = response.content
+
+        self.assertEqual(data, b'Need the name of group')
+
+
