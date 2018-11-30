@@ -1,8 +1,14 @@
+import json
+
 from django.test import TestCase
 
-from Poem.poem.models import Profile, MetricInstance, Metrics, GroupOfMetrics
+from Poem.poem.models import Profile, MetricInstance, Metrics, \
+    GroupOfMetrics, Metric, Tags, MetricType, MetricProbeExecutable, \
+    MetricConfig, MetricFlags, MetricDependancy, MetricAttribute, \
+    MetricParameter, MetricFileParameter, MetricFiles, MetricParent
 
-import json
+from reversion.models import Version
+
 
 class ProfileViewsTests(TestCase):
     def setUp(self):
@@ -609,4 +615,168 @@ class MetricsInGroupViewTests(TestCase):
         data = response.content
 
         self.assertEqual(data, b'Not a valid group.')
+
+class MetricsViewTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+
+        tag = Tags.objects.create(
+            name='prod',
+        )
+
+        metrictype = MetricType.objects.create(
+            name='active',
+        )
+
+        probekey = Version.objects.create(
+            object_repr='ams_probe (0.1.7)',
+            serialized_data=json.dumps(
+                [{
+                    'model': 'poem.probe',
+                    'fields': {
+                        'comment': 'Initial version',
+                        'group': 'EOSC',
+                        'version': '0.1.7',
+                        'docurl':
+                            'https://github.com/ARGOeu/nagios-plugins-argo'
+                            '/blob/master/README.md'
+                    }
+                }]
+            ),
+            content_type_id='1',
+            revision_id='1',
+        )
+
+        metric = Metric.objects.create(
+            name='argo.AMS-Check',
+            tag=tag,
+            mtype=metrictype,
+            probekey=probekey,
+        )
+
+        group = GroupOfMetrics.objects.create(
+            name='EOSC',
+        )
+        group.metrics.create(name=metric.name)
+
+        MetricParent.objects.create(
+            metric=metric,
+            value='org.nagios.CDMI-TCP',
+        )
+
+        MetricProbeExecutable.objects.create(
+            metric=metric,
+            value='ams-probe',
+        )
+
+        MetricConfig.objects.create(
+            key='maxCheckAttempts',
+            value='3',
+            metric=metric,
+        )
+
+        MetricConfig.objects.create(
+            key='timeout',
+            value='60',
+            metric=metric,
+        )
+
+        MetricConfig.objects.create(
+            key='path',
+            value='/usr/libexec/argo-monitoring/probes/argo',
+            metric=metric,
+        )
+
+        MetricConfig.objects.create(
+            key='interval',
+            value='5',
+            metric=metric,
+        )
+
+        MetricConfig.objects.create(
+            key='retryInterval',
+            value='3',
+            metric=metric,
+        )
+
+        MetricAttribute.objects.create(
+            key='argo.ams_TOKEN',
+            value='--token',
+            metric=metric,
+        )
+
+        MetricDependancy.objects.create(
+            key='argo.AMS-Check',
+            value='1',
+            metric=metric,
+        )
+
+        MetricFlags.objects.create(
+            key='OBSESS',
+            value='1',
+            metric=metric,
+        )
+
+        MetricFiles.objects.create(
+            key='UCC_CONFIG',
+            value='UCC_CONFIG',
+            metric=metric,
+        )
+
+        MetricParameter.objects.create(
+            key='--project',
+            value='EGI',
+            metric=metric,
+        )
+
+        MetricFileParameter.objects.create(
+            key='FILE_SIZE_KBS',
+            value='1000',
+            metric=metric,
+        )
+
+    def test_get_metric_for_a_given_tag_with_all_fields(self):
+        response = self.client.get('/api/0.2/json/metrics/?tag=prod')
+
+        data = json.loads(response.content)
+
+        self.assertEqual(
+            data,
+            [
+                {
+                    'argo.AMS-Check': {
+                        'probe': 'ams-probe',
+                        'config': {
+                            'maxCheckAttempts': '3',
+                            'timeout': '60',
+                            'path': '/usr/libexec/argo-monitoring/probes/argo',
+                            'interval': '5',
+                            'retryInterval': '3'
+                        },
+                        'flags': {
+                            'OBSESS': '1'
+                        },
+                        'dependency': {
+                            'argo.AMS-Check': '1'
+                        },
+                        'attribute': {
+                            'argo.ams_TOKEN': '--token'
+                        },
+                        'parameter': {
+                            '--project': 'EGI'
+                        },
+                        'file_parameter': {
+                            'FILE_SIZE_KBS': '1000'
+                        },
+                        'file_attribute': {
+                            'UCC_CONFIG': 'UCC_CONFIG'
+                        },
+                        'parent': 'org.nagios.CDMI-TCP',
+                        'docurl':
+                            'https://github.com/ARGOeu/nagios-plugins-argo'
+                            '/blob/master/README.md'
+                    }
+                }
+            ]
+        )
 
