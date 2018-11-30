@@ -98,10 +98,10 @@ class MetricsInProfiles(View):
             metrics = {}
             if profile_lookup:
                 metrics = models.MetricInstance.objects.filter(vo__in=vo_lookup).filter(profile__name__in=profile_lookup).values('metric', 'service_flavour', 'fqan', 'profile__name')
-                profiles = set(models.MetricInstance.objects.filter(vo__in=vo_lookup).filter(profile__name__in=profile_lookup).values_list('profile__name', 'profile__description', 'profile__vo'))
+                profiles = set(models.Profile.objects.filter(vo__in=vo_lookup).filter(name__in=profile_lookup).values_list('name', 'description', 'vo'))
             else:
                 metrics = models.MetricInstance.objects.filter(vo__in=vo_lookup).values('metric', 'service_flavour', 'fqan', 'profile__name')
-                profiles = set(models.MetricInstance.objects.filter(vo__in=vo_lookup).values_list('profile__name', 'profile__description', 'profile__vo'))
+                profiles = set(models.Profile.objects.filter(vo__in=vo_lookup).values_list('name', 'description', 'vo'))
             metrics_in_profiles = []
             for p in profiles:
                 metrics_in_profiles.append({'name' : p[0], \
