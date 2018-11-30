@@ -180,6 +180,13 @@ class MetricsInProfilesVIewTests(TestCase):
             groupname='ARGO',
         )
 
+        Profile.objects.create(
+            name='TEST_EMPTY_PROFILE',
+            description='Profiles with no metrics associated with them.',
+            vo='test_empty',
+            groupname='ARGO',
+        )
+
         MetricInstance.objects.create(
             profile=profile1,
             service_flavour='ARC-CE',
@@ -560,6 +567,31 @@ class MetricsInProfilesVIewTests(TestCase):
                                         'fqan': ''
                                     }
                                 ]
+                            }
+                        ]
+                    }
+                ]
+            )
+
+    def test_get_metrics_if_no_metrics_exist_for_the_given_vo(self):
+        with self.settings(POEM_NAMESPACE='hr.cro-ngi.TEST'):
+            response = self.client.get(
+                '/api/0.2/json/metrics_in_profiles/?vo_name=test_empty')
+            data = json.loads(response.content)
+
+            self.assertEqual(
+                data,
+                [
+                    {
+                        'name': ['test_empty'],
+                        'profiles': [
+                            {
+                                'name': 'TEST_EMPTY_PROFILE',
+                                'namespace': 'hr.cro-ngi.TEST',
+                                'description': 'Profiles with no metrics '
+                                               'associated with them.',
+                                'vo': 'test_empty',
+                                'metrics': []
                             }
                         ]
                     }
