@@ -706,7 +706,7 @@ class MetricsViewTests(TestCase):
             probekey=probekey,
         )
 
-        Metric.objects.create(
+        metric2 = Metric.objects.create(
             name='argo.API-Check',
             tag=tag2,
             mtype=metrictype,
@@ -722,9 +722,19 @@ class MetricsViewTests(TestCase):
             value='org.nagios.CDMI-TCP',
         )
 
+        MetricParent.objects.create(
+            metric=metric2,
+            value=None,
+        )
+
         MetricProbeExecutable.objects.create(
             metric=metric,
             value='ams-probe',
+        )
+
+        MetricProbeExecutable.objects.create(
+            metric=metric2,
+            value=None,
         )
 
         MetricConfig.objects.create(
@@ -755,6 +765,12 @@ class MetricsViewTests(TestCase):
             key='retryInterval',
             value='3',
             metric=metric,
+        )
+
+        MetricConfig.objects.create(
+            key=None,
+            value=None,
+            metric=metric2,
         )
 
         MetricAttribute.objects.create(
