@@ -787,3 +787,9 @@ class MetricsViewTests(TestCase):
 
         self.assertEqual(data, b'Need the name of tag.')
 
+    def test_get_metric_with_invalid_tag(self):
+        response = self.client.get('/api/0.2/json/metrics/?tag=invalidtag')
+        data = response.content
+
+        self.assertEqual(data, b'Not a valid tag.')
+
