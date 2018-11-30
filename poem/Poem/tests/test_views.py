@@ -780,3 +780,10 @@ class MetricsViewTests(TestCase):
             ]
         )
 
+    def test_get_metric_with_no_tag(self):
+        response = self.client.get('/api/0.2/json/metrics/')
+
+        data = response.content
+
+        self.assertEqual(data, b'Need the name of tag.')
+
