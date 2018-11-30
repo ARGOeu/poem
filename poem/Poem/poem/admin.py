@@ -32,11 +32,14 @@ class MyAdminSite(AdminSite):
         extra_context = extra_context if extra_context else dict()
         extra_context.update(samlloginstring=SAMLLOGINSTRING)
 
-        # If we are coming from /poem/public_probe/ and ask for individual
+        # If we are coming from /poem/public_probe/, /poem/public_probe/?,
+        # /poem/public_probe/?all=, /poem/public_probe/?group=GROUP,
+        # /poem/public_probe/?all=&group=GROUP and ask for individual
         # change_view for Probe, then proceed. Otherwise, we must authenticate.
         prev = request.META.get('HTTP_REFERER', None)
         if prev:
-            if prev.endswith('public_probe/') or prev.endswith('public_probe/?all='):
+            r = re.search('public_probe/(\?)?(\?all\=)?([\&\?]group\=[\w\-]+)?$', prev)
+            if r:
                 context = dict(self.each_context(request))
                 next_url = request.GET.get('next')
                 objid = re.search('([0-9]+)', next_url)
