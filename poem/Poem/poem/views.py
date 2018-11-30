@@ -201,7 +201,7 @@ class Metrics(View):
                 return HttpResponse(json.dumps(api), content_type='application/json')
 
             except models.Tags.DoesNotExist:
-                pass
+                return HttpResponse('Not a valid tag.')
 
         else:
             return HttpResponse('Need the name of tag.')
