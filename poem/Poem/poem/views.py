@@ -146,14 +146,17 @@ class Metrics(View):
 
                     try:
                         exe = models.MetricProbeExecutable.objects.get(metric=m)
-                        mdict[m.name].update({'probe': exe.value})
+                        mdict[m.name].update({'probe': none_to_emptystr(exe.value)})
                     except models.MetricProbeExecutable.DoesNotExist:
                         mdict[m.name].update({'probe': ''})
 
                     mc = models.MetricConfig.objects.filter(metric=m)
                     mdict[m.name].update({'config': dict()})
                     for config in mc:
-                        mdict[m.name]['config'].update({config.key: config.value})
+                        if config.key is None or config.value is None:
+                            pass
+                        else:
+                            mdict[m.name]['config'].update({config.key: config.value})
 
                     f = models.MetricFlags.objects.filter(metric=m)
                     mdict[m.name].update({'flags': dict()})
@@ -187,7 +190,7 @@ class Metrics(View):
 
                     try:
                         parent = models.MetricParent.objects.get(metric=m)
-                        mdict[m.name].update({'parent': parent.value})
+                        mdict[m.name].update({'parent': none_to_emptystr(parent.value)})
                     except models.MetricParent.DoesNotExist:
                         mdict[m.name].update({'parent': ''})
 
