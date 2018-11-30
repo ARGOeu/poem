@@ -20,7 +20,6 @@ class ProfileViewsTests(TestCase):
             groupname='ARGO',
         )
 
-
     def test_get_profiles(self):
 
         MetricInstance.objects.create(
@@ -487,7 +486,7 @@ class MetricsInProfilesVIewTests(TestCase):
 
     def test_get_metric_with_no_namespace(self):
         with self.settings(POEM_NAMESPACE=None):
-            response=self.client.get(
+            response = self.client.get(
                 '/api/0.2/json/metrics_in_profiles/?vo_name=ops')
 
             data = json.loads(response.content)
@@ -567,6 +566,7 @@ class MetricsInProfilesVIewTests(TestCase):
                 ]
             )
 
+
 class MetricsInGroupViewTests(TestCase):
     @classmethod
     def setUpTestData(cls):
@@ -616,6 +616,7 @@ class MetricsInGroupViewTests(TestCase):
 
         self.assertEqual(data, b'Not a valid group.')
 
+
 class MetricsViewTests(TestCase):
     @classmethod
     def setUpTestData(cls):
@@ -626,6 +627,10 @@ class MetricsViewTests(TestCase):
 
         tag2 = Tags.objects.create(
             name='test_none',
+        )
+
+        Tags.objects.create(
+            name='test_empty',
         )
 
         metrictype = MetricType.objects.create(
@@ -826,3 +831,9 @@ class MetricsViewTests(TestCase):
                 }
             ]
         )
+
+    def test_get_metrics_if_tag_without_associated_metrics(self):
+        response = self.client.get('/api/0.2/json/metrics/?tag=test_empty')
+        data = json.loads(response.content)
+
+        self.assertEqual(data, [])
