@@ -198,7 +198,11 @@ class Metrics(View):
                         mdict[m.name].update({'docurl': ''})
 
                     api.append(mdict)
+                return HttpResponse(json.dumps(api), content_type='application/json')
+
             except models.Tags.DoesNotExist:
                 pass
 
-        return HttpResponse(json.dumps(api), content_type='application/json')
+        else:
+            return HttpResponse('Need the name of tag.')
+
