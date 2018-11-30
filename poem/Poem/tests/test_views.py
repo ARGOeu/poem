@@ -584,6 +584,10 @@ class MetricsInGroupViewTests(TestCase):
         group.metrics.create(name=metric1.name)
         group.metrics.create(name=metric2.name)
 
+        GroupOfMetrics.objects.create(
+            name='Empty_group',
+        )
+
     def test_get_metrics_in_group_for_a_given_group(self):
 
         response = self.client.get('/api/0.2/json/metrics_in_group/?group=EOSC')
@@ -615,6 +619,13 @@ class MetricsInGroupViewTests(TestCase):
         data = response.content
 
         self.assertEqual(data, b'Not a valid group.')
+
+    def test_get_metrics_in_group_if_empty_group(self):
+        response = self.client.get(
+            '/api/0.2/json/metrics_in_group/?group=Empty_group')
+        data = json.loads(response.content)
+
+        self.assertEqual(data, {'result': []})
 
 
 class MetricsViewTests(TestCase):
