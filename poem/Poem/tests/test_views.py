@@ -27,7 +27,7 @@ class ProfileViewsTests(TestCase):
             profile=self.profile,
             service_flavour='APEL',
             metric='org.apel.APEL-Pub',
-            vo='ops',
+            # vo='ops',
             fqan='fqan_text',
         )
         response = self.client.get('/api/0.2/json/profiles')
@@ -624,6 +624,10 @@ class MetricsViewTests(TestCase):
             name='prod',
         )
 
+        tag2 = Tags.objects.create(
+            name='test_none',
+        )
+
         metrictype = MetricType.objects.create(
             name='active',
         )
@@ -652,6 +656,12 @@ class MetricsViewTests(TestCase):
             tag=tag,
             mtype=metrictype,
             probekey=probekey,
+        )
+
+        Metric.objects.create(
+            name='argo.API-Check',
+            tag=tag2,
+            mtype=metrictype,
         )
 
         group = GroupOfMetrics.objects.create(
@@ -793,3 +803,26 @@ class MetricsViewTests(TestCase):
 
         self.assertEqual(data, b'Not a valid tag.')
 
+    def test_get_metric_with_all_empty_fields(self):
+        response = self.client.get('/api/0.2/json/metrics/?tag=test_none')
+        data = json.loads(response.content)
+
+        self.assertEqual(
+            data,
+            [
+                {
+                    'argo.API-Check': {
+                        'probe': '',
+                        'config': {},
+                        'flags': {},
+                        'dependency': {},
+                        'attribute': {},
+                        'parameter': {},
+                        'file_parameter': {},
+                        'file_attribute': {},
+                        'parent': '',
+                        'docurl': ''
+                    }
+                }
+            ]
+        )
