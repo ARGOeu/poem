@@ -3,11 +3,10 @@ from django.forms import ModelForm
 from django.contrib.auth.models import Permission
 from django.contrib.auth.admin import GroupAdmin
 from Poem.poem.models import GroupOfProbes, Probe
-from Poem.poem.admin_interface.formmodel import MyModelMultipleChoiceField, MySelect, MyFilteredSelectMultiple
+from Poem.poem.admin_interface.formmodel import MyModelMultipleChoiceField, MyFilteredSelectMultiple
+
 
 class GroupOfProbesAdminForm(ModelForm):
-    class Meta:
-        model = GroupOfProbes
     qs = Probe.objects.filter(groupofprobes__id__isnull=True).order_by('nameversion')
     probes = MyModelMultipleChoiceField(queryset=qs,
                                         required=False,
@@ -25,6 +24,11 @@ class GroupOfProbesAdmin(GroupAdmin):
                  ('Settings', {'fields': ['probes']})]
 
     def save_model(self, request, obj, form, change):
+        """
+           Save group changes and also update Probe.group field name in case
+           group is renamed.
+        """
         obj.save()
         perm = Permission.objects.get(codename__startswith='probe')
         obj.permissions.add(perm)
+        form.cleaned_data['probes'].update(group=obj.name)

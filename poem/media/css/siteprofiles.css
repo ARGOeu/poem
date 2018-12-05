@@ -50,11 +50,11 @@ td.field-fqan input {
 }
 
 .change-list tbody th a, td {
-  font-size: 14px;
+    font-size: 14px;
 }
 
 .change-list .filtered .results, .change-list .filtered .paginator, .filtered #toolbar, .filtered div.xfull {
-  margin-right: 180px;
+    margin-right: 180px;
 }
 
 .stats {
@@ -63,4 +63,9 @@ td.field-fqan input {
     background: #fff;
     overflow: hidden;
     font-size: 0.9em;
+}
+
+select {
+    min-width: 100px;
+    background: #F6F6F6;
 }

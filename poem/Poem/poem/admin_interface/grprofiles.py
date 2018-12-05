@@ -1,17 +1,18 @@
 from django.contrib import admin
-from django.forms import ModelForm
+from django.forms import ModelForm, ModelMultipleChoiceField, MultipleChoiceField
 from django.contrib.auth.models import Permission
 from django.contrib.auth.admin import GroupAdmin
 from Poem.poem.models import GroupOfProfiles, Profile
-from Poem.poem.admin_interface.formmodel import MyModelMultipleChoiceField, MySelect, MyFilteredSelectMultiple
+from Poem.poem.admin_interface.formmodel import MyModelMultipleChoiceField, MyFilteredSelectMultiple
+from django.contrib.admin.widgets import FilteredSelectMultiple
+
 
 class GroupOfProfilesAdminForm(ModelForm):
-    class Meta:
-        model = GroupOfProfiles
     qs = Profile.objects.filter(groupofprofiles__id__isnull=True).order_by('name')
     profiles = MyModelMultipleChoiceField(queryset=qs,
                                           required=False,
                                           widget=MyFilteredSelectMultiple('profiles', False), ftype='profiles')
+
 
 class GroupOfProfilesAdmin(GroupAdmin):
     class Media:
@@ -27,5 +28,4 @@ class GroupOfProfilesAdmin(GroupAdmin):
         obj.save()
         perm = Permission.objects.get(codename__startswith='profile')
         obj.permissions.add(perm)
-
-        return
+        form.cleaned_data['profiles'].update(groupname=obj.name)

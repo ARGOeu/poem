@@ -9,6 +9,6 @@ then
   exit 1
 fi
 
-su -s /bin/sh - $RUNASUSER -c \
+su -m -s /bin/sh $RUNASUSER -c \
 "export DJANGO_SETTINGS_MODULE=Poem.settings && \
 python $SITEPACK/Poem/sync/poem-syncservtype.py"

@@ -116,7 +116,38 @@
         $('.metricautocomplete').autocomplete("search", "");
       });
     });
-  });
+
+    function hideIt() {
+      var undisplay = new Array('metricprobeexecutable', 'metricattribute', 'metricdependancy', 
+                                'metricconfig', 'metricparameter', 'metricfiles', 
+                                'metricfileparameter');
+      undisplay.forEach(function hideIt(element) {
+        target = element + '_set-group';
+        $('#' + target).css({'display': 'none'});
+      })
+
+    }
+
+    function showAll() {
+      $('.inline-group').css({'display': 'block'})
+    }
+
+    var metrictype_selected = $('#id_mtype :selected').text().toLowerCase();
+    if (metrictype_selected === 'passive') {
+      hideIt();
+    }
+
+    var metrictype = $('#id_mtype');
+    metrictype.on('change', function () {
+			var metrictype_selected = $('#id_mtype :selected').text().toLowerCase();
+			if (metrictype_selected === 'passive') {
+				hideIt();
+			} else if (metrictype_selected === 'active') {
+        showAll();
+      }
+    })
+
+  })(django.jQuery);
 </script>
 
 {# JavaScript for prepopulated fields #}

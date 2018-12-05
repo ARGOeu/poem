@@ -1,4 +1,3 @@
-import copy
 from django.contrib.auth.models import GroupManager, Permission
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
@@ -28,14 +27,14 @@ class Profile(models.Model):
         permissions = (('profileown', 'Read/Write/Modify'),)
         app_label = 'poem'
 
-    def __unicode__(self):
-        return u'%s %s %s' % (self.name, self.version, self.vo)
+    def __str__(self):
+        return u'%s' % (self.name)
 
 class GroupOfProfiles(models.Model):
     name = models.CharField(_('name'), max_length=80, unique=True)
     permissions = models.ManyToManyField(Permission,
                                          verbose_name=_('permissions'), blank=True)
-    profiles = models.ManyToManyField(Profile, null=True, blank=True)
+    profiles = models.ManyToManyField(Profile, blank=True)
     objects = GroupManager()
 
     class Meta:
@@ -49,18 +48,9 @@ class GroupOfProfiles(models.Model):
     def natural_key(self):
         return (self.name,)
 
-wasprofiles = []
-def gpprofile_presave(sender, instance, **kwargs):
-    global wasprofiles
-    if instance.pk:
-        wasprofiles = copy.copy(instance.profiles.values_list('pk', flat=True))
-    else:
-       wasprofiles = []
-pre_save.connect(gpprofile_presave, sender=GroupOfProfiles)
 def gpprofile_m2m(sender, action, pk_set, instance, **kwargs):
-    global wasprofiles
-    if action == 'post_clear':
-        for m in wasprofiles:
+    if action == 'post_remove':
+        for m in pk_set:
            Profile.objects.filter(id=m).update(groupname='')
     if action == 'post_add':
         for m in pk_set:
@@ -74,7 +64,7 @@ class VO(models.Model):
     class Meta:
         app_label = 'poem'
 
-    def __unicode__(self):
+    def __str__(self):
         return u'%s' % self.name
 
 class ServiceFlavour(models.Model):
@@ -85,7 +75,7 @@ class ServiceFlavour(models.Model):
     class Meta:
         app_label = 'poem'
 
-    def __unicode__(self):
+    def __str__(self):
         return u'%s' % self.name
 
 
@@ -94,7 +84,7 @@ class MetricInstance(models.Model):
     Metric instance is a tuple: (flavour, metric_name, vo, fqan).
     """
     id = models.AutoField(primary_key=True)
-    profile = models.ForeignKey(Profile, related_name='metric_instances')
+    profile = models.ForeignKey(Profile, related_name='metric_instances', on_delete=models.CASCADE)
     service_flavour = models.CharField(max_length=128)
     metric = models.CharField(max_length=128)
     vo = models.CharField(max_length=128, blank=True, null=True)
@@ -105,7 +95,7 @@ class MetricInstance(models.Model):
         unique_together = ('profile', 'service_flavour', 'metric', 'fqan')
         app_label = 'poem'
 
-    def __unicode__(self):
+    def __str__(self):
         return u'%s %s %s %s' % (self.service_flavour, self.metric,
                               self.fqan, self.vo)
 

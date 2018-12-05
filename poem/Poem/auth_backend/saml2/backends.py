@@ -5,8 +5,6 @@ from unidecode import unidecode
 
 from Poem.poem.models import UserProfile
 
-NAME_TO_OID = {'distinguishedName': 'urn:oid:2.5.4.49',
-               'eduPersonUniqueId': 'urn:oid:1.3.6.1.4.1.5923.1.1.1.13'}
 
 class SAML2Backend(Saml2Backend):
     def username_from_displayname(self, displayname):
@@ -42,11 +40,20 @@ class SAML2Backend(Saml2Backend):
             return ','.join(attrs[:-1])
 
 
-    def multival_attr(self, attr):
+    def joinval(self, attr):
         if len(attr) > 1:
             return ' '.join(attr)
         elif len(attr) == 1:
             return attr[0]
+
+
+    def extractby_keyoid(self, attr, attrs):
+        NAME_TO_OID = {'distinguishedName': 'urn:oid:2.5.4.49',
+                       'eduPersonUniqueId': 'urn:oid:1.3.6.1.4.1.5923.1.1.1.13'}
+        if attr in attrs:
+            return attrs[attr]
+        else:
+            return attrs[NAME_TO_OID[attr]]
 
 
     def authenticate(self, session_info=None, attribute_mapping=None,
@@ -55,25 +62,27 @@ class SAML2Backend(Saml2Backend):
 
         displayname, username, first_name, last_name = '', '', '', ''
         try:
-            displayname = self.multival_attr(attributes['displayName'])
+            displayname = self.joinval(attributes['displayName'])
             username = self.username_from_displayname(displayname)
             first_name, last_name = displayname.split(' ', 1)
         except KeyError:
-            first_name = self.multival_attr(attributes['givenName'])
-            last_name = self.multival_attr(attributes['sn'])
+            first_name = self.joinval(attributes['givenName'])
+            last_name = self.joinval(attributes['sn'])
             username = self.username_from_givename_sn(first_name, last_name)
 
         certsub = ''
         try:
-            certsub = attributes[NAME_TO_OID['distinguishedName']][0]
+            certsub = self.joinval(self.extractby_keyoid('distinguishedName',
+                                                         attributes))
             certsub = self.certsub_rev(certsub)
         except (KeyError, IndexError):
             pass
 
         email, egiid = '', ''
         try:
-            email = self.multival_attr(attributes['mail'])
-            egiid = self.multival_attr(attributes[NAME_TO_OID['eduPersonUniqueId']])
+            email = self.joinval(attributes['mail'])
+            egiid = self.joinval(self.extractby_keyoid('eduPersonUniqueId',
+                                                       attributes))
         except KeyError:
             pass
 
@@ -93,13 +102,10 @@ class SAML2Backend(Saml2Backend):
             user.save()
 
             userpro, upcreated = UserProfile.objects.get_or_create(user=user)
-            if upcreated:
-                userpro.subject = certsub
-                userpro.displayname = displayname
-                userpro.egiid = egiid
-                userpro.save()
-            else:
-                raise Exception
+            userpro.subject = certsub
+            userpro.displayname = displayname
+            userpro.egiid = egiid
+            userpro.save()
 
             return user
 

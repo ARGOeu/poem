@@ -1,6 +1,7 @@
 
-from distutils.core import setup
-import os, sys
+from setuptools import setup
+import os
+import sys
 
 NAME='poem'
 
@@ -9,45 +10,47 @@ def get_files(install_prefix, directory):
     for root, _, filenames in os.walk(directory):
         subdir_files = []
         for filename in filenames:
-            if 'svn' not in root:
-                subdir_files.append(os.path.join(root, filename))
+            subdir_files.append(os.path.join(root, filename))
         if filenames and subdir_files:
             files.append((os.path.join(install_prefix, root), subdir_files))
     return files
 
-def get_ver():
-    try:
-        for line in open(NAME+'.spec'):
-            if "Version:" in line:
-                return line.split()[1]
-    except IOError:
-        print "Make sure that %s is in directory"  % (NAME+'.spec')
-        sys.exit(1)
-
-poem_media_files = get_files("/usr/share", "poem/media") + get_files("/usr/share/", "poem/static")
+poem_media_files = get_files("usr/share", "poem/media") + get_files("usr/share/", "poem/static")
 
 setup(name=NAME,
-    version=get_ver(),
-    description='Profile Management (POEM) for ARGO.',
+    version='2.1.0',
+    description='Profile, Probes and Metric Configuration Management (POEM) for ARGO Monitoring framework.',
     author='SRCE',
     author_email='dvrcic@srce.hr',
-    license='GPL',
-    long_description='''The Profile Management (POEM) system couples metrics
-                        and services and enables profile-based configuration of SAM/Nagios.''',
-    url='https://tomtools.cern.ch/confluence/display/SAM/POEM',
+    license='Apache License 2.0',
+    long_description=open('README.md').read(),
+    long_description_content_type = 'text/markdown',
+    install_requires=['django>=2.0,<2.1',
+                      'django-ajax-selects',
+                      'django-reversion',
+                      'djangosaml2',
+                      'unidecode'],
+    url='https://github.com/ARGOeu/poem',
+    classifiers=(
+          "Programming Language :: Python :: 3",
+          "License :: OSI Approved :: Apache Software License",
+          "Operating System :: POSIX :: Linux",
+      ),
     scripts = ['bin/poem-syncvo', 'bin/poem-syncservtype',
                'bin/poem-db', 'bin/poem-importprofiles',
                'bin/poem-exportprofiles', 'bin/poem-genseckey'],
     data_files = [
-        ('/etc/poem', ['etc/poem.conf', 'etc/poem_logging.conf', 'etc/saml2.conf']),
-        ('/etc/cron.d/', ['cron/poem-syncvosf', 'cron/poem-clearsessions']),
-        ('/etc/httpd/conf.d', ['poem/apache/poem.conf']),
-        ('/usr/share/poem/apache', ['poem/apache/poem.wsgi']),
+        ('etc/poem', ['etc/poem.conf', 'etc/poem_logging.conf', 'etc/saml2.conf']),
+        ('etc/cron.d/', ['cron/poem-syncvosf', 'cron/poem-clearsessions']),
+        ('etc/httpd/conf.d', ['poem/apache/poem.conf']),
+        ('usr/share/poem/apache', ['poem/apache/poem.wsgi']),
+        ('var/log/poem', ['helpers/empty']),
+        ('var/lib/poem', ['helpers/empty']),
     ] + poem_media_files,
     package_dir = {'Poem': 'poem/Poem'},
     packages = ['Poem', 'Poem.auth_backend', 'Poem.poem', 'Poem.poem.management', 'Poem.poem.dbmodels', 'Poem.poem.management.commands',
                 'Poem.auth_backend.saml2', 'Poem.sync', 'Poem.auth_backend.cust',
-                'Poem.poem.admin_interface', 'Poem.poem.migrations'],
+                'Poem.poem.admin_interface', 'Poem.poem.migrations', 'Poem.poem.templatetags'],
     package_data = {'Poem' : ['poem/templates/admin/*.html', 'poem/templates/poem/*.html',
                               'poem/templates/admin/poem/profile/*.html', 'poem/templates/hints_*',
                               'poem/templates/reversion/poem/metric/*.html', 'poem/templates/reversion/poem/probe/*.html',
@@ -62,4 +65,3 @@ setup(name=NAME,
                               ]
                     },
 )
-

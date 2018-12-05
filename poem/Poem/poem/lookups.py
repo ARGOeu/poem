@@ -21,7 +21,7 @@ class VOLookup(LookupChannel):
         return sorted(filter(lambda x: q.lower() in x.lower(), values))
 
 
-class SFLookup(LookupChannel):
+class ServiceFlavoursLookup(LookupChannel):
     model = ServiceFlavour
 
     def get_query(self, q, request):
@@ -29,7 +29,7 @@ class SFLookup(LookupChannel):
         return sorted(filter(lambda x: q.lower() in x.lower(), values))
 
 
-class MILookup(LookupChannel):
+class MetricInstancesLookup(LookupChannel):
     model = MetricInstance
 
     def get_query(self, q, request):
@@ -37,9 +37,9 @@ class MILookup(LookupChannel):
         return sorted(filter(lambda x: q.lower() in x.lower(), values))
 
 
-class MFiltLookup(LookupChannel):
+class MetricsFilteredLookup(LookupChannel):
     model = Metrics
-    relmodel = model.groupofmetrics_set.related.model
+    relmodel = model.groupofmetrics_set.through
 
     def get_query(self, q, request):
         meting = []
@@ -52,25 +52,26 @@ class MFiltLookup(LookupChannel):
         return sorted(filter(lambda x: q.lower() in x.lower(), meting))
 
 
-class MAllLookup(LookupChannel):
+class MetricsAllLookup(LookupChannel):
     model = Metrics
-    relmodel = model.groupofmetrics_set.related.model
+    relmodel = model.groupofmetrics_set.through
 
     def get_query(self, q, request):
         mets = self.model.objects.all().values_list('name', flat=True)
         return sorted(filter(lambda x: q.lower() in x.lower(), mets))
 
 
-class PLookup(LookupChannel):
+class ProbeLookup(LookupChannel):
     model = Version
 
     def get_query(self, q, request):
         ct = ContentType.objects.get_for_model(Probe)
         proberevs = self.model.objects.filter(content_type_id=ct.id)
-        return sorted(filter(lambda x: q.lower() in x.object_repr.lower(), proberevs))
+        match = [proberev for proberev in proberevs if q.lower() in proberev.object_repr.lower()]
+        return sorted(match, key=lambda m: m.object_repr.lower())
 
 
-class TLookup(LookupChannel):
+class TagsLookup(LookupChannel):
     model = Tags
 
     def get_query(self, q, request):

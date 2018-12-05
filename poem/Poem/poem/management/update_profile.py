@@ -1,10 +1,10 @@
 import Poem.django_logging
 import logging, urllib
-import httplib
+import http.client
 
-from django.utils import simplejson
+import json
 from Poem.poem.models import Profile, MetricInstance, Metrics
-from urlparse import urlparse
+from urllib.parse import urlparse
 from Poem import settings
 from django.core.cache import cache
 
@@ -79,11 +79,11 @@ class PoemSync(object):
 
             if self._has_error:
                 raise SyncException('Unable to Sync')
-        except ValueError, (ve):
+        except ValueError as ve:
             return self._raise_error("From sync_profile ValueError: (%s): %s" % (p_dict['name'], ve))
-        except KeyError, (ke):
+        except KeyError as ke:
             return self._raise_error("From sync_profile KeyError: (%s): %s" % (p_dict['name'], ke))
-        except SyncException, (ex):
+        except SyncException as ex:
             return self._raise_error('From sync_profile: (%s): %s' % (p_dict['name'], ex))
 
         try:
@@ -124,20 +124,20 @@ class PoemSync(object):
         try:
             o = urlparse(url)
             if o.scheme.startswith('file'):
-                dcstr = simplejson.JSONDecoder().decode(open('/'+o.path).read())
+                dcstr = json.loads(open('/'+o.path).read())
             else:
                 if o.scheme.startswith('https'):
-                    conn = httplib.HTTPSConnection(host=o.netloc,
+                    conn = http.client.HTTPSConnection(host=o.netloc,
                                                    key_file=settings.HOST_KEY,
                                                    cert_file=settings.HOST_CERT)
                 else:
-                    conn = httplib.HTTPConnection(host=o.netloc)
+                    conn = http.client.HTTPConnection(host=o.netloc)
                 conn.putrequest('GET', o.path+'?'+o.query)
                 conn.endheaders()
-                dcstr = simplejson.JSONDecoder().decode(conn.getresponse().read())
-        except IOError, (er):
+                dcstr = json.loads(conn.getresponse().read())
+        except IOError as er:
             self._raise_error("Error Occurred while Retrieving URL: %s%s : %s" % (url, append, er))
-        except Exception, (er):
+        except Exception as er:
             self._raise_error("Error Occurred while JSON decode: %s" % (er))
         return dcstr
 

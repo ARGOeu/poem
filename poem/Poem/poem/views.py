@@ -5,6 +5,13 @@ from django.views.generic import View
 from Poem.poem import models
 import json
 
+def none_to_emptystr(val):
+    if val is None:
+        return ''
+    else:
+        return val
+
+
 class Profiles(View):
     """
     Dumps the list of profiles available in this namespace. This API call is used by the
@@ -31,16 +38,16 @@ class Profiles(View):
         for profile in models.Profile.objects.all():
             mi = list(profile.metric_instances.all().\
                  values('metric', 'fqan', 'vo', 'service_flavour'))
-            mi = map(lambda e: {'metric': e['metric'],\
-                                'fqan': e['fqan'],\
-                                'vo': e['vo'],\
-                                'atp_service_type_flavour': e['service_flavour']}, mi)
+            mi = list(map(lambda e: {'metric': none_to_emptystr(e['metric']),\
+                                'fqan': none_to_emptystr(e['fqan']),\
+                                'vo': none_to_emptystr(e['vo']),\
+                                'atp_service_type_flavour': none_to_emptystr(e['service_flavour'])}, mi))
             lp.append({"name": profile.name, "atp_vo" : profile.vo,
                     "version": profile.version,
                     "description": profile.description,
                     "metric_instances": mi})
 
-        return HttpResponse(json.dumps(lp), mimetype='application/json')
+        return HttpResponse(json.dumps(lp), content_type='application/json')
 
 class MetricsInProfiles(View):
     """
@@ -73,28 +80,37 @@ class MetricsInProfiles(View):
     }
 
     * *Supported formats*: json
-    * *URL*: /api/0.2/json/metrics_in_profiles/?vo_name=ops
+    * *URL*: /api/0.2/json/metrics_in_profiles/?vo_name=ops&vo_name=biomed&profile=ARGO_MON&profile=ARGO_MON_BIOMED
     * *Supported methods*: GET
     """
 
     def get(self, request):
-        lookup = request.GET.get('vo_name')
-        if lookup:
+        vo_lookup = request.GET.getlist('vo_name')
+        try:
+            profile_lookup = request.GET.getlist('profile')
+        except NameError:
+            pass
+        if vo_lookup:
             metrics = {}
-            metrics = models.MetricInstance.objects.filter(vo__exact=lookup).values('metric', 'service_flavour', 'fqan', 'profile__name')
-            profiles = set(models.MetricInstance.objects.filter(vo__exact=lookup).values_list('profile__name', 'profile__description'))
+            if profile_lookup:
+                metrics = models.MetricInstance.objects.filter(vo__in=vo_lookup).filter(profile__name__in=profile_lookup).values('metric', 'service_flavour', 'fqan', 'profile__name')
+                profiles = set(models.MetricInstance.objects.filter(vo__in=vo_lookup).filter(profile__name__in=profile_lookup).values_list('profile__name', 'profile__description', 'profile__vo'))
+            else:
+                metrics = models.MetricInstance.objects.filter(vo__in=vo_lookup).values('metric', 'service_flavour', 'fqan', 'profile__name')
+                profiles = set(models.MetricInstance.objects.filter(vo__in=vo_lookup).values_list('profile__name', 'profile__description', 'profile__vo'))
             metrics_in_profiles = []
             for p in profiles:
                 metrics_in_profiles.append({'name' : p[0], \
-                                            'namespace' : settings.POEM_NAMESPACE, \
-                                            'description' : p[1], \
-                                            'metrics' : [{'service_flavour': m['service_flavour'], \
-                                                          'name': m['metric'], \
-                                                          'fqan': m['fqan']} for m in metrics \
+                                            'namespace' : none_to_emptystr(settings.POEM_NAMESPACE), \
+                                            'description' : none_to_emptystr(p[1]), \
+                                            'vo' : none_to_emptystr(p[2]),\
+                                            'metrics' : [{'service_flavour': none_to_emptystr(m['service_flavour']), \
+                                                          'name': none_to_emptystr(m['metric']), \
+                                                          'fqan': none_to_emptystr(m['fqan'])} for m in metrics \
                                                         if m['profile__name'] == p[0]]})
-            result = {"name" : lookup, "profiles" : metrics_in_profiles}
+            result = {"name" : vo_lookup, "profiles" : metrics_in_profiles}
 
-            return HttpResponse(json.dumps([result]), mimetype='application/json')
+            return HttpResponse(json.dumps([result]), content_type='application/json')
 
         else:
             return HttpResponse("Need the name of VO")
@@ -103,7 +119,8 @@ class MetricsInGroup(View):
     def get(self, request):
         gr = request.GET.get('group')
         metrics = models.Metrics.objects.filter(groupofmetrics__name__exact=gr).values_list('name', flat=True)
-        return HttpResponse(json.dumps({'result': [met for met in metrics]}), content_type='application/json')
+        results = sorted(metrics, key=lambda m: m.lower())
+        return HttpResponse(json.dumps({'result': results}), content_type='application/json')
 
 class Metrics(View):
     def get(self, request):
@@ -117,8 +134,11 @@ class Metrics(View):
                     mdict = dict()
                     mdict.update({m.name: dict()})
 
-                    exe = models.MetricProbeExecutable.objects.get(metric=m)
-                    mdict[m.name].update({'probe': exe.value})
+                    try:
+                        exe = models.MetricProbeExecutable.objects.get(metric=m)
+                        mdict[m.name].update({'probe': exe.value})
+                    except models.MetricProbeExecutable.DoesNotExist:
+                        mdict[m.name].update({'probe': ''})
 
                     mc = models.MetricConfig.objects.filter(metric=m)
                     mdict[m.name].update({'config': dict()})
@@ -145,9 +165,28 @@ class Metrics(View):
                     for parameter in mp:
                         mdict[m.name]['parameter'].update({parameter.key: parameter.value})
 
-                    version_fields = json.loads(m.probekey.serialized_data)
+                    mfp = models.MetricFileParameter.objects.filter(metric=m)
+                    mdict[m.name].update({'file_parameter': dict()})
+                    for parameter in mfp:
+                        mdict[m.name]['file_parameter'].update({parameter.key: parameter.value})
 
-                    mdict[m.name].update({'docurl': version_fields[0]['fields']['docurl']})
+                    mfa = models.MetricFiles.objects.filter(metric=m)
+                    mdict[m.name].update({'file_attribute': dict()})
+                    for parameter in mfa:
+                        mdict[m.name]['file_attribute'].update({parameter.key: parameter.value})
+
+                    try:
+                        parent = models.MetricParent.objects.get(metric=m)
+                        mdict[m.name].update({'parent': parent.value})
+                    except models.MetricParent.DoesNotExist:
+                        mdict[m.name].update({'parent': ''})
+
+                    if m.probekey:
+                        version_fields = json.loads(m.probekey.serialized_data)
+                        mdict[m.name].update({'docurl': version_fields[0]['fields']['docurl']})
+                    else:
+                        mdict[m.name].update({'docurl': ''})
+
                     api.append(mdict)
             except models.Tags.DoesNotExist:
                 pass

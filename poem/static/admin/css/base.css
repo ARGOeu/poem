@@ -20,8 +20,12 @@ a:link, a:visited {
     text-decoration: none;
 }
 
-a:hover {
+a:focus, a:hover {
     color: #036;
+}
+
+a:focus {
+    text-decoration: underline;
 }
 
 a img {
@@ -31,6 +35,10 @@ a img {
 a.section:link, a.section:visited {
     color: #fff;
     text-decoration: none;
+}
+
+a.section:focus, a.section:hover {
+    text-decoration: underline;
 }
 
 /* GLOBAL DEFAULTS */
@@ -179,9 +187,13 @@ p.mini {
     margin-top: -3px;
 }
 
-.help, p.help, form p.help {
+.help, p.help, form p.help, div.help, form div.help, div.help li {
     font-size: 11px;
     color: #999;
+}
+
+div.help ul {
+     margin-bottom: 0;
 }
 
 .help-tooltip {
@@ -227,12 +239,6 @@ p img, h1 img, h2 img, h3 img, h4 img, td img {
     white-space: nowrap;
 }
 
-img[src*="icon-no"], img[src*="icon-yes"], img[src*="icon-unknown"] {
-  width: 12px;
-  height: 12px;
-  vertical-align: -1px;
-}
-
 /* TABLES */
 
 table {
@@ -268,6 +274,10 @@ tfoot td {
 tfoot td {
     border-bottom: none;
     border-top: 1px solid #eee;
+}
+
+thead th.required {
+    color: #000;
 }
 
 tr.alt {
@@ -314,7 +324,7 @@ table thead th .text a {
     padding: 8px 10px;
 }
 
-table thead th.sortable:hover {
+table thead th .text a:focus, table thead th .text a:hover {
     background: #eee;
 }
 
@@ -347,7 +357,7 @@ table thead th.sorted .sortoptions a {
     width: 14px;
     height: 14px;
     display: inline-block;
-    background: url(../img/svg/sorting-icons.svg) 0 0 no-repeat;
+    background: url(../img/sorting-icons.svg) 0 0 no-repeat;
     background-size: 14px auto;
 }
 
@@ -365,10 +375,12 @@ table thead th.sorted .sortoptions a.sortremove:after {
     color: #999;
 }
 
+table thead th.sorted .sortoptions a.sortremove:focus:after,
 table thead th.sorted .sortoptions a.sortremove:hover:after {
     color: #447e9b;
 }
 
+table thead th.sorted .sortoptions a.sortremove:focus,
 table thead th.sorted .sortoptions a.sortremove:hover {
     background-position: 0 -14px;
 }
@@ -377,6 +389,7 @@ table thead th.sorted .sortoptions a.ascending {
     background-position: 0 -28px;
 }
 
+table thead th.sorted .sortoptions a.ascending:focus,
 table thead th.sorted .sortoptions a.ascending:hover {
     background-position: 0 -42px;
 }
@@ -386,6 +399,7 @@ table thead th.sorted .sortoptions a.descending {
     background-position: 0 -56px;
 }
 
+table thead th.sorted .sortoptions a.descending:focus,
 table thead th.sorted .sortoptions a.descending:hover {
     background-position: 0 -70px;
 }
@@ -400,23 +414,25 @@ input, textarea, select, .form-row p, form .button {
     font-weight: normal;
     font-size: 13px;
 }
+.form-row div.help {
+    padding: 2px 3px;
+}
 
 textarea {
     vertical-align: top;
 }
 
 input[type=text], input[type=password], input[type=email], input[type=url],
-input[type=number], textarea, select, .vTextField {
+input[type=number], input[type=tel], textarea, select, .vTextField {
     border: 1px solid #ccc;
     border-radius: 4px;
     padding: 5px 6px;
     margin-top: 0;
-    outline: none;
 }
 
 input[type=text]:focus, input[type=password]:focus, input[type=email]:focus,
-input[type=url]:focus, input[type=number]:focus, textarea:focus, select:focus,
-.vTextField:focus {
+input[type=url]:focus, input[type=number]:focus, input[type=tel]:focus,
+textarea:focus, select:focus, .vTextField:focus {
     border-color: #999;
 }
 
@@ -434,7 +450,6 @@ select[multiple] {
     background: #79aec8;
     padding: 10px 15px;
     border: none;
-    outline: none;
     border-radius: 4px;
     color: #fff;
     cursor: pointer;
@@ -445,6 +460,7 @@ a.button {
 }
 
 .button:active, input[type=submit]:active, input[type=button]:active,
+.button:focus, input[type=submit]:focus, input[type=button]:focus,
 .button:hover, input[type=submit]:hover, input[type=button]:hover {
     background: #609ab6;
 }
@@ -461,6 +477,7 @@ a.button {
 }
 
 .button.default:active, input[type=submit].default:active,
+.button.default:focus, input[type=submit].default:focus,
 .button.default:hover, input[type=submit].default:hover {
     background: #205067;
 }
@@ -531,18 +548,18 @@ ul.messagelist li {
     font-size: 13px;
     padding: 10px 10px 10px 65px;
     margin: 0 0 10px 0;
-    background: #dfd url(../img/svg/icon-yes.svg) 40px 12px no-repeat;
+    background: #dfd url(../img/icon-yes.svg) 40px 12px no-repeat;
     background-size: 16px auto;
     color: #333;
 }
 
 ul.messagelist li.warning {
-    background: #ffc url(../img/svg/icon-alert.svg) 40px 14px no-repeat;
+    background: #ffc url(../img/icon-alert.svg) 40px 14px no-repeat;
     background-size: 14px auto;
 }
 
 ul.messagelist li.error {
-    background: #ffefef url(../img/svg/icon-no.svg) 40px 12px no-repeat;
+    background: #ffefef url(../img/icon-no.svg) 40px 12px no-repeat;
     background-size: 16px auto;
 }
 
@@ -616,7 +633,7 @@ div.system-message p.system-message-title {
     padding: 4px 5px 4px 25px;
     margin: 0;
     color: #c11;
-    background: #ffefef url(../img/svg/icon-no.svg) 5px 5px no-repeat;
+    background: #ffefef url(../img/icon-no.svg) 5px 5px no-repeat;
 }
 
 .description {
@@ -639,7 +656,7 @@ div.breadcrumbs a {
     color: #fff;
 }
 
-div.breadcrumbs a:hover {
+div.breadcrumbs a:focus, div.breadcrumbs a:hover {
     color: #c4dce8;
 }
 
@@ -647,25 +664,26 @@ div.breadcrumbs a:hover {
 
 .addlink {
     padding-left: 16px;
-    background: url(../img/svg/icon-addlink.svg) 0 1px no-repeat;
+    background: url(../img/icon-addlink.svg) 0 1px no-repeat;
 }
 
 .changelink, .inlinechangelink {
     padding-left: 16px;
-    background: url(../img/svg/icon-changelink.svg) 0 1px no-repeat;
+    background: url(../img/icon-changelink.svg) 0 1px no-repeat;
 }
 
 .deletelink {
     padding-left: 16px;
-    background: url(../img/svg/icon-deletelink.svg) 0 1px no-repeat;
+    background: url(../img/icon-deletelink.svg) 0 1px no-repeat;
 }
 
 a.deletelink:link, a.deletelink:visited {
     color: #CC3434;
 }
 
-a.deletelink:hover {
+a.deletelink:focus, a.deletelink:hover {
     color: #993333;
+    text-decoration: none;
 }
 
 /* OBJECT TOOLS */
@@ -710,18 +728,26 @@ a.deletelink:hover {
     color: #fff;
 }
 
-.object-tools a:hover, .object-tools li:hover a {
+.object-tools a:focus, .object-tools a:hover {
     background-color: #417690;
 }
 
-.object-tools a.viewsitelink, .object-tools a.golink {
-    background: #999 url(../img/svg/tooltag-arrowright.svg) right 8px center no-repeat;
+.object-tools a:focus{
+    text-decoration: none;
+}
+
+.object-tools a.viewsitelink, .object-tools a.golink,.object-tools a.addlink {
+    background-repeat: no-repeat;
+    background-position: right 7px center;
     padding-right: 26px;
 }
 
+.object-tools a.viewsitelink, .object-tools a.golink {
+    background-image: url(../img/tooltag-arrowright.svg);
+}
+
 .object-tools a.addlink {
-    background: #999 url(../img/svg/tooltag-add.svg) right 8px center no-repeat;
-    padding-right: 26px;
+    background-image: url(../img/tooltag-add.svg);
 }
 
 /* OBJECT HISTORY */
@@ -808,7 +834,7 @@ table#change-history tbody th {
     color: #fff;
 }
 
-#header a:hover {
+#header a:focus , #header a:hover {
     text-decoration: underline;
 }
 
@@ -855,7 +881,7 @@ table#change-history tbody th {
     border-bottom: 1px solid rgba(255, 255, 255, 0.25);
 }
 
-#user-tools a:hover {
+#user-tools a:focus, #user-tools a:hover {
     text-decoration: none;
     border-bottom-color: #79aec8;
     color: #79aec8;
@@ -915,6 +941,7 @@ table#change-history tbody th {
 }
 
 .delete-confirmation form input[type="submit"]:active,
+.delete-confirmation form input[type="submit"]:focus,
 .delete-confirmation form input[type="submit"]:hover {
     background: #a41515;
 }
@@ -932,10 +959,10 @@ table#change-history tbody th {
 }
 
 .delete-confirmation form .cancel-link:active,
+.delete-confirmation form .cancel-link:focus,
 .delete-confirmation form .cancel-link:hover {
     background: #ccc;
 }
-
 
 /* POPUP */
 .popup #content {

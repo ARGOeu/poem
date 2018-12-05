@@ -15,18 +15,17 @@ class Command(BaseCommand):
     args = '[<space separated list of profiles to import>]'
     help = 'Import profiles to POEM (from URL containing JSON encoded List)'
 
-    option_list = BaseCommand.option_list + (
-                 make_option('--url',
+    def add_arguments(self, parser):
+        parser.add_argument('--url',
                              action='store',
                              help='URL containing JSON encoded list of profiles',
                              dest='url',
-                             default=None),
-                 make_option('--initial',
+                             default=None)
+        parser.add_argument('--initial',
                              action='store_true',
                              help='Only import profiles if poem database is empty',
                              dest='is_initial',
-                             default=False),
-                 )
+                             default=False)
 
     def handle(self, *args, **options):
         if not options.get('url'):
@@ -41,6 +40,6 @@ class Command(BaseCommand):
         try:
             sync_ob = PoemSync(profile_list=args)
             sync_ob.sync_profile_list_from_url(url=options.get('url'))
-        except Exception, e:
+        except Exception as e:
             logger.error('Exception occured while trying to import profiles (%s)' % str(e))
             sys.exit(2)

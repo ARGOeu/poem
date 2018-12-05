@@ -9,7 +9,7 @@ YESNO_CHOICE=((u'Y', u'Yes'), (u'N', u'No'), )
 
 class Probe(models.Model):
     name = models.CharField(max_length=128, null=False,
-                            help_text='Name of the probe.')
+                            help_text='Name of the probe.', unique=True)
     version = models.CharField(max_length=28, help_text='Version of the probe.')
     nameversion = models.CharField(max_length=128, null=False, help_text='Name, version tuple.')
     description = models.CharField(max_length=1024)
@@ -24,18 +24,20 @@ class Probe(models.Model):
         permissions = (('probesown', 'Read/Write/Modify'),)
         app_label = 'poem'
 
-    def __unicode__(self):
+    def __str__(self):
         return u'%s (%s)' % (self.name, self.version)
+
 
 @receiver(pre_save, sender=Probe)
 def probe_handler(sender, instance, **kwargs):
     instance.nameversion = u'%s (%s)' % (str(instance.name), str(instance.version))
 
+
 class GroupOfProbes(models.Model):
     name = models.CharField(_('name'), max_length=80, unique=True)
     permissions = models.ManyToManyField(Permission,
                                          verbose_name=_('permissions'), blank=True)
-    probes = models.ManyToManyField(Probe, null=True, blank=True)
+    probes = models.ManyToManyField(Probe, blank=True)
     objects = GroupManager()
 
     class Meta:
@@ -49,20 +51,11 @@ class GroupOfProbes(models.Model):
     def natural_key(self):
         return (self.name,)
 
-wasprobes = []
-def gpprobes_presave(sender, instance, **kwargs):
-    global wasprobes
-    if instance.pk:
-        wasprobes = copy.copy(instance.probes.values_list('pk', flat=True))
-    else:
-        wasprobes = []
-pre_save.connect(gpprobes_presave, sender=GroupOfProbes)
 def gpprobes_m2m(sender, action, pk_set, instance, **kwargs):
-    global wasprobes
-    if action == 'post_clear':
-        for m in wasprobes:
-            Probe.objects.filter(nameversion=m).update(group='')
+    if action == 'post_remove':
+        for m in pk_set:
+            Probe.objects.filter(id=m).update(group='')
     if action == 'post_add':
         for m in pk_set:
-            Probe.objects.filter(nameversion=m).update(group=instance.name)
+            Probe.objects.filter(id=m).update(group=instance.name)
 m2m_changed.connect(gpprobes_m2m, sender=GroupOfProbes.probes.through)

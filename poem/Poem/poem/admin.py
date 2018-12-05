@@ -1,5 +1,5 @@
 from django.http import HttpResponseRedirect
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.contrib import admin
 from django.contrib.auth.models import Group
 from django.contrib.admin.sites import AdminSite
@@ -16,10 +16,12 @@ from Poem.poem.admin_interface.siteprofile import *
 from Poem.poem.admin_interface.siteprobes import *
 from Poem.poem.admin_interface.sitemetrics import *
 
+import re
+
 class MyAdminSite(AdminSite):
     @never_cache
     def index(self, request, extra_context=None):
-        if request.user.is_authenticated():
+        if request.user.is_authenticated:
             if request.user.is_superuser:
                 return HttpResponseRedirect(request.path + 'poem')
             else:
@@ -29,18 +31,50 @@ class MyAdminSite(AdminSite):
     def login(self, request, extra_context=None):
         extra_context = extra_context if extra_context else dict()
         extra_context.update(samlloginstring=SAMLLOGINSTRING)
-        return super(MyAdminSite, self).login(request, extra_context)
+
+        # If we are coming from /poem/public_probe/, /poem/public_probe/?,
+        # /poem/public_probe/?all=, /poem/public_probe/?group=GROUP,
+        # /poem/public_probe/?all=&group=GROUP and ask for individual
+        # change_view for Probe, then proceed. Otherwise, we must authenticate.
+        prev = request.META.get('HTTP_REFERER', None)
+        if prev:
+            r = re.search('public_probe/(\?)?(\?all\=)?([\&\?]group\=[\w\-]+)?$', prev)
+            if r:
+                context = dict(self.each_context(request))
+                next_url = request.GET.get('next')
+                objid = re.search('([0-9]+)', next_url)
+                if objid:
+                    objid = objid.group(1)
+                    url = reverse('admin:poem_probe_change', args=(objid,))
+                    if next_url == url:
+                        return self._registry[Probe].change_view(request, objid, form_url='', extra_context=context)
+
+        return super().login(request, extra_context)
 
     def app_index(self, request, app_label, extra_context=None):
-        if request.user.is_authenticated():
+        if request.user.is_authenticated:
             if request.user.is_superuser:
-                return super(MyAdminSite, self).app_index(request, app_label, extra_context)
+                return super().app_index(request, app_label, extra_context)
             else:
                 return HttpResponseRedirect(request.path + 'profile')
 
+    def get_urls(self):
+        """
+        Add public Probe changelist_view, that bypass permission checks implied
+        in admin_view()
+        """
+        from django.urls import path
+        urls = super().get_urls()
+        my_urls = [path('poem/public_probe/', self.publicprobe_view)]
+        return my_urls + urls
+
+    def publicprobe_view(self, request):
+        context = dict(self.each_context(request))
+        return self._registry[Probe].changelist_view(request, extra_context=context)
+
     @never_cache
     def logout(self, request, extra_context=None):
-        super(MyAdminSite,self).logout(request, extra_context=extra_context)
+        super().logout(request, extra_context=extra_context)
         return HttpResponseRedirect(reverse('admin:index'))
 
 
