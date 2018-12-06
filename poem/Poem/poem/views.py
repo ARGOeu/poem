@@ -38,13 +38,13 @@ class Profiles(View):
         for profile in models.Profile.objects.all():
             mi = list(profile.metric_instances.all().\
                  values('metric', 'fqan', 'vo', 'service_flavour'))
-            mi = list(map(lambda e: {'metric': none_to_emptystr(e['metric']),\
+            mi = list(map(lambda e: {'metric': e['metric'],\
                                 'fqan': none_to_emptystr(e['fqan']),\
                                 'vo': none_to_emptystr(e['vo']),\
-                                'atp_service_type_flavour': none_to_emptystr(e['service_flavour'])}, mi))
+                                'atp_service_type_flavour': e['service_flavour']}, mi))
             lp.append({"name": profile.name, "atp_vo" : profile.vo,
                     "version": profile.version,
-                    "description": profile.description,
+                    "description": none_to_emptystr(profile.description),
                     "metric_instances": mi})
 
         return HttpResponse(json.dumps(lp), content_type='application/json')
@@ -90,21 +90,25 @@ class MetricsInProfiles(View):
             profile_lookup = request.GET.getlist('profile')
         except NameError:
             pass
-        if vo_lookup:
+
+        if vo_lookup and not models.Profile.objects.filter(vo__in=vo_lookup):
+            return HttpResponse("Not valid VO")
+
+        elif vo_lookup:
             metrics = {}
             if profile_lookup:
                 metrics = models.MetricInstance.objects.filter(vo__in=vo_lookup).filter(profile__name__in=profile_lookup).values('metric', 'service_flavour', 'fqan', 'profile__name')
-                profiles = set(models.MetricInstance.objects.filter(vo__in=vo_lookup).filter(profile__name__in=profile_lookup).values_list('profile__name', 'profile__description', 'profile__vo'))
+                profiles = set(models.Profile.objects.filter(vo__in=vo_lookup).filter(name__in=profile_lookup).values_list('name', 'description', 'vo'))
             else:
                 metrics = models.MetricInstance.objects.filter(vo__in=vo_lookup).values('metric', 'service_flavour', 'fqan', 'profile__name')
-                profiles = set(models.MetricInstance.objects.filter(vo__in=vo_lookup).values_list('profile__name', 'profile__description', 'profile__vo'))
+                profiles = set(models.Profile.objects.filter(vo__in=vo_lookup).values_list('name', 'description', 'vo'))
             metrics_in_profiles = []
             for p in profiles:
                 metrics_in_profiles.append({'name' : p[0], \
                                             'namespace' : none_to_emptystr(settings.POEM_NAMESPACE), \
                                             'description' : none_to_emptystr(p[1]), \
-                                            'vo' : none_to_emptystr(p[2]),\
-                                            'metrics' : [{'service_flavour': none_to_emptystr(m['service_flavour']), \
+                                            'vo' : p[2],\
+                                            'metrics' : [{'service_flavour': m['service_flavour'], \
                                                           'name': none_to_emptystr(m['metric']), \
                                                           'fqan': none_to_emptystr(m['fqan'])} for m in metrics \
                                                         if m['profile__name'] == p[0]]})
@@ -118,9 +122,15 @@ class MetricsInProfiles(View):
 class MetricsInGroup(View):
     def get(self, request):
         gr = request.GET.get('group')
-        metrics = models.Metrics.objects.filter(groupofmetrics__name__exact=gr).values_list('name', flat=True)
-        results = sorted(metrics, key=lambda m: m.lower())
-        return HttpResponse(json.dumps({'result': results}), content_type='application/json')
+        if gr:
+            if models.GroupOfMetrics.objects.filter(name__exact=gr):
+                metrics = models.Metrics.objects.filter(groupofmetrics__name__exact=gr).values_list('name', flat=True)
+                results = sorted(metrics, key=lambda m: m.lower())
+                return HttpResponse(json.dumps({'result': results}), content_type='application/json')
+            else:
+                return HttpResponse("Not a valid group.")
+        else:
+            return HttpResponse("Need the name of group")
 
 class Metrics(View):
     def get(self, request):
@@ -136,14 +146,17 @@ class Metrics(View):
 
                     try:
                         exe = models.MetricProbeExecutable.objects.get(metric=m)
-                        mdict[m.name].update({'probe': exe.value})
+                        mdict[m.name].update({'probe': none_to_emptystr(exe.value)})
                     except models.MetricProbeExecutable.DoesNotExist:
                         mdict[m.name].update({'probe': ''})
 
                     mc = models.MetricConfig.objects.filter(metric=m)
                     mdict[m.name].update({'config': dict()})
                     for config in mc:
-                        mdict[m.name]['config'].update({config.key: config.value})
+                        if config.key is None or config.value is None:
+                            pass
+                        else:
+                            mdict[m.name]['config'].update({config.key: config.value})
 
                     f = models.MetricFlags.objects.filter(metric=m)
                     mdict[m.name].update({'flags': dict()})
@@ -177,7 +190,7 @@ class Metrics(View):
 
                     try:
                         parent = models.MetricParent.objects.get(metric=m)
-                        mdict[m.name].update({'parent': parent.value})
+                        mdict[m.name].update({'parent': none_to_emptystr(parent.value)})
                     except models.MetricParent.DoesNotExist:
                         mdict[m.name].update({'parent': ''})
 
@@ -188,7 +201,11 @@ class Metrics(View):
                         mdict[m.name].update({'docurl': ''})
 
                     api.append(mdict)
-            except models.Tags.DoesNotExist:
-                pass
+                return HttpResponse(json.dumps(api), content_type='application/json')
 
-        return HttpResponse(json.dumps(api), content_type='application/json')
+            except models.Tags.DoesNotExist:
+                return HttpResponse('Not a valid tag.')
+
+        else:
+            return HttpResponse('Need the name of tag.')
+
