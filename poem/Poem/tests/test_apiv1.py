@@ -26,7 +26,7 @@ class ProfileViewsTests(TestCase):
             profile=self.profile,
             service_flavour='APEL',
             metric='org.apel.APEL-Pub',
-            # vo='ops',
+            vo='ops',
             fqan='fqan_text',
         )
         response = self.client.get('/api/0.2/json/profiles')
