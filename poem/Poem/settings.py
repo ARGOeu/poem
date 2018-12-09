@@ -7,7 +7,6 @@ from django.core.exceptions import ImproperlyConfigured
 import saml2
 
 VENV = '/home/pyvenv/poem'
-PROJECT_NAME = 'poem'
 APP_PATH = os_path.abspath(os_path.split(__file__)[0])
 PROJECT_PATH = os_path.abspath(os_path.join(APP_PATH, '..'))
 CONFIG_FILE = '{}/etc/poem/poem.conf'.format(VENV)
@@ -108,6 +107,7 @@ INSTALLED_APPS = (
     'modelclone',
     'reversion',
     'reversion_compare',
+    'Poem.api',
     'Poem.poem',
 )
 
