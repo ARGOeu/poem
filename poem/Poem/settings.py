@@ -107,6 +107,7 @@ INSTALLED_APPS = (
     'modelclone',
     'reversion',
     'reversion_compare',
+    'rest_framework',
     'Poem.api',
     'Poem.poem',
 )
@@ -170,6 +171,12 @@ USE_L10N = True
 
 URL_DEBUG = True
 TEMPLATE_DEBUG = DEBUG
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',
+    ]
+}
 
 
 # Django development server settings
