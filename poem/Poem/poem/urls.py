@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.conf.urls import url
-from Poem.poem import views
+from . import views
 
 admin.autodiscover()
 

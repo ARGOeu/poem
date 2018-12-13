@@ -18,7 +18,7 @@ urlpatterns = [
     url(r'^$', lambda x: HttpResponseRedirect('/poem/admin/')),
     url(r'^admin/', myadmin.urls),
     url(r'^admin/lookups/', include(ajax_select_urls)),
-    url(r'^api/0.2/', include('Poem.urls_api')),
+    url(r'^api/0.2/', include('Poem.poem.urls')),
     url(r'^api/v2/', include('Poem.api.urls')),
     url(r'^saml2/', include(('djangosaml2.urls', 'poem'), namespace='saml2')),
 ]
