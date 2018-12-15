@@ -17,8 +17,8 @@ from Poem.poem.models import GroupOfMetrics, GroupOfProfiles
 from Poem.poem.models import MetricInstance, Metric, Probe, Profile, UserProfile, VO, ServiceFlavour, GroupOfProfiles, CustUser
 from Poem.settings import SAMLLOGINSTRING
 
-from rest_framework.authtoken.models import Token
-from rest_framework.authtoken.admin import TokenAdmin
+from rest_framework_api_key.admin import APIKeyAdmin
+from rest_framework_api_key.models import APIKey
 
 import re
 
@@ -84,10 +84,9 @@ class MyAdminSite(AdminSite):
                                 authnz['models'].append(m)
                         a['models'] = list(filter(lambda x: x['object_name']
                                                   not in extract, a['models']))
-
                 app_list.append(authnz)
-                order = ['poem', 'authnz', 'authtoken']
 
+                order = ['poem', 'authnz', 'rest_framework_api_key']
                 app_list = sorted(app_list, key=lambda a: order.index(a['app_label']))
 
                 extra_context = dict(
@@ -131,4 +130,4 @@ myadmin.register(GroupOfProfiles, GroupOfProfilesAdmin)
 myadmin.register(GroupOfMetrics, GroupOfMetricsAdmin)
 myadmin.register(GroupOfProbes, GroupOfProbesAdmin)
 myadmin.register(CustUser, UserProfileAdmin)
-myadmin.register(Token, TokenAdmin)
+myadmin.register(APIKey, APIKeyAdmin)

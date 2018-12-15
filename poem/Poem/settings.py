@@ -96,7 +96,7 @@ ROOT_URLCONF = 'Poem.urls'
 APPEND_SLASH = True
 
 INSTALLED_APPS = (
-    'django.contrib.admin.apps.SimpleAdminConfig',
+    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.staticfiles',
@@ -108,6 +108,7 @@ INSTALLED_APPS = (
     'reversion',
     'reversion_compare',
     'rest_framework',
+    'rest_framework_api_key',
     'Poem.api',
     'Poem.poem',
 )
@@ -174,7 +175,7 @@ TEMPLATE_DEBUG = DEBUG
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
+        'rest_framework.permissions.IsAuthenticated',
     ]
 }
 
