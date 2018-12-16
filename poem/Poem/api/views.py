@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import APIException
 
-from rest_framework_api_key.permissions import HasAPIKey
+from Poem.api.permissions import MyHasAPIKey
 
 from Poem.poem import models
 from . import serializers
@@ -22,14 +22,14 @@ class NotFound(APIException):
 class ListProfile(generics.ListAPIView):
     queryset = models.Profile.objects.all()
     serializer_class = serializers.ProfileSerializer
-    permission_classes = (HasAPIKey,)
+    permission_classes = (MyHasAPIKey,)
 
 
 class DetailProfile(generics.RetrieveAPIView):
     lookup_field = 'name'
     queryset = models.Profile.objects.all()
     serializer_class = serializers.ProfileSerializer
-    permission_classes = (HasAPIKey,)
+    permission_classes = (MyHasAPIKey,)
 
 
 def build_metricconfigs(tag=None):
@@ -109,14 +109,14 @@ def build_metricconfigs(tag=None):
 
 
 class ListTaggedMetrics(APIView):
-    permission_classes = (HasAPIKey,)
+    permission_classes = (MyHasAPIKey,)
 
     def get(self, request, tag):
         return Response(build_metricconfigs(tag))
 
 
 class ListMetrics(APIView):
-    permission_classes = (HasAPIKey,)
+    permission_classes = (MyHasAPIKey,)
 
     def get(self, request):
         return Response(build_metricconfigs())
