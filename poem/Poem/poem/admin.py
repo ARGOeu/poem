@@ -61,6 +61,11 @@ class MyAdminSite(AdminSite):
     def app_index(self, request, app_label, extra_context=None):
         if request.user.is_authenticated:
             if request.user.is_superuser:
+                poem_app_name, apikey_app = 'poem', 'rest_framework_api_key'
+
+                if request.path.endswith('admin/%s/' % apikey_app):
+                    return HttpResponseRedirect('/admin/%s/' % poem_app_name)
+
                 # Reorganize administration page by grouping type of data that
                 # want to be administered:
                 #   Poem = Metrics, Probes, Profiles
@@ -78,7 +83,7 @@ class MyAdminSite(AdminSite):
                                'GroupOfProfiles', 'CustUser'])
 
                 for a in app_list:
-                    if a['app_label'] == 'poem':
+                    if a['app_label'] == poem_app_name:
                         for m in a['models']:
                             if m['object_name'] in extract:
                                 authnz['models'].append(m)
@@ -86,7 +91,7 @@ class MyAdminSite(AdminSite):
                                                   not in extract, a['models']))
                 app_list.append(authnz)
 
-                order = ['poem', 'authnz', 'rest_framework_api_key']
+                order = [poem_app_name, 'authnz', apikey_app]
                 app_list = sorted(app_list, key=lambda a: order.index(a['app_label']))
 
                 extra_context = dict(

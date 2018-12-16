@@ -20,6 +20,8 @@ class MyAPIKeyAdmin(APIKeyAdmin):
         would like to call it "Tenant". Also, override token creation and use
         default SECRET_KEY from settings and don't show it on UI.
     """
+    class Media:
+        css = { "all" : ("/poem_media/css/siteapikey.css",) }
 
     def tenant_name(obj):
         return obj.client_id
