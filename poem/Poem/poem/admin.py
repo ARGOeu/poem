@@ -17,7 +17,7 @@ from Poem.poem.models import GroupOfMetrics, GroupOfProfiles
 from Poem.poem.models import MetricInstance, Metric, Probe, Profile, UserProfile, VO, ServiceFlavour, GroupOfProfiles, CustUser
 from Poem.settings import SAMLLOGINSTRING
 
-from rest_framework_api_key.admin import APIKeyAdmin
+from Poem.api.admin import MyAPIKeyAdmin
 from rest_framework_api_key.models import APIKey
 
 import re
@@ -130,4 +130,4 @@ myadmin.register(GroupOfProfiles, GroupOfProfilesAdmin)
 myadmin.register(GroupOfMetrics, GroupOfMetricsAdmin)
 myadmin.register(GroupOfProbes, GroupOfProbesAdmin)
 myadmin.register(CustUser, UserProfileAdmin)
-myadmin.register(APIKey, APIKeyAdmin)
+myadmin.register(APIKey, MyAPIKeyAdmin)

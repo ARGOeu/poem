@@ -173,12 +173,12 @@ USE_L10N = True
 URL_DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
+# Django REST Framework settings
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ]
 }
-
 
 # Django development server settings
 # MEDIA_URL = '/poem_media/'
