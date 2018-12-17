@@ -1,10 +1,9 @@
 from rest_framework import permissions
 
 from rest_framework_api_key.models import APIKey
-from rest_framework_api_key.settings import TOKEN_HEADER
 from rest_framework_api_key.crypto import hash_token
 
-from Poem.settings import SECRET_KEY
+from Poem.settings import SECRET_KEY, TOKEN_HEADER
 
 
 class MyHasAPIKey(permissions.BasePermission):
