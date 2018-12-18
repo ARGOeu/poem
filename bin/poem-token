@@ -1,0 +1,46 @@
+#!/bin/sh
+
+RUNASUSER="apache"
+SITEPACK=$(python -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")
+
+usage()
+{
+	printf "Usage: %s -t <tenant name> [-o token]\n" $(basename $0) >&2
+	printf "       [-t] - tenant\n" >&2
+	printf "       [-o] - token\n" >&2
+    exit 2
+}
+
+if [[ $# == 0 ]]
+then
+    usage
+fi
+
+while getopts 't:o:' OPTION
+do
+    case $OPTION in
+        t)
+            tenant=$OPTARG
+            ;;
+        o)
+            token=$OPTARG
+            ;;
+        h)
+            usage
+            ;;
+        ?)
+            usage
+            ;;
+    esac
+done
+
+if [ -z "$token" ]
+then
+    su -m -s /bin/sh $RUNASUSER -c \
+    "export DJANGO_SETTINGS_MODULE=Poem.settings && \
+    python $SITEPACK/Poem/manage.py api_token --tenant $tenant"
+else
+    su -m -s /bin/sh $RUNASUSER -c \
+    "export DJANGO_SETTINGS_MODULE=Poem.settings && \
+    python $SITEPACK/Poem/manage.py api_token --tenant $tenant --token $token"
+fi

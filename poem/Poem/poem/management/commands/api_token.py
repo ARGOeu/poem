@@ -1,8 +1,8 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.db.utils import IntegrityError
 
-from rest_framework_api_key import APIKey
-from rest_framework_api_key import _generate_token, hash_token
+from rest_framework_api_key.models import APIKey
+from rest_framework_api_key.crypto import _generate_token, hash_token
 
 from Poem.settings import SECRET_KEY
 
