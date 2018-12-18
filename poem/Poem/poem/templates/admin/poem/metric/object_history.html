@@ -81,7 +81,7 @@
                                         {{action.revision.user.username}}
                                     {% endif %}
                                 </td>
-                                <td>{% get_new_comment action.revision.comment action.version.object_id action.version.id %}</td>
+                                <td>{% get_new_comment action.revision.comment action.version.object_id action.version.id action.version.content_type_id %}</td>
                             </tr>
                         {% endfor %}
                     </tbody>
