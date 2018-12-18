@@ -16,7 +16,7 @@ import json
 register = template.Library()
 
 
-def get_obj_from_db(objname, object_id, version_id):
+def get_obj_from_db(objname, object_id, version_id, contenttype_id):
     """Get object name from the database by its id. In case the object is
     deleted (id = None, ObjectDoesNotExist exception), version queryset is
     loaded for that object and object name is obtained from previous
@@ -33,7 +33,8 @@ def get_obj_from_db(objname, object_id, version_id):
 
     except ObjectDoesNotExist:
 
-        versionset = Version.objects.all().filter(object_id=object_id)
+        versionset = Version.objects.all().filter(
+            object_id=object_id).filter(content_type_id=contenttype_id)
         versionid = [i.id for i in versionset if i.id == version_id]
         allversionid = [i.id for i in versionset]
         olderversionid = versionset[allversionid.index(versionid[0]) + 1]
@@ -51,7 +52,7 @@ def get_obj_from_db(objname, object_id, version_id):
         return diff_fieldname
 
 @register.simple_tag
-def get_new_comment(comment, obj_id=None, version_id=None):
+def get_new_comment(comment, obj_id=None, version_id=None, ctt_id=None):
     """Makes nicer comments in object_history templates. It makes plaintext
     messages from default json comment in log table."""
 
@@ -77,7 +78,7 @@ def get_new_comment(comment, obj_id=None, version_id=None):
                         messages.append('Added %s "%s".' % (sub_message[
                             'added']['name'], get_obj_from_db(gettext(
                             sub_message['added']['object']), obj_id,
-                            version_id)))
+                            version_id, ctt_id)))
                     else:
                         messages.append('Added new %s.'
                                         % (sub_message['added']['name']))
@@ -98,7 +99,7 @@ def get_new_comment(comment, obj_id=None, version_id=None):
                                 sub_message['changed']['name']),
                             get_obj_from_db(gettext(sub_message['changed'][
                                                         'object']),
-                                            obj_id, version_id)))
+                                            obj_id, version_id, ctt_id)))
                     else:
                         messages.append('Changed %s for %s.'
                                         % (sub_message['changed']['fields'],
@@ -116,7 +117,8 @@ def get_new_comment(comment, obj_id=None, version_id=None):
                 if version_id:
                     messages.append('Deleted %s "%s".' % (sub_message[
                         'deleted']['name'], get_obj_from_db(gettext(
-                        sub_message['deleted']['object']), obj_id, version_id)))
+                        sub_message['deleted']['object']), obj_id,
+                        version_id, ctt_id)))
                 else:
                     messages.append('Deleted %s.' % (sub_message['deleted'][
                         'name']))
