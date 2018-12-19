@@ -8,4 +8,3 @@ include cron/*
 include bin/*
 
 recursive-include poem/media *.css *.js *.jpg *.png *.gif
-recursive-include poem/Poem/poem/templates *.html

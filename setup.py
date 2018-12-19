@@ -1,5 +1,5 @@
 
-from setuptools import setup
+from setuptools import setup, find_packages
 import os
 import sys
 
@@ -50,21 +50,7 @@ setup(name=NAME,
         ('var/log/poem', ['helpers/empty']),
         ('var/lib/poem', ['helpers/empty']),
     ] + poem_media_files,
-    package_dir = {'Poem': 'poem/Poem'},
-    packages = ['Poem', 'Poem.auth_backend', 'Poem.poem', 'Poem.poem.management', 'Poem.poem.dbmodels', 'Poem.poem.management.commands',
-                'Poem.auth_backend.saml2', 'Poem.sync', 'Poem.auth_backend.cust', 'Poem.api',
-                'Poem.poem.admin_interface', 'Poem.poem.migrations', 'Poem.poem.templatetags'],
-    package_data = {'Poem' : ['poem/templates/admin/*.html', 'poem/templates/poem/*.html',
-                              'poem/templates/admin/poem/profile/*.html', 'poem/templates/hints_*',
-                              'poem/templates/reversion/poem/metric/*.html', 'poem/templates/reversion/poem/probe/*.html',
-                              'poem/templates/metrics_in_profiles', 'poem/templates/profiles',
-                              'poem/templates/admin/edit_inline/*.html', 'poem/templates/admin/includes/*.html',
-                              'poem/templates/admin/auth/user/*.html', 'poem/templates/admin/poem/custuser/*.html',
-                              'poem/templates/admin/poem/groupofmetrics/*.html', 'poem/templates/admin/poem/groupofprobes/*.html',
-                              'poem/templates/admin/poem/groupofprofiles/*.html', 'poem/templates/admin/poem/metric/*.html',
-                              'poem/templates/admin/poem/probe/*.html', 'poem/templates/admin/poem/profile/*.html',
-                              'poem/fixtures/*.json',
-                              'poem/migrations/*',
-                              ]
-                    },
+    include_package_data=True,
+    package_dir = {'': 'poem/Poem'},
+    packages=find_packages('poem/Poem')
 )
