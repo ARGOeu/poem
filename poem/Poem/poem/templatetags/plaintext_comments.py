@@ -17,39 +17,29 @@ register = template.Library()
 
 
 def get_obj_from_db(objname, object_id, version_id, contenttype_id):
-    """Get object name from the database by its id. In case the object is
-    deleted (id = None, ObjectDoesNotExist exception), version queryset is
-    loaded for that object and object name is obtained from previous
-    version."""
+    """Get object from the database by its id and content_type. Version table
+    is used for getting the object from database, and differences between
+    versions are returned."""
 
     objname = objname.split(' ')
-    try:
-        fieldname = eval("%s.objects.get(id=%s)" % (objname[0], objname[2][
-                                                                1:-1]))
-        try:
-            return fieldname.key
-        except AttributeError:
-            return fieldname.value
 
-    except ObjectDoesNotExist:
+    versionset = Version.objects.all().filter(
+        object_id=object_id).filter(content_type_id=contenttype_id)
+    versionid = [i.id for i in versionset if i.id == version_id]
+    allversionid = [i.id for i in versionset]
+    olderversionid = versionset[allversionid.index(versionid[0]) + 1]
+    fieldnameold = eval("json.loads(Version.objects.get("
+                        "id=%s).serialized_data)[0]['fields']" %
+                        olderversionid.id)
+    fieldname = eval("json.loads(Version.objects.get("
+                     "id=%s).serialized_data)[0]['fields']" % version_id)
+    if objname[0].startswith('Metric'):
+        objname[0] = objname[0][6:]
+    value = json.loads(fieldname[objname[0].lower()])
+    valueold = json.loads(fieldnameold[objname[0].lower()])
+    diff_fieldname = list(set(valueold) - set(value))[0].split(' ')[0]
 
-        versionset = Version.objects.all().filter(
-            object_id=object_id).filter(content_type_id=contenttype_id)
-        versionid = [i.id for i in versionset if i.id == version_id]
-        allversionid = [i.id for i in versionset]
-        olderversionid = versionset[allversionid.index(versionid[0]) + 1]
-        fieldnameold = eval("json.loads(Version.objects.get("
-                            "id=%s).serialized_data)[0]['fields']" %
-                            olderversionid.id)
-        fieldname = eval("json.loads(Version.objects.get("
-                         "id=%s).serialized_data)[0]['fields']" % version_id)
-        if objname[0].startswith('Metric'):
-            objname[0] = objname[0][6:]
-        value = json.loads(fieldname[objname[0].lower()])
-        valueold = json.loads(fieldnameold[objname[0].lower()])
-        diff_fieldname = list(set(valueold) - set(value))[0].split(' ')[0]
-
-        return diff_fieldname
+    return diff_fieldname
 
 @register.simple_tag
 def get_new_comment(comment, obj_id=None, version_id=None, ctt_id=None):
