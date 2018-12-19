@@ -51,6 +51,6 @@ setup(name=NAME,
         ('var/lib/poem', ['helpers/empty']),
     ] + poem_media_files,
     include_package_data=True,
-    package_dir = {'': 'poem/Poem'},
-    packages=find_packages('poem/Poem')
+    package_dir = {'Poem': 'poem/Poem'},
+    packages=find_packages('poem/')
 )
