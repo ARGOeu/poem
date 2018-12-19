@@ -16,12 +16,33 @@ import json
 register = template.Library()
 
 
-def get_obj_from_db(objname, object_id, version_id, contenttype_id):
+def get_obj_from_db(objname, all_changes, action, object_id, version_id,
+                    contenttype_id):
     """Get object from the database by its id and content_type. Version table
     is used for getting the object from database, and differences between
     versions are returned."""
 
     objname = objname.split(' ')
+
+    """In case there are multiple changes in the same objectname, the whole 
+    comment is used to determine which of the entries in serialized_data in 
+    reversion_version table is used in which function call."""
+    nr = 0
+    for x in all_changes:
+        if action in x:
+            if x[action]['object'].split(' ')[0] == objname[0]:
+                nr += 1
+        else:
+            continue
+
+    if nr > 1:
+        obj_id = list()
+        for obj in all_changes:
+            if action in obj:
+                obj_id.append(obj[action]['object'].split(' ')[2][1:-1])
+        ind = obj_id.index(objname[2][1:-1])
+    else:
+        ind = 0
 
     versionset = Version.objects.all().filter(
         object_id=object_id).filter(content_type_id=contenttype_id)
@@ -35,9 +56,25 @@ def get_obj_from_db(objname, object_id, version_id, contenttype_id):
                      "id=%s).serialized_data)[0]['fields']" % version_id)
     if objname[0].startswith('Metric'):
         objname[0] = objname[0][6:]
-    value = json.loads(fieldname[objname[0].lower()])
-    valueold = json.loads(fieldnameold[objname[0].lower()])
-    diff_fieldname = list(set(valueold) - set(value))[0].split(' ')[0]
+
+    if fieldname[objname[0].lower()]:
+        value = json.loads(fieldname[objname[0].lower()])
+    else:
+        value = []
+
+    if fieldnameold[objname[0].lower()]:
+        valueold = json.loads(fieldnameold[objname[0].lower()])
+    else:
+        valueold = []
+
+
+    list_fieldname = list(set(value).union(set(valueold)) - set(
+        value).intersection(set(valueold)))
+
+    if len(list_fieldname) == 0:
+        diff_fieldname = ''
+    else:
+        diff_fieldname = list_fieldname[ind].split(' ')[0]
 
     return diff_fieldname
 
@@ -65,10 +102,16 @@ def get_new_comment(comment, obj_id=None, version_id=None, ctt_id=None):
                     sub_message['added']['name'] = gettext(sub_message['added']
                                                            ['name'])
                     if version_id:
-                        messages.append('Added %s "%s".' % (sub_message[
-                            'added']['name'], get_obj_from_db(gettext(
-                            sub_message['added']['object']), obj_id,
-                            version_id, ctt_id)))
+                        if get_obj_from_db(gettext(sub_message['added'][
+                                                       'object']),
+                                           new_comment, 'added', obj_id,
+                                           version_id, ctt_id):
+                            messages.append('Added %s "%s".' % (sub_message[
+                                'added']['name'], get_obj_from_db(gettext(
+                                sub_message['added']['object']), new_comment,
+                                'added', obj_id, version_id, ctt_id)))
+                        else:
+                            messages.append('')
                     else:
                         messages.append('Added new %s.'
                                         % (sub_message['added']['name']))
@@ -84,12 +127,19 @@ def get_new_comment(comment, obj_id=None, version_id=None, ctt_id=None):
                     sub_message['changed']['name'] = gettext(
                         sub_message['changed']['name'])
                     if version_id:
-                        messages.append('Changed %s for %s "%s".' % (
-                            sub_message['changed']['fields'], gettext(
-                                sub_message['changed']['name']),
-                            get_obj_from_db(gettext(sub_message['changed'][
-                                                        'object']),
-                                            obj_id, version_id, ctt_id)))
+                        if get_obj_from_db(gettext(sub_message['changed'][
+                                                       'object']),
+                                           new_comment, 'changed', obj_id,
+                                           version_id, ctt_id):
+                            messages.append('Changed %s for %s "%s".' % (
+                                sub_message['changed']['fields'], gettext(
+                                    sub_message['changed']['name']),
+                                get_obj_from_db(gettext(sub_message['changed'][
+                                                            'object']),
+                                                new_comment, 'changed',
+                                                obj_id, version_id, ctt_id)))
+                        else:
+                            messages.append('')
                     else:
                         messages.append('Changed %s for %s.'
                                         % (sub_message['changed']['fields'],
@@ -105,17 +155,22 @@ def get_new_comment(comment, obj_id=None, version_id=None, ctt_id=None):
                     sub_message['deleted']['name'])
 
                 if version_id:
-                    messages.append('Deleted %s "%s".' % (sub_message[
-                        'deleted']['name'], get_obj_from_db(gettext(
-                        sub_message['deleted']['object']), obj_id,
-                        version_id, ctt_id)))
+                    if get_obj_from_db(gettext(sub_message['deleted'][
+                                                   'object']), new_comment,
+                                       'deleted', obj_id, version_id, ctt_id):
+                        messages.append('Deleted %s "%s".' % (sub_message[
+                            'deleted']['name'], get_obj_from_db(gettext(
+                            sub_message['deleted']['object']), new_comment,
+                            'deleted', obj_id, version_id, ctt_id)))
+                    else:
+                        messages.append('')
                 else:
                     messages.append('Deleted %s.' % (sub_message['deleted'][
                         'name']))
 
-        new_comment = ' '.join(msg[0].upper() + msg[1:] for msg in messages)
-
-    if new_comment == '':
-        new_comment = 'Initial version.'
+        new_comment = ' '.join(msg[0].upper() + msg[1:] if msg != '' else
+                               '' for msg in messages)
+        if new_comment == ' ':
+            new_comment = 'No fields changed.'
 
     return new_comment or gettext('No fields changed.')
