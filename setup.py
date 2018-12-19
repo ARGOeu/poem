@@ -27,7 +27,7 @@ setup(name=NAME,
     long_description_content_type = 'text/markdown',
     install_requires=['django>=2.0,<2.1',
                       'djangorestframework',
-                      'djangorestframework-api-key'
+                      'djangorestframework-api-key',
                       'django-ajax-selects',
                       'django-reversion',
                       'djangosaml2',
