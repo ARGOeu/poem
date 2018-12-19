@@ -252,6 +252,11 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
 
     @reversion.create_revision()
     def save_model(self, request, obj, form, change):
+        """
+        In case new_version button is ticked, the new revision is created;
+        in case that new_version button IS NOT ticked, there is no new
+        revision created, only the data in Probe table in db is updated.
+        """
         sh = SharedInfo()
 
         if obj and sh.getgroup():
