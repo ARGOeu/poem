@@ -64,7 +64,7 @@ class MyAdminSite(AdminSite):
                 poem_app_name, apikey_app = 'poem', 'rest_framework_api_key'
 
                 if request.path.endswith('admin/%s/' % apikey_app):
-                    return HttpResponseRedirect('%s/admin/%s/' % (poem_app_name, poem_app_name))
+                    return HttpResponseRedirect('/%s/admin/%s/' % (poem_app_name, poem_app_name))
 
                 # Reorganize administration page by grouping type of data that
                 # want to be administered:
