@@ -4,17 +4,21 @@ from django.contrib import admin
 from django.contrib.auth.models import Group
 from django.contrib.admin.sites import AdminSite
 from django.views.decorators.cache import never_cache
-from Poem.poem.models import GroupOfMetrics, GroupOfProfiles
+from django.template.response import TemplateResponse
+
 from Poem.poem.admin_interface.grmetrics import GroupOfMetricsAdmin
-from Poem.poem.admin_interface.grprofiles import GroupOfProfilesAdmin
 from Poem.poem.admin_interface.grprobes import GroupOfProbesAdmin
+from Poem.poem.admin_interface.grprofiles import GroupOfProfilesAdmin
+from Poem.poem.admin_interface.sitemetrics import *
+from Poem.poem.admin_interface.siteprobes import *
+from Poem.poem.admin_interface.siteprofile import *
+from Poem.poem.admin_interface.userprofile import *
+from Poem.poem.models import GroupOfMetrics, GroupOfProfiles
 from Poem.poem.models import MetricInstance, Metric, Probe, Profile, UserProfile, VO, ServiceFlavour, GroupOfProfiles, CustUser
 from Poem.settings import SAMLLOGINSTRING
 
-from Poem.poem.admin_interface.userprofile import *
-from Poem.poem.admin_interface.siteprofile import *
-from Poem.poem.admin_interface.siteprobes import *
-from Poem.poem.admin_interface.sitemetrics import *
+from Poem.api.admin import MyAPIKeyAdmin
+from rest_framework_api_key.models import APIKey
 
 import re
 
@@ -47,13 +51,57 @@ class MyAdminSite(AdminSite):
                     objid = objid.group(1)
                     url = reverse('admin:poem_probe_change', args=(objid,))
                     if next_url == url:
-                        return self._registry[Probe].change_view(request, objid, form_url='', extra_context=context)
+                        return self._registry[Probe].change_view(request,
+                                                                 objid,
+                                                                 form_url='',
+                                                                 extra_context=context)
 
         return super().login(request, extra_context)
 
     def app_index(self, request, app_label, extra_context=None):
         if request.user.is_authenticated:
             if request.user.is_superuser:
+                poem_app_name, apikey_app = 'poem', 'rest_framework_api_key'
+
+                if request.path.endswith('admin/%s/' % apikey_app):
+                    return HttpResponseRedirect('/%s/admin/%s/' % (poem_app_name, poem_app_name))
+
+                # Reorganize administration page by grouping type of data that
+                # want to be administered:
+                #   Poem = Metrics, Probes, Profiles
+                #   Authnz = GroupOfMetrics, GroupOfProbes, GroupOfProfiles, Users
+                #   Auth Tokens = Tokens
+                app_list = self.get_app_list(request)
+                authnz = dict(
+                    name='Authentication and Authorization',
+                    app_label='authnz',
+                    app_url='/poem/admin/poem',
+                    has_module_perms=True,
+                    models=list()
+                )
+                extract = set(['GroupOfProbes', 'GroupOfMetrics',
+                               'GroupOfProfiles', 'CustUser'])
+
+                for a in app_list:
+                    if a['app_label'] == poem_app_name:
+                        for m in a['models']:
+                            if m['object_name'] in extract:
+                                authnz['models'].append(m)
+                        a['models'] = list(filter(lambda x: x['object_name']
+                                                  not in extract, a['models']))
+                app_list.append(authnz)
+
+                order = [poem_app_name, 'authnz', apikey_app]
+                app_list = sorted(app_list, key=lambda a: order.index(a['app_label']))
+
+                extra_context = dict(
+                    self.each_context(request),
+                    app_list=app_list,
+                )
+                extra_context.update(extra_context or {})
+
+                request.current_app = self.name
+
                 return super().app_index(request, app_label, extra_context)
             else:
                 return HttpResponseRedirect(request.path + 'profile')
@@ -87,3 +135,4 @@ myadmin.register(GroupOfProfiles, GroupOfProfilesAdmin)
 myadmin.register(GroupOfMetrics, GroupOfMetricsAdmin)
 myadmin.register(GroupOfProbes, GroupOfProbesAdmin)
 myadmin.register(CustUser, UserProfileAdmin)
+myadmin.register(APIKey, MyAPIKeyAdmin)

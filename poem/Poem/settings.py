@@ -7,7 +7,6 @@ from django.core.exceptions import ImproperlyConfigured
 import saml2
 
 VENV = '/home/pyvenv/poem'
-PROJECT_NAME = 'poem'
 APP_PATH = os_path.abspath(os_path.split(__file__)[0])
 PROJECT_PATH = os_path.abspath(os_path.join(APP_PATH, '..'))
 CONFIG_FILE = '{}/etc/poem/poem.conf'.format(VENV)
@@ -97,7 +96,7 @@ ROOT_URLCONF = 'Poem.urls'
 APPEND_SLASH = True
 
 INSTALLED_APPS = (
-    'django.contrib.admin.apps.SimpleAdminConfig',
+    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.staticfiles',
@@ -108,6 +107,9 @@ INSTALLED_APPS = (
     'modelclone',
     'reversion',
     'reversion_compare',
+    'rest_framework',
+    'rest_framework_api_key',
+    'Poem.api',
     'Poem.poem',
 )
 
@@ -171,6 +173,13 @@ USE_L10N = True
 URL_DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
+# Django REST Framework settings
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ]
+}
+TOKEN_HEADER = 'HTTP_X_API_KEY'
 
 # Django development server settings
 # MEDIA_URL = '/poem_media/'

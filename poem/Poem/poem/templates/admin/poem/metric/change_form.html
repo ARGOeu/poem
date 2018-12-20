@@ -109,7 +109,7 @@
   $(document).ready(function() {
     $('.metricautocomplete').on('click', function() {
       var gr = $('#id_group :selected').text();
-      var json_metrics_group = '/poem/api/0.2/json/metrics_in_group?group=' + gr;
+      var json_metrics_group = '/poem/api/v2/metrics/' + gr;
       $.getJSON(json_metrics_group).done(function(json) {
         $('.metricautocomplete').autocomplete();
         $('.metricautocomplete').autocomplete({minLength: 0, source: json['result']});
