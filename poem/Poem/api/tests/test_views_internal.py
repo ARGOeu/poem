@@ -51,3 +51,15 @@ class ListMetricsInGroupAPIViewTests(APITestCase):
         force_authenticate(request, user=self.user)
         response = self.view(request, 'Empty_group')
         self.assertEqual(response.data, {'result': []})
+
+
+class ListTokensAPIViewTests(APITestCase):
+    def setUp(self):
+        self.factory = APIRequestFactory()
+        self.view = ListTokens.as_view()
+        self.url = '/api/v2/internal/tokens/'
+
+    def test_permission_denied_in_case_no_authorization(self):
+        request = self.factory.get(self.url)
+        response = self.view(request)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
