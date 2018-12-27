@@ -44,3 +44,10 @@ class ListMetricsInGroupAPIViewTests(APITestCase):
                 'result': ['org.apel.APEL-Pub', 'org.apel.APEL-Sync']
             }
         )
+
+    def test_get_metrics_in_group_if_empty_group(self):
+        url = '/api/v2/internal/metrics/Empty_group'
+        request = self.factory.get(url)
+        force_authenticate(request, user=self.user)
+        response = self.view(request, 'Empty_group')
+        self.assertEqual(response.data, {'result': []})
