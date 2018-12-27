@@ -2,6 +2,8 @@ from rest_framework.test import APITestCase, APIRequestFactory, \
     force_authenticate
 from rest_framework import status
 
+from rest_framework_api_key.models import APIKey
+
 from Poem.poem.models import *
 from Poem.api.views_internal import *
 
@@ -58,8 +60,29 @@ class ListTokensAPIViewTests(APITestCase):
         self.factory = APIRequestFactory()
         self.view = ListTokens.as_view()
         self.url = '/api/v2/internal/tokens/'
+        self.user = CustUser.objects.create(username='testuser')
+
+        key1 = APIKey.objects.create(client_id='EGI')
+        self.token1 = key1.token
+        key2 = APIKey.objects.create(client_id='EUDAT')
+        self.token2 = key2.token
 
     def test_permission_denied_in_case_no_authorization(self):
         request = self.factory.get(self.url)
         response = self.view(request)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_get_get_list_of_tokens(self):
+        request = self.factory.get(self.url)
+        force_authenticate(request, user=self.user)
+        response = self.view(request)
+        # Those created later are listed first
+        self.assertEqual(
+            response.data,
+            [
+                {'name': 'EUDAT',
+                 'token': self.token2},
+                {'name': 'EGI',
+                 'token': self.token1}
+            ]
+        )
