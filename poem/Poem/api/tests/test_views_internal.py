@@ -114,3 +114,10 @@ class ListTokenForTenantAPIViewTests(APITestCase):
         response2 = self.view(request2, 'EUDAT')
         self.assertEqual(response1.data, self.token1)
         self.assertEqual(response2.data, self.token2)
+
+    def test_get_token_in_case_tenant_is_nonexistent(self):
+        request = self.factory.get(self.url_base + 'nonexisting')
+        force_authenticate(request, user=self.user)
+        response = self.view(request, 'nonexisting')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.data, {'detail': 'Tenant not found'})
