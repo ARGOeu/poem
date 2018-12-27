@@ -100,6 +100,11 @@ class ListTokenForTenantAPIViewTests(APITestCase):
         tenant2 = APIKey.objects.create(client_id='EUDAT')
         self.token2 = tenant2.token
 
+    def test_permission_denied_in_case_no_authorization(self):
+        request = self.factory.get(self.url_base + 'EGI')
+        response = self.view(request, 'EGI')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
     def test_get_token_for_a_given_tenant(self):
         request1 = self.factory.get(self.url_base + 'EGI')
         request2 = self.factory.get(self.url_base + 'EUDAT')
