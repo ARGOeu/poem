@@ -86,3 +86,26 @@ class ListTokensAPIViewTests(APITestCase):
                  'token': self.token1}
             ]
         )
+
+
+class ListTokenForTenantAPIViewTests(APITestCase):
+    def setUp(self):
+        self.factory = APIRequestFactory()
+        self.view = ListTokenForTenant.as_view()
+        self.url_base = '/api/v2/internal/tokens/'
+        self.user = CustUser.objects.create(username='testuser')
+
+        tenant1 = APIKey.objects.create(client_id='EGI')
+        self.token1 = tenant1.token
+        tenant2 = APIKey.objects.create(client_id='EUDAT')
+        self.token2 = tenant2.token
+
+    def test_get_token_for_a_given_tenant(self):
+        request1 = self.factory.get(self.url_base + 'EGI')
+        request2 = self.factory.get(self.url_base + 'EUDAT')
+        force_authenticate(request1, user=self.user)
+        force_authenticate(request2, user=self.user)
+        response1 = self.view(request1, 'EGI')
+        response2 = self.view(request2, 'EUDAT')
+        self.assertEqual(response1.data, self.token1)
+        self.assertEqual(response2.data, self.token2)
