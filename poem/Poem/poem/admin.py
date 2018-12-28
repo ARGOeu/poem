@@ -36,25 +36,38 @@ class MyAdminSite(AdminSite):
         extra_context = extra_context if extra_context else dict()
         extra_context.update(samlloginstring=SAMLLOGINSTRING)
 
-        # If we are coming from /poem/public_probe/, /poem/public_probe/?,
-        # /poem/public_probe/?all=, /poem/public_probe/?group=GROUP,
-        # /poem/public_probe/?all=&group=GROUP and ask for individual
-        # change_view for Probe, then proceed. Otherwise, we must authenticate.
+        # If we are coming from all forms of public changelist_view, like
+        # /poem/public_probe/, /poem/public_probe/?, /poem/public_probe/?all=,
+        # /poem/public_probe/?group=GROUP, /poem/public_probe/?all=&group=GROUP,
+        # /poem/public_probe/poem/?p=5 or /poem/public_probe/?q=term
+        # and ask for individual change_view for Probe, then proceed without
+        # authentication.
+        #
+        # Also, if we are coming from invidiual change_view of the probe like
+        # /poem/public_probe/87/change want to go to changelist_view, then
+        # proceed without authentication.
+
         prev = request.META.get('HTTP_REFERER', None)
         if prev:
-            r = re.search('public_probe/(\?)?(\?all\=)?([\&\?]group\=[\w\-]+)?$', prev)
+            context = dict(self.each_context(request))
+            next_url = request.GET.get('next')
+
+            # changelist_view -> change_view
+            r = re.search('public_probe/(\?)?(\?p=[0-9]+)?(\?q=\w+)?(\?all\=)?([\&\?]group\=[\w\-]+)?$', prev)
             if r:
-                context = dict(self.each_context(request))
-                next_url = request.GET.get('next')
                 objid = re.search('([0-9]+)', next_url)
                 if objid:
                     objid = objid.group(1)
                     url = reverse('admin:poem_probe_change', args=(objid,))
-                    if next_url == url:
-                        return self._registry[Probe].change_view(request,
-                                                                 objid,
-                                                                 form_url='',
-                                                                 extra_context=context)
+                    url = url.replace('probe/', 'public_probe/')
+                    return HttpResponseRedirect(url)
+
+            # change_view -> changelist_view
+            r = re.search('public_probe/([0-9]+)/change/$', prev)
+            if r:
+                url = reverse('admin:poem_probe_changelist')
+                url = url.replace('probe/', 'public_probe/')
+                return HttpResponseRedirect(url)
 
         return super().login(request, extra_context)
 
@@ -70,7 +83,7 @@ class MyAdminSite(AdminSite):
                 # want to be administered:
                 #   Poem = Metrics, Probes, Profiles
                 #   Authnz = GroupOfMetrics, GroupOfProbes, GroupOfProfiles, Users
-                #   Auth Tokens = Tokens
+                #   API Permissions = API keys
                 app_list = self.get_app_list(request)
                 authnz = dict(
                     name='Authentication and Authorization',
@@ -108,17 +121,23 @@ class MyAdminSite(AdminSite):
 
     def get_urls(self):
         """
-        Add public Probe changelist_view, that bypass permission checks implied
-        in admin_view()
+        Add public Probe changelist_view and change_view, that bypasses
+        permission checks implied in admin_view()
         """
-        from django.urls import path
+        from django.urls import path, re_path
         urls = super().get_urls()
-        my_urls = [path('poem/public_probe/', self.publicprobe_view)]
-        return my_urls + urls
+        my_urls = list()
+        my_urls.append(path('poem/public_probe/', self.publicprobe_changelistview))
+        my_urls.append(re_path('poem/public_probe/(?P<object_id>[0-9]+)/change/', self.publicprobe_changeview))
+        return urls + my_urls
 
-    def publicprobe_view(self, request):
+    def publicprobe_changelistview(self, request):
         context = dict(self.each_context(request))
         return self._registry[Probe].changelist_view(request, extra_context=context)
+
+    def publicprobe_changeview(self, request, object_id):
+        context = dict(self.each_context(request))
+        return self._registry[Probe].change_view(request, object_id, extra_context=context)
 
     @never_cache
     def logout(self, request, extra_context=None):

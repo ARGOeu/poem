@@ -23,10 +23,8 @@
     {% if request.user.is_superuser %}
       <a href="{% url 'admin:app_list' app_label=opts.app_label %}">Admin</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
     {% endif %}
-      <a href="{% url 'admin:poem_profile_changelist' %}">Profiles</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
-    {% if request.user.is_anonymous %}
-      <a href="{% url 'admin:app_list' app_label=opts.app_label %}public_probe/">{{ opts.verbose_name_plural|capfirst }}</a>
-    {% elif has_change_permission %}
+    <a href="{% url 'admin:poem_profile_changelist' %}">Profiles</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
+    {% if has_change_permission %}
       <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
     {% else %}
       {{ opts.verbose_name_plural|capfirst }}
