@@ -22,32 +22,41 @@ from rest_framework_api_key.models import APIKey
 
 import re
 
-class MyAdminSite(AdminSite):
-    @never_cache
-    def index(self, request, extra_context=None):
-        if request.user.is_authenticated:
-            if request.user.is_superuser:
-                return HttpResponseRedirect(request.path + 'poem')
-            else:
-                return HttpResponseRedirect(request.path + 'poem/profile')
 
-    @never_cache
-    def login(self, request, extra_context=None):
-        extra_context = extra_context if extra_context else dict()
-        extra_context.update(samlloginstring=SAMLLOGINSTRING)
+class PublicViews(object):
+    def get_public_urls(self):
+        from django.urls import path, re_path
 
-        # If we are coming from all forms of public changelist_view, like
-        # /poem/public_probe/, /poem/public_probe/?, /poem/public_probe/?all=,
-        # /poem/public_probe/?group=GROUP, /poem/public_probe/?all=&group=GROUP,
-        # /poem/public_probe/poem/?p=5 or /poem/public_probe/?q=term
-        # and ask for individual change_view for Probe, then proceed without
-        # authentication.
-        #
-        # Also, if we are coming from invidiual change_view of the probe like
-        # /poem/public_probe/87/change want to go to changelist_view, then
-        # proceed without authentication.
+        public_urls = list()
+        public_urls.append(re_path('^poem/public_(?P<model>(probe|profiles|metric))/$', self.public_views))
+        public_urls.append(re_path('^poem/public_(?P<model>(probe|profiles|metric))/(?P<object_id>[0-9]+)/change/', self.public_views))
+
+        return public_urls
+
+    def public_views(self, request, **kwargs):
+        objid = kwargs.get('object_id', None)
+        context = dict(self.each_context(request))
+        if objid:
+            return self._registry[Probe].change_view(request, objid, extra_context=context)
+        else:
+            return self._registry[Probe].changelist_view(request, extra_context=context)
+
+    def login(self, request, extra_context):
+        """
+        If we are coming from all forms of public changelist_view, like
+        /poem/public_probe/, /poem/public_probe/?, /poem/public_probe/?all=,
+        /poem/public_probe/?group=GROUP, /poem/public_probe/?all=&group=GROUP,
+        /poem/public_probe/poem/?p=5 or /poem/public_probe/?q=term
+        and ask for individual change_view for Probe, then proceed without
+        authentication.
+
+        Also, if we are coming from invidiual change_view of the probe like
+        /poem/public_probe/87/change want to go to changelist_view, then
+        proceed without authentication.
+        """
 
         prev = request.META.get('HTTP_REFERER', None)
+        # prev = None
         if prev:
             context = dict(self.each_context(request))
             next_url = request.GET.get('next')
@@ -60,6 +69,7 @@ class MyAdminSite(AdminSite):
                     objid = objid.group(1)
                     url = reverse('admin:poem_probe_change', args=(objid,))
                     url = url.replace('probe/', 'public_probe/')
+
                     return HttpResponseRedirect(url)
 
             # change_view -> changelist_view
@@ -67,7 +77,28 @@ class MyAdminSite(AdminSite):
             if r:
                 url = reverse('admin:poem_probe_changelist')
                 url = url.replace('probe/', 'public_probe/')
+
                 return HttpResponseRedirect(url)
+
+        return super().login(request, extra_context)
+
+
+class MyAdminSite(PublicViews, AdminSite):
+    @never_cache
+    def index(self, request, extra_context=None):
+        if request.user.is_authenticated:
+            if request.user.is_superuser:
+                return HttpResponseRedirect(request.path + 'poem')
+            else:
+                return HttpResponseRedirect(request.path + 'poem/profile')
+
+    @never_cache
+    def login(self, request, extra_context=None):
+        """
+        Extend login view with SAML login string and call PublicViews.login()
+        """
+        extra_context = extra_context if extra_context else dict()
+        extra_context.update(samlloginstring=SAMLLOGINSTRING)
 
         return super().login(request, extra_context)
 
@@ -121,15 +152,10 @@ class MyAdminSite(AdminSite):
 
     def get_urls(self):
         """
-        Add public Probe changelist_view and change_view, that bypasses
-        permission checks implied in admin_view()
+        Add public url mappings to views so that we can bypass permission
+        checks implied in admin_view() decorator
         """
-        from django.urls import path, re_path
-        urls = super().get_urls()
-        my_urls = list()
-        my_urls.append(path('poem/public_probe/', self.publicprobe_changelistview))
-        my_urls.append(re_path('poem/public_probe/(?P<object_id>[0-9]+)/change/', self.publicprobe_changeview))
-        return urls + my_urls
+        return super().get_urls() + super().get_public_urls()
 
     def publicprobe_changelistview(self, request):
         context = dict(self.each_context(request))
