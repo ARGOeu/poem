@@ -24,22 +24,32 @@ import re
 
 
 class PublicViews(object):
+    def load_settings(self):
+        self.public_models = (Probe, Metric, Profile)
+        self._public_name_models = [s.__name__.lower() for s in self.public_models]
+        self._map = dict()
+        _ = [self._map.update({x.__name__.lower(): x}) for x in self.public_models]
+        self._regex = '(' + '|'.join(self._public_name_models) + ')'
+
     def get_public_urls(self):
         from django.urls import path, re_path
 
         public_urls = list()
-        public_urls.append(re_path('^poem/public_(?P<model>(probe|profiles|metric))/$', self.public_views))
-        public_urls.append(re_path('^poem/public_(?P<model>(probe|profiles|metric))/(?P<object_id>[0-9]+)/change/', self.public_views))
+        public_urls.append(re_path('^poem/public_(?P<model>%s)/$' %
+                                   self._regex, self.public_views))
+        public_urls.append(re_path('^poem/public_(?P<model>%s)/(?P<object_id>[0-9]+)/change/'
+                                   % self._regex, self.public_views))
 
         return public_urls
 
     def public_views(self, request, **kwargs):
         objid = kwargs.get('object_id', None)
+        model = self._map[kwargs['model']]
         context = dict(self.each_context(request))
         if objid:
-            return self._registry[Probe].change_view(request, objid, extra_context=context)
+            return self._registry[model].change_view(request, objid, extra_context=context)
         else:
-            return self._registry[Probe].changelist_view(request, extra_context=context)
+            return self._registry[model].changelist_view(request, extra_context=context)
 
     def login(self, request, extra_context):
         """
@@ -62,21 +72,23 @@ class PublicViews(object):
             next_url = request.GET.get('next')
 
             # changelist_view -> change_view
-            r = re.search('public_probe/(\?)?(\?p=[0-9]+)?(\?q=\w+)?(\?all\=)?([\&\?]group\=[\w\-]+)?$', prev)
+            r = re.search('public_(\w+)/(\?)?(\?p=[0-9]+)?(\?q=\w+)?(\?all\=)?([\&\?]group\=[\w\-]+)?$', prev)
             if r:
                 objid = re.search('([0-9]+)', next_url)
                 if objid:
                     objid = objid.group(1)
-                    url = reverse('admin:poem_probe_change', args=(objid,))
-                    url = url.replace('probe/', 'public_probe/')
+                    url = reverse('admin:poem_%s_change' % r.group(1), args=(objid,))
+                    url = url.replace(r.group(1) + '/',
+                                      'public_%s/' % r.group(1))
 
                     return HttpResponseRedirect(url)
 
             # change_view -> changelist_view
-            r = re.search('public_probe/([0-9]+)/change/$', prev)
+            r = re.search('public_(\w+)/([0-9]+)/change/$', prev)
             if r:
-                url = reverse('admin:poem_probe_changelist')
-                url = url.replace('probe/', 'public_probe/')
+                url = reverse('admin:poem_%s_changelist' % r.group(1))
+                url = url.replace(r.group(1) + '/',
+                                  'public_%s/' % r.group(1))
 
                 return HttpResponseRedirect(url)
 
@@ -84,6 +96,10 @@ class PublicViews(object):
 
 
 class MyAdminSite(PublicViews, AdminSite):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        super().load_settings()
+
     @never_cache
     def index(self, request, extra_context=None):
         if request.user.is_authenticated:
