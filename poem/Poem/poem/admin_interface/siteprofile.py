@@ -94,7 +94,8 @@ class GroupOfProfilesInlineForms(ModelForm):
     def __init__(self, *args, **kwargs):
         sh = SharedInfo()
         self.user = sh.getuser()
-        self.usergroups = self.user.groupsofprofiles.all()
+        if self.user.is_authenticated:
+            self.usergroups = self.user.groupsofprofiles.all()
         super(GroupOfProfilesInlineForms, self).__init__(*args, **kwargs)
         self.fields['groupofprofiles'].widget.can_add_related = False
         self.fields['groupofprofiles'].widget.can_change_related = False
@@ -146,7 +147,7 @@ class GroupOfProfilesInline(admin.TabularInline):
         return True
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if not request.user.is_superuser:
+        if request.user.is_authenticated and not request.user.is_superuser:
             lgi = request.user.groupsofprofiles.all().values_list('id', flat=True)
             kwargs["queryset"] = GroupOfProfiles.objects.filter(pk__in=lgi)
         return super(GroupOfProfilesInline, self).formfield_for_foreignkey(db_field, request, **kwargs)
@@ -251,11 +252,12 @@ class ProfileAdmin(modelclone.ClonableModelAdmin):
         if request.path.endswith('/clone/'):
             self.form = ProfileCloneForm
         if obj:
-            ug = request.user.groupsofprofiles.all().values_list('name', flat=True)
-            if obj.groupname in ug:
-                self._groupown_turn(request.user, 'add')
-            else:
-                self._groupown_turn(request.user, 'del')
+            if request.user.is_authenticated:
+                ug = request.user.groupsofprofiles.all().values_list('name', flat=True)
+                if obj.groupname in ug:
+                    self._groupown_turn(request.user, 'add')
+                else:
+                    self._groupown_turn(request.user, 'del')
         elif not request.user.is_superuser:
             self._groupown_turn(request.user, 'add')
         return super(ProfileAdmin, self).get_form(request, obj=None, **kwargs)
@@ -321,7 +323,7 @@ class ProfileAdmin(modelclone.ClonableModelAdmin):
     def has_add_permission(self, request):
         if request.user.is_superuser:
             return True
-        if request.user.groupsofprofiles.count():
+        if request.user.is_authenticated and request.user.groupsofprofiles.count():
             return True
         else:
             return False
