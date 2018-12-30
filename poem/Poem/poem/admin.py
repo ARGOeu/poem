@@ -26,10 +26,10 @@ import re
 class PublicViews(object):
     def load_settings(self):
         self.public_models = (Probe, Metric, Profile)
-        self._public_name_models = [s.__name__.lower() for s in self.public_models]
         self._map = dict()
         _ = [self._map.update({x.__name__.lower(): x}) for x in self.public_models]
-        self._regex = '(' + '|'.join(self._public_name_models) + ')'
+        self._regex = '(' + '|'.join([s.__name__.lower() \
+                                      for s in self.public_models]) + ')'
 
     def get_public_urls(self):
         from django.urls import path, re_path
@@ -172,14 +172,6 @@ class MyAdminSite(PublicViews, AdminSite):
         checks implied in admin_view() decorator
         """
         return super().get_urls() + super().get_public_urls()
-
-    def publicprobe_changelistview(self, request):
-        context = dict(self.each_context(request))
-        return self._registry[Probe].changelist_view(request, extra_context=context)
-
-    def publicprobe_changeview(self, request, object_id):
-        context = dict(self.each_context(request))
-        return self._registry[Probe].change_view(request, object_id, extra_context=context)
 
     @never_cache
     def logout(self, request, extra_context=None):
