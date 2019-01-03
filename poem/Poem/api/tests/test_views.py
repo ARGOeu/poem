@@ -234,3 +234,10 @@ class ListTaggedMetricsAPIViewTests(APITestCase):
                 }
             ]
         )
+
+    def test_get_metrics_if_tag_without_associated_metrics(self):
+        url = '/api/v2/metrics/test_empty'
+        request = self.factory.get(self.url_base + 'test_empty',
+                                   **{'HTTP_X_API_KEY': self.token})
+        response = self.view(request, 'test_empty')
+        self.assertEqual(response.data, [])
