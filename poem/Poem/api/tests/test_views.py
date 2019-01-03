@@ -143,6 +143,38 @@ def mock_db_for_tagged_metrics_tests():
         metric=metric1
     )
 
+def mock_db_for_profile_testing():
+    profile1 = Profile.objects.create(
+        name='ARGO_MON',
+        version='1.0',
+        vo='ops',
+        description='Central ARGO-MON profile',
+        groupname='ARGO'
+    )
+    profile2 = Profile.objects.create(
+        name='ARGO_MON_BIOMED',
+        version='1.0',
+        vo='biomed',
+        description='Central ARGO-MON profile for Biomed vo',
+        groupname='ARGO'
+    )
+
+    MetricInstance.objects.create(
+        profile=profile1,
+        service_flavour='APEL',
+        metric='org.apel.APEL-Pub',
+    )
+    MetricInstance.objects.create(
+        profile=profile1,
+        service_flavour='APEL',
+        metric='org.apel.APEL-Sync'
+    )
+    MetricInstance.objects.create(
+        profile=profile2,
+        service_flavour='ARC_CE',
+        metric='org.nordugrid.ARC-CE-ARIS'
+    )
+
 
 def create_credentials():
     token = _generate_token()
@@ -246,7 +278,6 @@ class ListTaggedMetricsAPIViewTests(APITestCase):
         )
 
     def test_get_metrics_if_tag_without_associated_metrics(self):
-        url = '/api/v2/metrics/test_empty'
         request = self.factory.get(self.url_base + 'test_empty',
                                    **{'HTTP_X_API_KEY': self.token})
         response = self.view(request, 'test_empty')
@@ -328,6 +359,8 @@ class ListMetricsAPIViewTests(APITestCase):
         )
 
 
+@patch('Poem.api.permissions.SECRET_KEY', 'top_secret')
+@patch('Poem.api.permissions.TOKEN_HEADER', 'HTTP_X_API_KEY')
 class ListProfileAPIViewTests(APITestCase):
     def setUp(self):
         self.token = create_credentials()
@@ -335,8 +368,45 @@ class ListProfileAPIViewTests(APITestCase):
         self.factory = APIRequestFactory()
         self.url = '/api/v2/profiles'
 
+        mock_db_for_profile_testing()
+
     def test_list_profile_403_in_case_of_wrong_token(self):
         request = self.factory.get(self.url, **{'HTTP_X_API_KEY':
                                                     'wrong_token'})
         response = self.view(request)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_get_profiles(self):
+        request = self.factory.get(self.url, **{'HTTP_X_API_KEY': self.token})
+        response = self.view(request)
+        self.assertEqual(
+            response.data,
+            [
+                {
+                    'name': 'ARGO_MON',
+                    'vo': 'ops',
+                    'description': 'Central ARGO-MON profile',
+                    'metric_instances': [
+                        {
+                            'metric': 'org.apel.APEL-Pub',
+                            'service_flavour': 'APEL'
+                        },
+                        {
+                            'metric': 'org.apel.APEL-Sync',
+                            'service_flavour': 'APEL'
+                        }
+                    ]
+                },
+                {
+                    'name': 'ARGO_MON_BIOMED',
+                    'vo': 'biomed',
+                    'description': 'Central ARGO-MON profile for Biomed vo',
+                    'metric_instances': [
+                        {
+                            'metric': 'org.nordugrid.ARC-CE-ARIS',
+                            'service_flavour': 'ARC_CE'
+                        }
+                    ]
+                }
+            ]
+        )
