@@ -264,8 +264,67 @@ class ListMetricsAPIViewTests(APITestCase):
         self.factory = APIRequestFactory()
         self.url = '/api/v2/metrics'
 
+        mock_db_for_tagged_metrics_tests()
+
     def test_list_metrics_if_wrong_token(self):
         request = self.factory.get(self.url, **{'HTTP_X_API_KEY':
                                                     'wrong_token'})
         response = self.view(request)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_list_metrics(self):
+        request = self.factory.get(self.url, **{'HTTP_X_API_KEY': self.token})
+        response = self.view(request)
+        self.assertEqual(
+            response.data,
+            [
+                {
+                    'argo.AMS-Check': {
+                        'probe': 'ams-probe',
+                        'config': {
+                            'maxCheckAttempts': '3',
+                            'timeout': '60',
+                            'path': '/usr/libexec/argo-monitoring/probes/argo',
+                            'interval': '5',
+                            'retryInterval': '3'
+                        },
+                        'flags': {
+                            'OBSESS': '1'
+                        },
+                        'dependency': {
+                            'argo.AMS-Check': '1'
+                        },
+                        'attribute': {
+                            'argo.ams_TOKEN': '--token'
+                        },
+                        'parameter': {
+                            '--project': 'EGI'
+                        },
+                        'file_parameter': {
+                            'FILE_SIZE_KBS': '1000'
+                        },
+                        'file_attribute': {
+                            'UCC_CONFIG': 'UCC_CONFIG'
+                        },
+                        'parent': 'org.nagios.CDMI-TCP',
+                        'docurl':
+                            'https://github.com/ARGOeu/nagios-plugins-argo'
+                            '/blob/master/README.md'
+                    }
+                },
+                {
+                    'argo.AMSPublisher-Check': {
+                        'probe': '',
+                        'config': {},
+                        'flags': {},
+                        'dependency': {},
+                        'attribute': {},
+                        'parameter': {},
+                        'file_parameter': {},
+                        'file_attribute': {},
+                        'parent': '',
+                        'docurl': ''
+                    }
+                }
+            ]
+        )
