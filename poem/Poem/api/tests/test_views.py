@@ -49,6 +49,11 @@ def mock_db_for_tagged_metrics_tests():
         mtype=metrictype,
         probekey=probekey,
     )
+    metric2 = Metric.objects.create(
+        name='argo.AMSPublisher-Check',
+        tag=tag2,
+        mtype=metrictype,
+    )
 
     group = GroupOfMetrics.objects.create(name='EOSC')
     group.metrics.create(name=metric1.name)
@@ -57,10 +62,18 @@ def mock_db_for_tagged_metrics_tests():
         metric=metric1,
         value='org.nagios.CDMI-TCP'
     )
+    MetricParent.objects.create(
+        metric=metric2,
+        value=None
+    )
 
     MetricProbeExecutable.objects.create(
         metric=metric1,
         value='ams-probe'
+    )
+    MetricProbeExecutable.objects.create(
+        metric=metric2,
+        value=None
     )
 
     MetricConfig.objects.create(
@@ -87,6 +100,11 @@ def mock_db_for_tagged_metrics_tests():
         key='retryInterval',
         value='3',
         metric=metric1
+    )
+    MetricConfig.objects.create(
+        key=None,
+        value=None,
+        metric=metric2
     )
 
     MetricAttribute.objects.create(
@@ -192,3 +210,27 @@ class ListTaggedMetricsAPIViewTests(APITestCase):
         response = self.view(request, 'invalidtag')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(response.data, {'detail': 'Tag not found'})
+
+    def test_get_metric_with_all_empty_fields(self):
+        request = self.factory.get(self.url_base + 'test_none',
+                                   **{'HTTP_X_API_KEY': self.token})
+        response = self.view(request, 'test_none')
+        self.assertEqual(
+            response.data,
+            [
+                {
+                    'argo.AMSPublisher-Check': {
+                        'probe': '',
+                        'config': {},
+                        'flags': {},
+                        'dependency': {},
+                        'attribute': {},
+                        'parameter': {},
+                        'file_parameter': {},
+                        'file_attribute': {},
+                        'parent': '',
+                        'docurl': ''
+                    }
+                }
+            ]
+        )
