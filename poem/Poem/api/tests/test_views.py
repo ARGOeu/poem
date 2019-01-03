@@ -410,3 +410,21 @@ class ListProfileAPIViewTests(APITestCase):
                 }
             ]
         )
+
+
+@patch('Poem.api.permissions.SECRET_KEY', 'top_secret')
+@patch('Poem.api.permissions.TOKEN_HEADER', 'HTTP_X_API_KEY')
+class DetailProfileAPIViewTests(APITestCase):
+    def setUp(self):
+        self.token = create_credentials()
+        self.view = DetailProfile.as_view()
+        self.factory = APIRequestFactory()
+        self.url_base = '/api/v2/profiles/'
+
+        mock_db_for_profile_testing()
+
+    def test_detail_profile_403_in_case_of_wrong_token(self):
+        request = self.factory.get(self.url_base + 'ARGO_MON',
+                                   **{'HTTP_X_API_KEY': 'wrong_token'})
+        response = self.view(request, 'ARGO_MON')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
