@@ -143,17 +143,21 @@ def mock_db_for_tagged_metrics_tests():
         metric=metric1
     )
 
+
+def create_credentials():
+    token = _generate_token()
+    hashed_token = hash_token(token, 'top_secret')
+    obj = APIKey.objects.create(client_id='EGI')
+    obj.token = token
+    obj.hashed_token = hashed_token
+    obj.save()
+    return token
+
 @patch('Poem.api.permissions.SECRET_KEY', 'top_secret')
 @patch('Poem.api.permissions.TOKEN_HEADER', 'HTTP_X_API_KEY')
 class ListTaggedMetricsAPIViewTests(APITestCase):
     def setUp(self):
-        token = _generate_token()
-        hashed_token = hash_token(token, 'top_secret')
-        obj = APIKey.objects.create(client_id='EGI')
-        obj.token = token
-        obj.hashed_token = hashed_token
-        obj.save()
-        self.token = token
+        self.token = create_credentials()
         self.view = ListTaggedMetrics.as_view()
         self.factory = APIRequestFactory()
         self.url_base = '/api/v2/metrics/'
@@ -253,13 +257,7 @@ class ListTaggedMetricsAPIViewTests(APITestCase):
 @patch('Poem.api.permissions.TOKEN_HEADER', 'HTTP_X_API_KEY')
 class ListMetricsAPIViewTests(APITestCase):
     def setUp(self):
-        token = _generate_token()
-        hashed_token = hash_token(token, 'top_secret')
-        obj = APIKey.objects.create(client_id='EGI')
-        obj.token = token
-        obj.hashed_token = hashed_token
-        obj.save()
-        self.token = token
+        self.token = create_credentials()
         self.view = ListMetrics.as_view()
         self.factory = APIRequestFactory()
         self.url = '/api/v2/metrics'
