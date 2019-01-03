@@ -326,3 +326,17 @@ class ListMetricsAPIViewTests(APITestCase):
                 }
             ]
         )
+
+
+class ListProfileAPIViewTests(APITestCase):
+    def setUp(self):
+        self.token = create_credentials()
+        self.view = ListProfile.as_view()
+        self.factory = APIRequestFactory()
+        self.url = '/api/v2/profiles'
+
+    def test_list_profile_403_in_case_of_wrong_token(self):
+        request = self.factory.get(self.url, **{'HTTP_X_API_KEY':
+                                                    'wrong_token'})
+        response = self.view(request)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
