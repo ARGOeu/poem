@@ -4,6 +4,7 @@ from mock import patch
 
 from rest_framework.test import APITestCase, APIRequestFactory, \
     force_authenticate
+from rest_framework import status
 
 from rest_framework_api_key.models import APIKey
 from rest_framework_api_key.crypto import _generate_token, hash_token
@@ -184,3 +185,10 @@ class ListTaggedMetricsAPIViewTests(APITestCase):
                 }
             ]
         )
+
+    def test_get_metric_with_invalid_tag(self):
+        request = self.factory.get(self.url_base + 'invalidtag',
+                                   **{'HTTP_X_API_KEY': self.token})
+        response = self.view(request, 'invalidtag')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.data, {'detail': 'Tag not found'})
