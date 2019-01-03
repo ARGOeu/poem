@@ -247,3 +247,25 @@ class ListTaggedMetricsAPIViewTests(APITestCase):
                                    **{'HTTP_X_API_KEY': self.token})
         response = self.view(request, 'test_empty')
         self.assertEqual(response.data, [])
+
+
+@patch('Poem.api.permissions.SECRET_KEY', 'top_secret')
+@patch('Poem.api.permissions.TOKEN_HEADER', 'HTTP_X_API_KEY')
+class ListMetricsAPIViewTests(APITestCase):
+    def setUp(self):
+        token = _generate_token()
+        hashed_token = hash_token(token, 'top_secret')
+        obj = APIKey.objects.create(client_id='EGI')
+        obj.token = token
+        obj.hashed_token = hashed_token
+        obj.save()
+        self.token = token
+        self.view = ListMetrics.as_view()
+        self.factory = APIRequestFactory()
+        self.url = '/api/v2/metrics'
+
+    def test_list_metrics_if_wrong_token(self):
+        request = self.factory.get(self.url, **{'HTTP_X_API_KEY':
+                                                    'wrong_token'})
+        response = self.view(request)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
