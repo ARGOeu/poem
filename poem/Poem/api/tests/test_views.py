@@ -160,6 +160,12 @@ class ListTaggedMetricsAPIViewTests(APITestCase):
 
         mock_db_for_tagged_metrics_tests()
 
+    def test_tagged_metric_wrong_token(self):
+        request = self.factory.get(self.url_base + 'prod',
+                                   **{'HTTP_X_API_KEY': 'wrong_token'})
+        response = self.view(request, 'prod')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
     def test_get_metric_for_a_given_tag_with_all_fields(self):
         request = self.factory.get(self.url_base + 'prod', **{'HTTP_X_API_KEY':
                                                             self.token})
