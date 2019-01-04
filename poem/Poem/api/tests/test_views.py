@@ -428,3 +428,26 @@ class DetailProfileAPIViewTests(APITestCase):
                                    **{'HTTP_X_API_KEY': 'wrong_token'})
         response = self.view(request, 'ARGO_MON')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_get_detail_profile(self):
+        request = self.factory.get(self.url_base + 'ARGO_MON',
+                                   **{'HTTP_X_API_KEY': self.token})
+        response = self.view(request, **{'name': 'ARGO_MON'})
+        self.assertEqual(
+            response.data,
+            {
+               'name': 'ARGO_MON',
+                'vo': 'ops',
+                'description': 'Central ARGO-MON profile',
+                'metric_instances': [
+                    {
+                        'metric': 'org.apel.APEL-Pub',
+                        'service_flavour': 'APEL'
+                    },
+                    {
+                        'metric': 'org.apel.APEL-Sync',
+                        'service_flavour': 'APEL'
+                    }
+                ]
+            }
+        )
