@@ -53,26 +53,22 @@ class PublicViews(object):
 
     def login(self, request, extra_context):
         """
-        If we are coming from all forms of public changelist_view, like
-        /poem/public_probe/, /poem/public_probe/?, /poem/public_probe/?all=,
-        /poem/public_probe/?group=GROUP, /poem/public_probe/?all=&group=GROUP,
-        /poem/public_probe/poem/?p=5 or /poem/public_probe/?q=term
-        and ask for individual change_view for Probe, then proceed without
-        authentication.
+        If we are coming from all forms of public changelist_view and ask for
+        individual change_view for Profile, Probe or Metric, then proceed
+        without authentication.
 
-        Also, if we are coming from invidiual change_view of the probe like
-        /poem/public_probe/87/change want to go to changelist_view, then
-        proceed without authentication.
+        Also, if we are coming from invidiual change_view of the Profile, Probe
+        and Metric and want to go to changelist_view, then proceed without
+        authentication.
         """
 
         prev = request.META.get('HTTP_REFERER', None)
-        # prev = None
         if prev:
             context = dict(self.each_context(request))
             next_url = request.GET.get('next')
 
             # changelist_view -> change_view
-            r = re.search('public_(\w+)/(\?)?(\?p=[0-9]+)?(\?q=\w+)?(\?all\=)?([\&\?]group\=[\w\-]+)?$', prev)
+            r = re.search('public_(\w+)/', prev)
             if r:
                 objid = re.search('([0-9]+)', next_url)
                 if objid:
