@@ -451,3 +451,9 @@ class DetailProfileAPIViewTests(APITestCase):
                 ]
             }
         )
+
+    def test_detail_profile_404_code_if_wrong_name(self):
+        request = self.factory.get(self.url_base + 'FAKE_GROUP',
+                                   **{'HTTP_X_API_KEY': self.token})
+        response = self.view(request, **{'name': 'FAKE_GROUP'})
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
