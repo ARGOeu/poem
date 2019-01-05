@@ -28,10 +28,15 @@ class PublicViews(object):
         self.public_models = (Probe, Metric, Profile)
         self._map = dict()
         _ = [self._map.update({x.__name__.lower(): x}) for x in self.public_models]
+        # (probe|metric|profile) regexp
         self._regex = '(' + '|'.join([s.__name__.lower() \
                                       for s in self.public_models]) + ')'
 
     def get_public_urls(self):
+        """
+        /poem/public_probe, /poem/public_profile and /poem/public_metric urls
+        map directly to view methods that have no permission checks
+        """
         from django.urls import path, re_path
 
         public_urls = list()
@@ -53,12 +58,8 @@ class PublicViews(object):
 
     def login(self, request, extra_context):
         """
-        If we are coming from all forms of public changelist_view and ask for
-        individual change_view for Profile, Probe or Metric, then proceed
-        without authentication.
-
-        Also, if we are coming from invidiual change_view of the Profile, Probe
-        and Metric and want to go to changelist_view, then proceed without
+        If coming from /public_<public_models> urls and want to visit Profile,
+        Probe and Metric change_view or changelist_view, then proceed without
         authentication.
         """
 
@@ -66,25 +67,33 @@ class PublicViews(object):
         if prev:
             context = dict(self.each_context(request))
             next_url = request.GET.get('next')
+            rn = re.search('poem/(?P<model>%s)/' % self._regex, next_url)
 
-            # changelist_view -> change_view
             r = re.search('public_(\w+)/', prev)
             if r:
-                objid = re.search('([0-9]+)', next_url)
+                objid = re.search('([0-9]+)/change/', next_url)
                 if objid:
+                    # changelist_view -> change_view
                     objid = objid.group(1)
-                    url = reverse('admin:poem_%s_change' % r.group(1), args=(objid,))
-                    url = url.replace(r.group(1) + '/',
-                                      'public_%s/' % r.group(1))
+                    url = reverse('admin:poem_%s_change' % rn.group('model'), args=(objid,))
+                    url = url.replace(rn.group('model') + '/',
+                                      'public_%s/' % rn.group('model'))
+
+                    return HttpResponseRedirect(url)
+                else:
+                    # changelist_view -> changelist_view
+                    url = reverse('admin:poem_%s_changelist' % rn.group('model'))
+                    url = url.replace(rn.group('model') + '/',
+                                      'public_%s/' % rn.group('model'))
 
                     return HttpResponseRedirect(url)
 
             # change_view -> changelist_view
             r = re.search('public_(\w+)/([0-9]+)/change/$', prev)
             if r:
-                url = reverse('admin:poem_%s_changelist' % r.group(1))
-                url = url.replace(r.group(1) + '/',
-                                  'public_%s/' % r.group(1))
+                url = reverse('admin:poem_%s_changelist' % rn.group('model'))
+                url = url.replace(rn.group('model') + '/',
+                                  'public_%s/' % rn.group('model'))
 
                 return HttpResponseRedirect(url)
 
@@ -165,7 +174,8 @@ class MyAdminSite(PublicViews, AdminSite):
     def get_urls(self):
         """
         Add public url mappings to views so that we can bypass permission
-        checks implied in admin_view() decorator
+        checks implied in admin_view() decorator that decorates change_view and
+        changelist_view methods.
         """
         return super().get_urls() + super().get_public_urls()
 
