@@ -11,8 +11,8 @@
         {% endif %}
       </strong>.
       {% block userlinks %}
-          <a href="{% url 'admin:logout' %}">
-          {% trans 'Log out' %}</a>
+        <a href="{% url 'admin:logout' %}">
+        {% trans 'Log out' %}</a>
       {% endblock %}
   </div>
 {% endblock %}
@@ -46,10 +46,12 @@
 {% if change %}{% if not is_popup %}
   <ul class="object-tools">
     {% block object-tools-items %}
-    <li>
+    {% if user.is_authenticated %}
+      <li>
         {% url opts|admin_urlname:'history' original.pk|admin_urlquote as history_url %}
         <a href="{% add_preserved_filters history_url %}" class="historylink">{% trans "History" %}</a>
-    </li>
+      </li>
+    {% endif %}
     {% if has_absolute_url %}<li><a href="{% url 'admin:view_on_site' content_type_id original.pk %}" class="viewsitelink">{% trans "View on site" %}</a></li>{% endif%}
     {% endblock %}
   </ul>
@@ -60,10 +62,10 @@
 {% if is_popup %}<input type="hidden" name="_popup" value="1" />{% endif %}
 {% if save_on_top %}{% block submit_buttons_top %}{% submit_row %}{% endblock %}{% endif %}
 {% if errors %}
-    <p class="errornote">
-    {% if errors|length == 1 %}{% trans "Please correct the error below." %}{% else %}{% trans "Please correct the errors below." %}{% endif %}
-    </p>
-    {{ adminform.form.non_field_errors }}
+  <p class="errornote">
+  {% if errors|length == 1 %}{% trans "Please correct the error below." %}{% else %}{% trans "Please correct the errors below." %}{% endif %}
+  </p>
+  {{ adminform.form.non_field_errors }}
 {% endif %}
 
 {% block field_sets %}
@@ -76,7 +78,7 @@
 
 {% block inline_field_sets %}
 {% for inline_admin_formset in inline_admin_formsets %}
-    {% include inline_admin_formset.opts.template %}
+  {% include inline_admin_formset.opts.template %}
 {% endfor %}
 {% endblock %}
 
@@ -89,7 +91,7 @@
 {% endif %}
 
 {% if adminform and add %}
-   <script type="text/javascript">document.getElementById("{{ adminform.first_field.id_for_label }}").focus();</script>
+  <script type="text/javascript">document.getElementById("{{ adminform.first_field.id_for_label }}").focus();</script>
 {% endif %}
 
 {# JavaScript for prepopulated fields #}
@@ -98,4 +100,3 @@
 </div>
 </form></div>
 {% endblock %}
-
