@@ -44,15 +44,20 @@ class PublicViews(object):
                                    self._regex, self.public_views))
         public_urls.append(re_path('^poem/public_(?P<model>%s)/(?P<object_id>[0-9]+)/change/'
                                    % self._regex, self.public_views))
+        public_urls.append(re_path('^poem/public_(?P<model>%s)/(?P<object_id>[0-9]+)/history/(?P<rev_id>[0-9]+)/'
+                                   % self._regex, self.public_views))
 
         return public_urls
 
     def public_views(self, request, **kwargs):
         objid = kwargs.get('object_id', None)
+        revid = kwargs.get('rev_id', None)
         model = self._map[kwargs['model']]
         context = dict(self.each_context(request))
-        if objid:
+        if objid and not revid:
             return self._registry[model].change_view(request, objid, extra_context=context)
+        elif objid and revid:
+            return self._registry[model].revision_view(request, objid, revid, extra_context=context)
         else:
             return self._registry[model].changelist_view(request, extra_context=context)
 
@@ -61,6 +66,8 @@ class PublicViews(object):
         If coming from /public_<public_models> urls and want to visit Profile,
         Probe and Metric change_view or changelist_view, then proceed without
         authentication.
+        Also, allow visiting individual Probe revision if coming from
+        /public_metric changelist_view
         """
 
         prev = request.META.get('HTTP_REFERER', None)
@@ -68,6 +75,17 @@ class PublicViews(object):
             context = dict(self.each_context(request))
             next_url = request.GET.get('next')
             rn = re.search('poem/(?P<model>%s)/' % self._regex, next_url)
+
+            # metric changelist_view -> probe revision_view
+            r = re.search('public_metric/$', prev)
+            rp = re.search('probe/([0-9]+)/history/([0-9]+)', next_url)
+            if r and rp:
+                revid = rp.group(2)
+                objid = rp.group(1)
+                url = reverse('admin:poem_probe_revision', args=(objid, revid,))
+                url = url.replace('probe', 'public_probe')
+
+                return HttpResponseRedirect(url)
 
             r = re.search('public_(\w+)/', prev)
             if r:
@@ -96,6 +114,7 @@ class PublicViews(object):
                                   'public_%s/' % rn.group('model'))
 
                 return HttpResponseRedirect(url)
+
 
         return super().login(request, extra_context)
 
