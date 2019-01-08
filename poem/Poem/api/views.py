@@ -12,6 +12,13 @@ from Poem.poem import models
 from . import serializers
 
 
+def none_to_emptystr(val):
+    if val is None:
+        return ''
+    else:
+        return val
+
+
 class NotFound(APIException):
     def __init__(self, status, detail, code=None):
         self.status_code = status
@@ -52,14 +59,15 @@ def build_metricconfigs(tag=None):
 
         try:
             exe = models.MetricProbeExecutable.objects.get(metric=m)
-            mdict[m.name].update({'probe': exe.value})
+            mdict[m.name].update({'probe': none_to_emptystr(exe.value)})
         except models.MetricProbeExecutable.DoesNotExist:
             mdict[m.name].update({'probe': ''})
 
         mc = models.MetricConfig.objects.filter(metric=m)
         mdict[m.name].update({'config': dict()})
         for config in mc:
-            mdict[m.name]['config'].update({config.key: config.value})
+            if config.key and config.value:
+                mdict[m.name]['config'].update({config.key: config.value})
 
         f = models.MetricFlags.objects.filter(metric=m)
         mdict[m.name].update({'flags': dict()})
@@ -93,7 +101,7 @@ def build_metricconfigs(tag=None):
 
         try:
             parent = models.MetricParent.objects.get(metric=m)
-            mdict[m.name].update({'parent': parent.value})
+            mdict[m.name].update({'parent': none_to_emptystr(parent.value)})
         except models.MetricParent.DoesNotExist:
             mdict[m.name].update({'parent': ''})
 

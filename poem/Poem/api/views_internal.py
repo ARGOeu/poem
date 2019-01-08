@@ -17,7 +17,13 @@ class ListMetricsInGroup(APIView):
             filter(groupofmetrics__name__exact=group).\
             values_list('name', flat=True)
         results = sorted(metrics, key=lambda m: m.lower())
-        return Response({'result': results})
+        if results or (not results and
+                       poem_models.GroupOfMetrics.objects.filter(
+                           name__exact=group)):
+            return Response({'result': results})
+        else:
+            raise NotFound(status=404,
+                           detail='Group not found')
 
 
 class ListTokens(APIView):
