@@ -144,7 +144,8 @@ class MetricChangeForm(MetricAddForm):
     def __init__(self, *args, **kwargs):
         sh = SharedInfo()
         self.user = sh.get_user()
-        self.usergroups = self.user.groupsofmetrics.all()
+        if self.user.is_authenticated:
+            self.usergroups = self.user.groupsofmetrics.all()
         super(MetricChangeForm, self).__init__(*args, **kwargs)
 
     class Meta:
@@ -641,7 +642,9 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
             yield inline.get_formset(request, obj), inline
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == 'group' and not request.user.is_superuser:
+        if (db_field.name == 'group'
+            and request.user.is_authenticated
+            and not request.user.is_superuser):
             lgi = request.user.groupsofmetrics.all().values_list('id', flat=True)
             kwargs["queryset"] = GroupOfMetrics.objects.filter(pk__in=lgi)
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
@@ -675,14 +678,15 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
         rquser = SharedInfo(requser=request.user)
         if obj:
             self.form = MetricChangeForm
-            ug = request.user.groupsofmetrics.all().values_list('name', flat=True)
-            if obj.group.name in ug:
-                self._groupown_turn(request.user, 'add')
-            else:
-                self._groupown_turn(request.user, 'del')
+            if request.user.is_authenticated:
+                ug = request.user.groupsofmetrics.all().values_list('name', flat=True)
+                if obj.group.name in ug:
+                    self._groupown_turn(request.user, 'add')
+                else:
+                    self._groupown_turn(request.user, 'del')
         else:
             self.form = MetricAddForm
-            if request.user.groupsofmetrics.count():
+            if request.user.is_authenticated and request.user.groupsofmetrics.count():
                 self._groupown_turn(request.user, 'add')
             else:
                 self._groupown_turn(request.user, 'del')
@@ -730,7 +734,7 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
     def has_add_permission(self, request):
         if request.user.is_superuser and GroupOfMetrics.objects.count():
             return True
-        if request.user.groupsofmetrics.count():
+        if request.user.is_authenticated and request.user.groupsofmetrics.count():
             return True
         else:
             return False
@@ -834,6 +838,12 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
 
     def has_change_permission(self, request, obj=None):
         return True
+
+    def history_view(self, request, object_id, extra_context=None):
+        extra_context = extra_context or dict()
+        if request.user.is_authenticated:
+            extra_context.update(dict(include_history_link=True))
+        return super().history_view(request, object_id, extra_context=extra_context)
 
 
 def update_field(field, formdata, model):

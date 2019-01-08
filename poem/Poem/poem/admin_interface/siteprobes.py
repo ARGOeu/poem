@@ -349,5 +349,11 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
             extra_context,
         )
 
+    def history_view(self, request, object_id, extra_context=None):
+        extra_context = extra_context or dict()
+        if request.user.is_authenticated:
+            extra_context.update(dict(include_history_link=True))
+        return super().history_view(request, object_id, extra_context=extra_context)
+
 
 reversion.register(Probe, exclude=["nameversion", "datetime"])

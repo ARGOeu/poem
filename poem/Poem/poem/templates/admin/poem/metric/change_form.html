@@ -53,13 +53,15 @@
     {% block object-tools-items %}
     {% if user.is_superuser or perms.poem.groupown_metric %}
       {% if include_clone_link %}
-          <li><a href="clone/">{{ clone_verbose_name }}</a></li>
+        <li><a href="clone/">{{ clone_verbose_name }}</a></li>
       {% endif %}
     {% endif %}
-    <li>
+    {% if user.is_authenticated %}
+      <li>
         {% url opts|admin_urlname:'history' original.pk|admin_urlquote as history_url %}
         <a href="{% add_preserved_filters history_url %}" class="historylink">{% trans "History" %}</a>
-    </li>
+      </li>
+    {% endif %}
     {% if has_absolute_url %}<li><a href="{% url 'admin:view_on_site' content_type_id original.pk %}" class="viewsitelink">{% trans "View on site" %}</a></li>{% endif%}
     {% endblock %}
   </ul>
