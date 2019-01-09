@@ -2,6 +2,9 @@ from django.contrib import admin
 
 
 class LogEntryAdmin(admin.ModelAdmin):
+    class Media:
+        css = {"all": ("/poem_media/css/siteactions.css",)}
+
     readonly_fields = (
         'content_type',
         'user',
