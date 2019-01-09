@@ -14,6 +14,7 @@ from Poem.poem.admin_interface.sitemetrics import *
 from Poem.poem.admin_interface.siteprobes import *
 from Poem.poem.admin_interface.siteprofile import *
 from Poem.poem.admin_interface.userprofile import *
+from Poem.poem.admin_interface.siteactions import *
 from Poem.poem.models import GroupOfMetrics, GroupOfProfiles
 from Poem.poem.models import MetricInstance, Metric, Probe, Profile, UserProfile, VO, ServiceFlavour, GroupOfProfiles, CustUser
 from Poem.settings import SAMLLOGINSTRING
@@ -220,4 +221,4 @@ myadmin.register(GroupOfMetrics, GroupOfMetricsAdmin)
 myadmin.register(GroupOfProbes, GroupOfProbesAdmin)
 myadmin.register(CustUser, UserProfileAdmin)
 myadmin.register(APIKey, MyAPIKeyAdmin)
-myadmin.register(LogEntry)
+myadmin.register(LogEntry, LogEntryAdmin)
