@@ -14,15 +14,13 @@ class LogEntryAdmin(admin.ModelAdmin):
     new_change_message.short_description = 'change message'
 
     list_display = (log_entry_name, 'user', 'action_time')
-    fields = ('content_type', 'user', 'action_time', 'object_id',
-              'object_repr', 'action_flag', 'new_change_message')
+    fields = ('content_type', 'user', 'action_time', 'object_repr',
+              'new_change_message')
     readonly_fields = (
         'content_type',
         'user',
         'action_time',
-        'object_id',
         'object_repr',
-        'action_flag',
         'new_change_message'
     )
 
