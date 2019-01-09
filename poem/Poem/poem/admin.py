@@ -2,6 +2,7 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.contrib import admin
 from django.contrib.auth.models import Group
+from django.contrib.admin.models import LogEntry
 from django.contrib.admin.sites import AdminSite
 from django.views.decorators.cache import never_cache
 from django.template.response import TemplateResponse
@@ -175,7 +176,7 @@ class MyAdminSite(PublicViews, AdminSite):
                                                   not in extract, a['models']))
                 app_list.append(authnz)
 
-                order = [poem_app_name, 'authnz', apikey_app]
+                order = [poem_app_name, 'admin', 'authnz', apikey_app]
                 app_list = sorted(app_list, key=lambda a: order.index(a['app_label']))
 
                 extra_context = dict(
@@ -214,3 +215,4 @@ myadmin.register(GroupOfMetrics, GroupOfMetricsAdmin)
 myadmin.register(GroupOfProbes, GroupOfProbesAdmin)
 myadmin.register(CustUser, UserProfileAdmin)
 myadmin.register(APIKey, MyAPIKeyAdmin)
+myadmin.register(LogEntry)
