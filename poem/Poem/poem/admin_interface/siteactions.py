@@ -5,6 +5,11 @@ class LogEntryAdmin(admin.ModelAdmin):
     class Media:
         css = {"all": ("/poem_media/css/siteactions.css",)}
 
+    def log_entry_name(obj):
+        return obj.__str__()
+    log_entry_name.short_description = 'Log entry'
+
+    list_display = (log_entry_name, 'user', 'action_time')
     readonly_fields = (
         'content_type',
         'user',
