@@ -9,7 +9,13 @@ class LogEntryAdmin(admin.ModelAdmin):
         return obj.__str__()
     log_entry_name.short_description = 'Log entry'
 
+    def new_change_message(self, obj):
+        return obj.__str__()
+    new_change_message.short_description = 'change message'
+
     list_display = (log_entry_name, 'user', 'action_time')
+    fields = ('content_type', 'user', 'action_time', 'object_id',
+              'object_repr', 'action_flag', 'new_change_message')
     readonly_fields = (
         'content_type',
         'user',
@@ -17,7 +23,7 @@ class LogEntryAdmin(admin.ModelAdmin):
         'object_id',
         'object_repr',
         'action_flag',
-        'change_message'
+        'new_change_message'
     )
 
     def has_delete_permission(self, request, obj=None):
