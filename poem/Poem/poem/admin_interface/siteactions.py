@@ -34,3 +34,15 @@ class LogEntryAdmin(admin.ModelAdmin):
         actions = super(LogEntryAdmin, self).get_actions(request)
         del actions['delete_selected']
         return actions
+
+
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        """
+        Overriding admin.ModelAdmin change_view so that it doesn't show save
+        button in change_view
+        """
+        extra_context = extra_context or {}
+        extra_context['show_save_and_continue'] = False
+        extra_context['show_save'] = False
+        return super(LogEntryAdmin, self).change_view(request, object_id,
+                                                      form_url, extra_context=extra_context)
