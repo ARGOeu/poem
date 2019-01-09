@@ -177,6 +177,8 @@ class MyAdminSite(PublicViews, AdminSite):
                                 authnz['models'].append(m)
                         a['models'] = list(filter(lambda x: x['object_name']
                                                   not in extract, a['models']))
+                    if a['app_label'] == 'admin':
+                        a['name'] = 'Logs'
                 app_list.append(authnz)
 
                 order = [poem_app_name, 'admin', 'authnz', apikey_app]
