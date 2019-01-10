@@ -23,6 +23,7 @@ class LogEntryAdmin(admin.ModelAdmin):
         'object_repr',
         'new_change_message'
     )
+    search_fields = ['user__username']
 
     def has_delete_permission(self, request, obj=None):
         return False
