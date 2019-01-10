@@ -31,6 +31,7 @@ setup(name=NAME,
                       'django-ajax-selects',
                       'django-reversion',
                       'djangosaml2',
+                      'psycopg2',
                       'unidecode'],
     url='https://github.com/ARGOeu/poem',
     classifiers=(
