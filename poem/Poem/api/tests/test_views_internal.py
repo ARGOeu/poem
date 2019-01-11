@@ -148,3 +148,8 @@ class ListUsersAPIViewTests(APITestCase):
         response = self.view(request)
         self.assertEqual(response.data, {'result': ['another_user',
                                                     'testuser']})
+
+    def test_get_users_permission_denied_in_case_no_authorization(self):
+        request = self.factory.get(self.url)
+        response = self.view(request)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
