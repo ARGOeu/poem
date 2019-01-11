@@ -24,6 +24,7 @@ class LogEntryAdmin(admin.ModelAdmin):
         'new_change_message'
     )
     search_fields = ['user__username']
+    date_hierarchy = 'action_time'
 
     def has_delete_permission(self, request, obj=None):
         return False
