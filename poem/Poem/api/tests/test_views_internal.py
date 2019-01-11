@@ -121,3 +121,30 @@ class ListTokenForTenantAPIViewTests(APITestCase):
         response = self.view(request, 'nonexisting')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(response.data, {'detail': 'Tenant not found'})
+
+
+class ListUsersAPIViewTests(APITestCase):
+    def setUp(self):
+        self.factory = APIRequestFactory()
+        self.view = ListUsers.as_view()
+        self.url = '/api/v2/internal/users/'
+        self.user = CustUser.objects.create_user(
+            username='testuser',
+            first_name='Test',
+            last_name='User',
+            email='testuser@example.com'
+        )
+
+        CustUser.objects.create_user(
+            username='another_user',
+            first_name='Another',
+            last_name='User',
+            email='otheruser@example.com'
+        )
+
+    def test_get_users(self):
+        request = self.factory.get(self.url)
+        force_authenticate(request, user=self.user)
+        response = self.view(request)
+        self.assertEqual(response.data, {'result': ['another_user',
+                                                    'testuser']})
