@@ -1,6 +1,22 @@
 {% extends "admin/change_list.html" %}
 {% load i18n admin_urls admin_static admin_modify %}
 
+{% block extrahead %}
+{{ block.super }}
+<script type="text/javascript">
+    $(document).ready(function() {
+      $('#searchbar').on('click', function() {
+        var json_users_list = '/poem/api/v2/internal/users/';
+        $.getJSON(json_users_list).done(function(json) {
+          $('#searchbar').autocomplete();
+          $('#searchbar').autocomplete({minLength: 0, source: json['result']});
+          $('#searchbar').autocomplete("search", "");
+        });
+      });
+    })(django.jQuery);
+  </script>
+{% endblock %}
+
 {% if not is_popup %}
   {% block breadcrumbs %}
     <div class="breadcrumbs">
