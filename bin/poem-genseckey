@@ -18,7 +18,7 @@ def main():
     args = parser.parse_args()
 
     SECRET_KEY = ''.join([random.SystemRandom().choice(validchars) \
-                          for i in range(50)])
+                          for i in range(32)])
 
     try:
         secret = open(args.outfile, 'w')
