@@ -3,18 +3,21 @@
 
 {% block extrahead %}
 {{ block.super }}
+{{ media.js }}
 <script type="text/javascript">
-    $(document).ready(function() {
-      $('#searchbar').on('click', function() {
-        var json_users_list = '/poem/api/v2/internal/users/';
-        $.getJSON(json_users_list).done(function(json) {
-          $('#searchbar').autocomplete();
-          $('#searchbar').autocomplete({minLength: 0, source: json['result']});
-          $('#searchbar').autocomplete("search", "");
-        });
+  $(document).ready(function() {
+    var field = $('#searchbar');
+    field.autofocus = false;
+    field.on('click', function() {
+      var json_users_list = '/poem/api/v2/internal/users/';
+      $.getJSON(json_users_list).done(function(json) {
+        field.autocomplete();
+        field.autocomplete({minLength: 0, source: json['result']});
+        field.autocomplete("search", "");
       });
-    })(django.jQuery);
-  </script>
+    });
+  });
+</script>
 {% endblock %}
 
 {% if not is_popup %}
