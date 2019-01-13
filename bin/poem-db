@@ -15,7 +15,7 @@ usage()
 	printf "       [-o] - apply migrations from other apps\n" >&2
 	printf "       [-s] - clear stale login sessions\n" >&2
 	printf "       [-x] - just load fixtures\n" >&2
-    printf "       [-u] - create superuser\n" >&2
+	printf "       [-u] - create superuser\n" >&2
     exit 2
 }
 
