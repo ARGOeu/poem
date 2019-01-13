@@ -32,13 +32,23 @@ try:
     if not all([SUPERUSER_EMAIL, SUPERUSER_NAME, SUPERUSER_PASS]):
         raise ImproperlyConfigured('Missing superuser value in config file %s' % CONFIG_FILE)
 
+    DBNAME = config.get('DATABASE', 'name')
+    DBUSER = config.get('DATABASE', 'user')
+    DBPASSWORD = config.get('DATABASE', 'password')
+    DBHOST = config.get('DATABASE', 'host')
+    DBPORT = config.get('DATABASE', 'port')
+
+    if not all([DBNAME, DBHOST, DBPORT, DBUSER, DBPASSWORD]):
+        raise ImproperlyConfigured('Missing database settings in %s' % CONFIG_FILE)
+
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'postgres',
-            'USER': 'postgres',
-            'HOST': 'db',
-            'PORT': 5432,
+            'NAME': DBNAME,
+            'USER': DBUSER,
+            'PASSWORD': DBPASSWORD,
+            'HOST': DBHOST,
+            'PORT': DBPORT,
         }
     }
 
