@@ -47,3 +47,13 @@ class ListTokenForTenant(APIView):
         except api_models.APIKey.DoesNotExist:
             raise NotFound(status=404,
                            detail='Tenant not found')
+
+
+class ListUsers(APIView):
+    authentication_classes = (SessionAuthentication,)
+
+    def get(self, request):
+        users = poem_models.CustUser.objects.all().values_list('username',
+                                                               flat=True)
+        results = sorted(users)
+        return Response({'result': results})

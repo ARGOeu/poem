@@ -2,6 +2,7 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.contrib import admin
 from django.contrib.auth.models import Group
+from django.contrib.admin.models import LogEntry
 from django.contrib.admin.sites import AdminSite
 from django.views.decorators.cache import never_cache
 from django.template.response import TemplateResponse
@@ -13,6 +14,7 @@ from Poem.poem.admin_interface.sitemetrics import *
 from Poem.poem.admin_interface.siteprobes import *
 from Poem.poem.admin_interface.siteprofile import *
 from Poem.poem.admin_interface.userprofile import *
+from Poem.poem.admin_interface.siteactions import *
 from Poem.poem.models import GroupOfMetrics, GroupOfProfiles
 from Poem.poem.models import MetricInstance, Metric, Probe, Profile, UserProfile, VO, ServiceFlavour, GroupOfProfiles, CustUser
 from Poem.settings import SAMLLOGINSTRING
@@ -150,6 +152,9 @@ class MyAdminSite(PublicViews, AdminSite):
                 if request.path.endswith('admin/%s/' % apikey_app):
                     return HttpResponseRedirect('/%s/admin/%s/' % (poem_app_name, poem_app_name))
 
+                if request.path.endswith('admin/admin/'):
+                    return HttpResponseRedirect('/%s/admin/%s/' % (poem_app_name, poem_app_name))
+
                 # Reorganize administration page by grouping type of data that
                 # want to be administered:
                 #   Poem = Metrics, Probes, Profiles
@@ -173,9 +178,11 @@ class MyAdminSite(PublicViews, AdminSite):
                                 authnz['models'].append(m)
                         a['models'] = list(filter(lambda x: x['object_name']
                                                   not in extract, a['models']))
+                    if a['app_label'] == 'admin':
+                        a['name'] = 'Logs'
                 app_list.append(authnz)
 
-                order = [poem_app_name, 'authnz', apikey_app]
+                order = [poem_app_name, 'admin', 'authnz', apikey_app]
                 app_list = sorted(app_list, key=lambda a: order.index(a['app_label']))
 
                 extra_context = dict(
@@ -214,3 +221,4 @@ myadmin.register(GroupOfMetrics, GroupOfMetricsAdmin)
 myadmin.register(GroupOfProbes, GroupOfProbesAdmin)
 myadmin.register(CustUser, UserProfileAdmin)
 myadmin.register(APIKey, MyAPIKeyAdmin)
+myadmin.register(LogEntry, LogEntryAdmin)
