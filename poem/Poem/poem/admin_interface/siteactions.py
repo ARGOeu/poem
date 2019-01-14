@@ -3,7 +3,10 @@ from django.contrib import admin
 
 class LogEntryAdmin(admin.ModelAdmin):
     class Media:
-        css = {"all": ("/poem_media/css/siteactions.css",)}
+        css = {"all": ("/poem_media/css/siteactions.css",
+                       "/poem_media/ajax_select/css/ajax_select.css")}
+        js = ("/poem_media/ajax_select/js/ajax_select.js",
+              "/poem_media/ajax_select/js/bootstrap.js")
 
     def log_entry_name(obj):
         return obj.__str__()
