@@ -24,7 +24,7 @@ class Migration(migrations.Migration):
     initial = False
 
     dependencies = [
-        ('poem', '0003_reversion_updates'),
+        ('poem', '0002_extrev_add'),
     ]
 
     operations = [

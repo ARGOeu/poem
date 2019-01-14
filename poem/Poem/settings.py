@@ -32,13 +32,26 @@ try:
     if not all([SUPERUSER_EMAIL, SUPERUSER_NAME, SUPERUSER_PASS]):
         raise ImproperlyConfigured('Missing superuser value in config file %s' % CONFIG_FILE)
 
+    DBNAME = config.get('DATABASE', 'name')
+    DBUSER = config.get('DATABASE', 'user')
+    DBPASSWORD = config.get('DATABASE', 'password')
+    DBHOST = config.get('DATABASE', 'host')
+    DBPORT = config.get('DATABASE', 'port')
+
+    if not all([DBNAME, DBHOST, DBPORT, DBUSER, DBPASSWORD]):
+        raise ImproperlyConfigured('Missing database settings in %s' % CONFIG_FILE)
 
     DATABASES = {
         'default': {
-            'NAME':  '{}/var/lib/poem/poemserv.db'.format(VENV),
-            'ENGINE': 'django.db.backends.sqlite3',
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': DBNAME,
+            'USER': DBUSER,
+            'PASSWORD': DBPASSWORD,
+            'HOST': DBHOST,
+            'PORT': DBPORT,
         }
     }
+
     CACHES = {
         'default': {
             'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
