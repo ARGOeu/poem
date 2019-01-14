@@ -24,7 +24,7 @@ then
     usage
 fi
 
-while getopts 'cafmlhsox' OPTION
+while getopts 'cafmlhsoxu' OPTION
 do
     case $OPTION in
         c)
