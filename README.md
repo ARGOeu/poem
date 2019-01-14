@@ -14,7 +14,6 @@ POEM service is based on Django 2.x framework and following Django packages from
 * `djangorestframework-api-key` - provides non-user token generation and protection
 * `djangorestframework` - provides Token and Session authenticated REST API 
 * `djangosaml2` - enable SAML2 login feature
-* `djangosaml2` - enable SAML2 login feature
 * `psycopg2` - PostgreSQL database adapter 
 
 Devel instance: https://poem-devel.argo.grnet.gr/
@@ -82,7 +81,6 @@ Once the Python 3.6 is installed, it needs to be used to create a new virtual en
 
 > **Notice** how the location of virtual environment is controlled with `WORKON_HOME` variable. Created virtual environment directory will be `$WORKON_HOME/poem`. It needs to be aligned with `VENV` variable in service configuration. 
 
-
 Afterward, the context of virtual environment can be started:
 
 ```sh
@@ -113,6 +111,41 @@ Next, the correct permission needs to be set on virtual environment directory:
 
 ```sh
 % (poem) chown -R apache:apache $VIRTUAL_ENV
+```
+
+### PostgreSQL server setup 
+
+POEM is tested and meant to be running on PostgreSQL 10 DBMS. CentOS 7 operating system delivers [PostgreSQL 10 through Software Collections service](https://www.softwarecollections.org/en/scls/rhscl/rh-postgresql10/) that is installed with the following instructions:
+
+```sh
+% yum -y install centos-release-scl
+% yum -y install scl-utils
+% yum -y install rh-postgresql10
+```
+
+Initalization of database:
+```sh
+% scl enable rh-postgresql10 'postgresql-setup --initdb'
+```
+
+Set password for default DB user `postgres`:
+```sh
+% su - postgres -c 'scl enable rh-postgresql10 -- psql'
+postgres=# \password postgres
+```
+
+In `/var/opt/rh/rh-postgresql10/lib/pgsql/data/pg_hba.conf`, change default client authentication to password authentication:
+```sh
+# IPv4 local connections:
+host    all             all             127.0.0.1/32            md5
+# IPv6 local connections:
+host    all             all             ::1/128                 md5
+```
+Default `ident` should be replaced by `md5`.
+
+Start the service:
+```sh
+% systemctl start rh-postgresql10-postgresql
 ```
 
 ## Configuration
