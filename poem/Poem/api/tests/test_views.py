@@ -1,4 +1,5 @@
 import json
+import datetime
 
 from mock import patch
 
@@ -12,15 +13,24 @@ from rest_framework_api_key.crypto import _generate_token, hash_token
 from Poem.poem.models import *
 from Poem.api.views import *
 
-from reversion.models import Version
+from reversion.models import Version, Revision
 
 
 def mock_db_for_tagged_metrics_tests():
+    user = CustUser.objects.create_user(username='testuser')
+
     tag1 = Tags.objects.create(name='prod')
     tag2 = Tags.objects.create(name='test_none')
     Tags.objects.create(name='test_empty')
 
     metrictype = MetricType.objects.create(name='active')
+
+    Revision.objects.create(
+        id=1,
+        comment='Initial version',
+        date_created=datetime.datetime(2015, 1, 1, 0, 0, 0),
+        user_id=user.id
+    )
 
     probekey = Version.objects.create(
         object_repr='ams_probe (0.1.7)',
