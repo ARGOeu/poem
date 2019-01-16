@@ -65,7 +65,7 @@ def get_new_change_message(obj):
                                                         'name']))
                     else:
                         messages.append(gettext('Added %s.' % obj.object_repr))
-                elif 'changed' in change_message:
+                elif 'changed' in sub_message:
                     sub_message['changed']['fields'] = get_text_list(
                         sub_message['changed']['fields'], gettext('and')
                     )
