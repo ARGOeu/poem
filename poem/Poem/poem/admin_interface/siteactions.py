@@ -114,14 +114,18 @@ class LogEntryAdmin(admin.ModelAdmin):
         return get_new_change_message(obj)
     new_change_message.short_description = 'change message'
 
+    def obj_repr(self, obj):
+        return obj.object_repr
+    obj_repr.short_description = 'object representation'
+
     list_display = (log_entry_name, 'user', 'action_time')
-    fields = ('content_type', 'user', 'action_time', 'object_repr',
+    fields = ('content_type', 'user', 'action_time', 'obj_repr',
               'new_change_message')
     readonly_fields = (
         'content_type',
         'user',
         'action_time',
-        'object_repr',
+        'obj_repr',
         'new_change_message'
     )
     search_fields = ['user__username']
