@@ -29,6 +29,14 @@ def get_object_from_db(obj):
             code = 'obj_repr = %s.objects.get(id=%s).key' % (model, pk)
         elif model in ['MetricParent', 'MetricProbeExecutable']:
             code = 'obj_repr = %s.objects.get(id=%s).value' % (model, pk)
+        elif model == 'GroupOfMetrics_metrics':
+            code = 'obj_repr = GroupOfMetrics.objects.get(' \
+                   'metrics_id=%s).name' % pk
+        elif model == 'GroupOfProbes_probes':
+            code = 'obj_repr = GroupOfProbes.objects.get(probes__id=%s)' % pk
+        elif model == 'GroupOfProfiles_profiles':
+            code = 'obj_repr = GroupOfProfiles.objects.get(' \
+                   'profiles_id=%s).name' % pk
         else:
             code = 'obj_repr = %s.objects.get(id=%s).name' % (model, pk)
         exec(code, globals())
