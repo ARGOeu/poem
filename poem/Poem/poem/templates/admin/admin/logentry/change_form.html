@@ -1,5 +1,6 @@
 {% extends "admin/change_form.html" %}
 {% load i18n admin_urls admin_static admin_list %}
+{% load logentry_breadcrumb %}
 
 {% if not is_popup %}
   {% block breadcrumbs %}
@@ -17,7 +18,7 @@
     {% if add %}
       {% trans 'Add' %} {{ opts.verbose_name }}
     {% else %}
-      {{ original|truncatewords:"18" }}
+      {{ original|first_sentence }}
     {% endif %}
     &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
     <a href="{% url 'admin:poem_profile_changelist' %}">Profiles</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
