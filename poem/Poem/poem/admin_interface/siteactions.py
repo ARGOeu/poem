@@ -1,4 +1,15 @@
+from gettext import gettext
+
 from django.contrib import admin
+
+
+def get_new_logentry_name(obj):
+    if obj.is_addition():
+        return gettext('Added "%(object)s".' % {'object': obj.object_repr})
+    elif obj.is_change():
+        return gettext('Changed "%(object)s".' % {'object': obj.object_repr})
+    elif obj.is_deletion():
+        return gettext('Deleted "%(object)s".' % {'object': obj.object_repr})
 
 
 class LogEntryAdmin(admin.ModelAdmin):
@@ -9,7 +20,7 @@ class LogEntryAdmin(admin.ModelAdmin):
               "/poem_media/ajax_select/js/bootstrap.js")
 
     def log_entry_name(obj):
-        return obj.__str__()
+        return get_new_logentry_name(obj)
     log_entry_name.short_description = 'Log entry'
 
     def new_change_message(self, obj):
