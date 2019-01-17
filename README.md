@@ -128,12 +128,6 @@ Initalization of database:
 % scl enable rh-postgresql10 'postgresql-setup --initdb'
 ```
 
-Set password for default DB user `postgres`:
-```sh
-% su - postgres -c 'scl enable rh-postgresql10 -- psql'
-postgres=# \password postgres
-```
-
 In `/var/opt/rh/rh-postgresql10/lib/pgsql/data/pg_hba.conf`, change default client authentication to password authentication:
 ```sh
 # IPv4 local connections:
@@ -146,6 +140,12 @@ Default `ident` should be replaced by `md5`.
 Start the service:
 ```sh
 % systemctl start rh-postgresql10-postgresql
+```
+
+Set password for default DB user `postgres`:
+```sh
+% su - postgres -c 'scl enable rh-postgresql10 -- psql'
+postgres=# \password postgres
 ```
 
 ## Configuration
