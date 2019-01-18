@@ -1,2 +1,0 @@
-git+https://github.com/vrdel/django-modelclone
-git+https://github.com/vrdel/django-reversion-compare

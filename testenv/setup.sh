@@ -5,7 +5,7 @@ source /etc/profile.d/venv_poem.sh
 workon poem
 
 # prerequisites
-poem-genseckey -f $VIRTUAL_ENV/etc/poem/secret_key
+cp secret_key $VIRTUAL_ENV/etc/poem/secret_key
 cp -f poem.conf $VIRTUAL_ENV/etc/poem/poem.conf
 chown -R apache:apache $VIRTUAL_ENV
 poem-db -c
