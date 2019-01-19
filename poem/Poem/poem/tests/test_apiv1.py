@@ -1,13 +1,15 @@
 import json
+import datetime
 
 from django.test import TestCase
+
 
 from Poem.poem.models import Profile, MetricInstance, Metrics, \
     GroupOfMetrics, Metric, Tags, MetricType, MetricProbeExecutable, \
     MetricConfig, MetricFlags, MetricDependancy, MetricAttribute, \
     MetricParameter, MetricFileParameter, MetricFiles, MetricParent
 
-from reversion.models import Version
+from reversion.models import Version, Revision
 
 
 class ProfileViewsTests(TestCase):
@@ -678,6 +680,13 @@ class MetricsViewTests(TestCase):
 
         metrictype = MetricType.objects.create(
             name='active',
+        )
+
+        revision = Revision.objects.create(
+            id='1',
+            date_created=datetime.datetime.now(),
+            comment='Initial version',
+            user_id=None
         )
 
         probekey = Version.objects.create(
