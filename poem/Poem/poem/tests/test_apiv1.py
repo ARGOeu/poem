@@ -3,11 +3,7 @@ import datetime
 
 from django.test import TestCase
 
-
-from Poem.poem.models import Profile, MetricInstance, Metrics, \
-    GroupOfMetrics, Metric, Tags, MetricType, MetricProbeExecutable, \
-    MetricConfig, MetricFlags, MetricDependancy, MetricAttribute, \
-    MetricParameter, MetricFileParameter, MetricFiles, MetricParent
+from Poem.poem.models import *
 
 from reversion.models import Version, Revision
 
@@ -666,6 +662,8 @@ class MetricsViewTests(TestCase):
     @classmethod
     def setUpTestData(cls):
 
+        user = CustUser.objects.create_user(username='testuser')
+
         tag = Tags.objects.create(
             name='prod',
         )
@@ -682,11 +680,11 @@ class MetricsViewTests(TestCase):
             name='active',
         )
 
-        revision = Revision.objects.create(
-            id='1',
-            date_created=datetime.datetime.now(),
-            comment='Initial version',
-            user_id=None
+        Revision.objects.create(
+            id=1,
+            comment='Initial_version',
+            date_created=datetime.datetime(2015, 1, 1, 0, 0, 0),
+            user_id=user.id,
         )
 
         probekey = Version.objects.create(

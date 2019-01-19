@@ -17,17 +17,19 @@ from reversion.models import Version, Revision
 
 
 def mock_db_for_tagged_metrics_tests():
+    user = CustUser.objects.create_user(username='testuser')
+
     tag1 = Tags.objects.create(name='prod')
     tag2 = Tags.objects.create(name='test_none')
     Tags.objects.create(name='test_empty')
 
     metrictype = MetricType.objects.create(name='active')
 
-    revision = Revision.objects.create(
-        id='1',
-        date_created=datetime.datetime.now(),
+    Revision.objects.create(
+        id=1,
         comment='Initial version',
-        user_id=None
+        date_created=datetime.datetime(2015, 1, 1, 0, 0, 0),
+        user_id=user.id
     )
 
     probekey = Version.objects.create(
