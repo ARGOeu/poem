@@ -1,10 +1,6 @@
 FROM centos:7
 MAINTAINER dvrcic@srce.hr 
-COPY EGI-trustanchors.repo /etc/yum.repos.d/
-RUN yum -y makecache; yum -y update; yum clean all
-RUN yum -y install epel-release && \
-    yum -y install \
-      ca-certificates \
+RUN yum -y install \
       git \
       unzip \
       psmisc \
@@ -26,18 +22,20 @@ COPY venv_poem.sh /etc/profile.d/
 RUN scl enable rh-python36 'source /etc/profile.d/venv_poem.sh; \
     mkdir -p $WORKON_HOME; \
     mkvirtualenv poem'      
-ADD https://github.com/vrdel/poem/archive/devel.zip poem-devel.zip
+WORKDIR /root/poem-source
+# TODO: fetch from github branch
+COPY poem-devel.zip .
 RUN unzip poem-devel.zip
-WORKDIR poem-devel
 RUN source /etc/profile.d/venv_poem.sh; \
     workon poem; \
+    pip3 install -r requirements.txt; \
+    pip3 install -r requirements_tests.txt; \ 
     python setup.py egg_info --tag-date sdist bdist_wheel; \
-    pip3 install dist/*; \
-    pip3 install -r requirements_ext.txt 
-RUN yum -y install ca-policy-egi-core 
-ADD hostcert.pem hostkey.pem /etc/grid-security/
-COPY DigiCertCA.crt /etc/pki/tls/certs/
+    pip3 install dist/*
 WORKDIR /root
+COPY secret_key ./ 
 COPY poem.conf ./ 
-COPY *.sh ./
-RUN ./setup.sh
+COPY settings.py ./ 
+COPY setup_test.sh /root/
+COPY execute-tests /usr/bin/ 
+RUN /root/setup_test.sh
