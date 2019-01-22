@@ -4,6 +4,9 @@ from Poem.poem.models import Service, MetricInstance, Metric
 
 
 class ServiceAdmin(admin.ModelAdmin):
+    class Media:
+        css = {'all': ('/poem_media/css/siteservices.css',)}
+
     qs = Service.objects.all()
     service_area = [p.service_area for p in qs]
     service_name = [p.service_name for p in qs]
