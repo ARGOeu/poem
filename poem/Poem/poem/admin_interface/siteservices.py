@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from Poem.poem.models import Service, MetricInstance, Metric
+from Poem.poem.models import Service, MetricInstance, Metric, Probe
 
 
 class ServiceAdmin(admin.ModelAdmin):
@@ -17,19 +17,23 @@ class ServiceAdmin(admin.ModelAdmin):
         metric = sorted(list(set([m.metric for m in mi])))
         for j in range(len(metric)):
             try:
-                probe = Metric.objects.get(name=metric[j])
-                probe = probe.probeversion
+                met = Metric.objects.get(name=metric[j])
+                probe = met.probeversion
             except Metric.DoesNotExist:
                 pass
             else:
                 if probe == '':
                     pass
                 else:
+                    metric_id = met.id
+                    probe_id = Probe.objects.get(nameversion=probe).id
                     data.append({'service_area': service_area[i],
                                  'service_name': service_name[i],
                                  'service_type': service_type[i],
                                  'metric': metric[j],
-                                 'probe': probe})
+                                 'metric_id': metric_id,
+                                 'probe': probe,
+                                 'probe_id': probe_id})
 
     def changelist_view(self, request, extra_context=None):
         extra_context = extra_context or {}
