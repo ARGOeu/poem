@@ -14,10 +14,10 @@ class ServiceAdmin(admin.ModelAdmin):
     data = list()
     for i in range(len(service_type)):
         mi = MetricInstance.objects.filter(service_flavour=service_type[i])
-        metric = list(set(mi))
+        metric = list(set([m.metric for m in mi]))
         for j in range(len(metric)):
             try:
-                probe = Metric.objects.get(name=metric[j].metric)
+                probe = Metric.objects.get(name=metric[j])
                 probe = probe.probeversion
             except Metric.DoesNotExist:
                 pass
@@ -28,7 +28,7 @@ class ServiceAdmin(admin.ModelAdmin):
                     data.append({'service_area': service_area[i],
                                  'service_name': service_name[i],
                                  'service_type': service_type[i],
-                                 'metric': metric[j].metric,
+                                 'metric': metric[j],
                                  'probe': probe})
 
     def changelist_view(self, request, extra_context=None):
