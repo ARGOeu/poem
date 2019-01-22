@@ -14,7 +14,7 @@ class ServiceAdmin(admin.ModelAdmin):
     data = list()
     for i in range(len(service_type)):
         mi = MetricInstance.objects.filter(service_flavour=service_type[i])
-        metric = list(set([m.metric for m in mi]))
+        metric = sorted(list(set([m.metric for m in mi])))
         for j in range(len(metric)):
             try:
                 probe = Metric.objects.get(name=metric[j])
