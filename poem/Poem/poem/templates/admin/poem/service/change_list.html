@@ -1,0 +1,52 @@
+{% extends "admin/change_list.html" %}
+{% load i18n admin_urls admin_static admin_modify %}
+
+{% if not is_popup %}
+  {% block breadcrumbs %}
+    <div class="breadcrumbs">
+      <a href="{% url 'admin:app_list' app_label=opts.app_label %}">Admin</a>
+      &rsaquo; {% if has_change_permission %}<a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>{% else %}{{ opts.verbose_name_plural|capfirst }}{% endif %}
+      &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;<a href="{% url 'admin:poem_profile_changelist' %}">Profiles</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
+      <a href="{% url 'admin:poem_probe_changelist' %}">Probes</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
+      <a href="{% url 'admin:poem_metric_changelist' %}">Metrics</a>
+    </div>
+  {% endblock %}
+{% endif %}
+
+{% block content %}
+  {% if servicedata %}
+    {% regroup servicedata|dictsort:"service_area" by service_area as data_by_servicearea %}
+    <table border="1">
+      <thead>
+        <tr><th>Service area</th><th>Service name</th><th>Service types</th><th>Metrics</th><th>Probes</th></tr>
+      </thead>
+      <tbody>
+        {% for data0 in data_by_servicearea %}
+          {% regroup data0.list by service_name as data0_by_servicename %}
+            {% for data1 in data0_by_servicename %}
+            {% with forloop.counter as outer_counter %}
+              {% regroup data1.list by service_type as data1_by_servicetype %}
+              {% for data2 in data1_by_servicetype %} {# forloop.parentloop #}
+                {% for data in data2.list %} {# forloop.first #}
+                  <tr>
+                    {% if forloop.first %}
+                      {% if forloop.parentloop.first %}
+                        {% if outer_counter == 1 %}
+                          <td rowspan="{{ data0.list|length }}">{{ data0.grouper }}</td>
+                        {% endif %}
+                        <td rowspan="{{ data2.list|length }}">{{ data1.grouper }}</td>
+                      {% endif %}
+                      <td rowspan="{{ data2.list|length }}">{{ data2.grouper }}</td>
+                    {% endif %}
+                    <td>{{ data.metric }}</td>
+                    <td>{{ data.probe }}</td>
+                  </tr>
+                {% endfor %}
+              {% endfor %}
+            {% endwith %}
+          {% endfor %}
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+{% endblock %}
