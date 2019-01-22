@@ -25,10 +25,10 @@
       </thead>
       <tbody>
         {% for data0 in data_by_servicearea %}
-          {% regroup data0.list by service_name as data0_by_servicename %}
+          {% regroup data0.list|dictsort:"service_name" by service_name as data0_by_servicename %}
             {% for data1 in data0_by_servicename %}
             {% with forloop.counter as outer_counter %}
-              {% regroup data1.list by service_type as data1_by_servicetype %}
+              {% regroup data1.list|dictsort:"service_type" by service_type as data1_by_servicetype %}
               {% for data2 in data1_by_servicetype %} {# forloop.parentloop #}
                 {% for data in data2.list %} {# forloop.first #}
                   <tr>
