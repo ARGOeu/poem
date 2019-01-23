@@ -22,20 +22,9 @@ COPY venv_poem.sh /etc/profile.d/
 RUN scl enable rh-python36 'source /etc/profile.d/venv_poem.sh; \
     mkdir -p $WORKON_HOME; \
     mkvirtualenv poem'      
-WORKDIR /root/poem-source
-# TODO: fetch from github branch
-COPY poem-devel.zip .
-RUN unzip poem-devel.zip
-RUN source /etc/profile.d/venv_poem.sh; \
-    workon poem; \
-    pip3 install -r requirements.txt; \
-    pip3 install -r requirements_tests.txt; \ 
-    python setup.py egg_info --tag-date sdist bdist_wheel; \
-    pip3 install dist/*
 WORKDIR /root
 COPY secret_key ./ 
 COPY poem.conf ./ 
 COPY settings.py ./ 
-COPY setup_test.sh /root/
+COPY setup_test.sh ./
 COPY execute-tests /usr/bin/ 
-RUN /root/setup_test.sh
