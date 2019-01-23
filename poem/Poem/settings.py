@@ -68,6 +68,7 @@ try:
 
     SERVICETYPE_URL = config.get('SYNC', 'servicetype')
     VO_URL = config.get('SYNC', 'vo')
+    SERVICE_URL = config.get('SYNC', 'services')
 
     ALLOWED_HOSTS = config.get('SECURITY', 'AllowedHosts')
     CAFILE = config.get('SECURITY', 'CAFile')
