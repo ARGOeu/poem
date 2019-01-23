@@ -28,7 +28,7 @@ import re
 
 class PublicViews(object):
     def load_settings(self):
-        self.public_models = (Probe, Metric, Profile)
+        self.public_models = (Probe, Metric, Profile, Service)
         self._map = dict()
         _ = [self._map.update({x.__name__.lower(): x}) for x in self.public_models]
         # (probe|metric|profile) regexp
