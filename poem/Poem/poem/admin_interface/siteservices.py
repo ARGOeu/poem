@@ -10,6 +10,9 @@ class ServiceAdmin(admin.ModelAdmin):
     def has_change_permission(self, request, obj=None):
         return True
 
+    def has_add_permission(self, request, obj=None):
+        return False
+
     def changelist_view(self, request, extra_context=None):
         qs = Service.objects.all()
         service_area = [p.service_area for p in qs]
