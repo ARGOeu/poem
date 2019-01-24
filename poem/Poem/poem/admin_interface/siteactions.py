@@ -44,67 +44,115 @@ def get_object_from_db(obj):
 
 
 def get_new_change_message(obj):
-    if obj.content_type.model in ['profile', 'API key', 'groupofmetrics']:
-        return obj.__str__()
-    else:
-        if obj.change_message and obj.change_message[0] == '[':
-            try:
-                change_message = json.loads(obj.change_message)
-            except json.JSONDecodeError:
-                return obj.change_message
-            messages = []
-            for sub_message in change_message:
-                if 'added' in sub_message:
-                    if sub_message['added']:
-                        sub_message['added']['name'] = \
-                            gettext(sub_message['added']['name'])
-                        if get_object_from_db(gettext(sub_message['added'][
-                                                          'object'])):
-                            messages.append(gettext('Added %s "%s".')
-                                            % (sub_message['added']['name'],
-                                               get_object_from_db(
-                                                   gettext(sub_message[
-                                                               'added'][
-                                                               'object'])
-                                               )))
-                        else:
-                            messages.append(gettext('Added a %s.'
-                                                    % sub_message['added'][
-                                                        'name']))
-                    else:
-                        messages.append(gettext('Added %s.' % obj.object_repr))
-                elif 'changed' in sub_message:
-                    sub_message['changed']['fields'] = get_text_list(
-                        sub_message['changed']['fields'], gettext('and')
-                    )
-                    if 'name' in sub_message['changed']:
-                        sub_message['changed']['name'] = gettext(
-                            sub_message['changed']['name']
-                        )
+    if obj.change_message and obj.change_message[0] == '[':
+        try:
+            change_message = json.loads(obj.change_message)
+        except json.JSONDecodeError:
+            return obj.change_message
+        messages = []
+        for sub_message in change_message:
+            if 'added' in sub_message:
+                if sub_message['added']:
+                    sub_message['added']['name'] = \
+                        gettext(sub_message['added']['name'])
+                    if obj.content_type.model == 'profile':
                         messages.append(
-                            gettext('Changed %s for %s "%s".'
+                            gettext('Added %s %s (service type: %s).\n')
+                            % (sub_message['added']['name'],
+                               gettext(
+                                   sub_message['added']['object']
+                               ).split(' ')[1],
+                               gettext(
+                                   sub_message['added']['object']
+                               ).split(' ')[0])
+                        )
+                    elif get_object_from_db(
+                            gettext(
+                                sub_message['added']['object']
+                            )
+                    ):
+                        messages.append(
+                            gettext('Added %s "%s".\n')
+                            % (sub_message['added']['name'],
+                               get_object_from_db(
+                                   gettext(sub_message['added']['object'])
+                               )
+                               )
+                        )
+                    else:
+                        messages.append(
+                            gettext('Added a %s.\n'
+                                    % sub_message['added']['name'])
+                        )
+                else:
+                    messages.append(gettext('Added %s.' % obj.object_repr))
+            elif 'changed' in sub_message:
+                sub_message['changed']['fields'] = get_text_list(
+                    sub_message['changed']['fields'],
+                    gettext('and')
+                )
+                if 'name' in sub_message['changed']:
+                    sub_message['changed']['name'] = gettext(
+                        sub_message['changed']['name']
+                    )
+                    if obj.content_type.model == 'profile':
+                        messages.append(
+                            gettext('Added %s %s (service type: %s).\n')
+                            % (sub_message['changed']['name'],
+                               gettext(
+                                   sub_message['changed']['object']
+                               ).split(' ')[1],
+                               gettext(
+                                   sub_message['changed']['object']
+                               ).split(' ')[0])
+                        )
+                    else:
+                        messages.append(
+                            gettext('Changed %s for %s "%s".\n'
                                     % (sub_message['changed']['fields'],
                                        sub_message['changed']['name'],
                                        get_object_from_db(
-                                           gettext(sub_message['changed'][
-                                               'object'])
-                                       ))
+                                           gettext(
+                                               sub_message['changed']['object']
+                                           )
+                                       )
+                                       )
                                     )
                         )
-                    else:
-                        messages.append(gettext('Changed {fields}.').format(
-                            **sub_message['changed']))
-                elif 'deleted' in sub_message:
-                    sub_message['deleted']['name'] = gettext(
-                        sub_message['deleted']['name']
+                else:
+                    messages.append(
+                        gettext(
+                            'Changed {fields}.\n'
+                        ).format(**sub_message['changed'])
                     )
-                    messages.append(gettext('Deleted a %s.')
-                                    % sub_message['deleted']['name'])
+            elif 'deleted' in sub_message:
+                sub_message['deleted']['name'] = gettext(
+                    sub_message['deleted']['name']
+                )
+                if obj.content_type.model == 'profile':
+                    messages.append(gettext(
+                        'Deleted %s %s (service type: %s).\n'
+                    )
+                                    % (sub_message['deleted']['name'],
+                                       gettext(
+                                           sub_message['deleted']['object']
+                                       ).split(' ')[1],
+                                       gettext(
+                                           sub_message['deleted']['object']
+                                       ).split(' ')[0])
+                                    )
+                else:
+                    messages.append(
+                        gettext(
+                            'Deleted a %s.\n'
+                        )
+                        % sub_message['deleted']['name']
+                    )
 
-            change_message = ' '.join(msg[0].upper() + msg[1:] for msg in messages)
-            return change_message
-        else:
-            return obj.change_message
+        change_message = ' '.join(msg[0].upper() + msg[1:] for msg in messages)
+        return change_message
+    else:
+        return obj.change_message
 
 
 class LogEntryAdmin(admin.ModelAdmin):
