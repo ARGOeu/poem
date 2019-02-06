@@ -145,7 +145,7 @@ class UserProfile(models.Model):
         app_label = 'poem'
 
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    subject = models.CharField('distinguishedName', max_length=255, blank=True,
+    subject = models.CharField('distinguishedName', max_length=512, blank=True,
                                null=True,)
     egiid = models.CharField('eduPersonUniqueId', max_length=255, blank=True,
                              null=True, unique=True)
