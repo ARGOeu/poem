@@ -43,7 +43,7 @@ try:
 
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.postgresql',
+            'ENGINE': 'tenant_schemas.postgresql_backend',
             'NAME': DBNAME,
             'USER': DBUSER,
             'PASSWORD': DBPASSWORD,
@@ -51,6 +51,8 @@ try:
             'PORT': DBPORT,
         }
     }
+
+    DATABASE_ROUTERS = ('tenant_schemas.routers.TenantSyncRouter',)
 
     CACHES = {
         'default': {
@@ -109,7 +111,13 @@ ROOT_URLCONF = 'Poem.urls'
 
 APPEND_SLASH = True
 
-INSTALLED_APPS = (
+SHARED_APPS = (
+    'tenant_schemas',
+    'Poem.tenants',
+    'django.contrib.contenttypes',
+)
+
+TENANT_APPS = (
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -127,7 +135,30 @@ INSTALLED_APPS = (
     'Poem.poem',
 )
 
+INSTALLED_APPS = (
+    'tenant_schemas',
+    'Poem.tenants',
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.staticfiles',
+    'django.contrib.messages',
+    'django.contrib.sessions',
+    'ajax_select',
+    'djangosaml2',
+    'modelclone',
+    'reversion',
+    'reversion_compare',
+    'rest_framework',
+    'rest_framework_api_key',
+    'Poem.api',
+    'Poem.poem',
+)
+
+TENANT_MODEL = 'tenants.Tenant'
+
 MIDDLEWARE = [
+    'tenant_schemas.middleware.TenantMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -152,6 +183,8 @@ TEMPLATES = [
         },
     },
 ]
+
+TEMPLATE_CONTEXT_PROCESSORS = ('django.core.context_processors.request',)
 
 AJAX_LOOKUP_CHANNELS = {
     'hintsvo' : ('Poem.poem.lookups', 'VOLookup'),
@@ -199,6 +232,7 @@ TOKEN_HEADER = 'HTTP_X_API_KEY'
 # MEDIA_URL = '/poem_media/'
 # MEDIA_ROOT = '{}/usr/share/poem/media/'.format(VENV)
 # STATIC_URL = '/static/'
+DEFAULT_FILE_STORAGE = 'tenant_schemas.storage.TenantFileSystemStorage'
 
 # Apache settings
 STATIC_URL = '/static/'
