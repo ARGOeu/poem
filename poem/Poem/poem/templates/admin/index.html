@@ -59,9 +59,9 @@
 <div id="content-related">
     <div class="module" id="recent-actions-module">
         <h2>{% trans 'Recent Actions' %}</h2>
-        <h3>{% trans 'My Actions' %}</h3>
+        <h3>{% trans 'Last Actions' %}</h3>
             {% load log %}
-            {% get_admin_log 10 as admin_log for_user user %}
+            {% get_admin_log 10 as admin_log %}
             {% if not admin_log %}
             <p>{% trans 'None available' %}</p>
             {% else %}
@@ -75,7 +75,7 @@
                 {% endif %}
                 <br/>
                 {% if entry.content_type %}
-                    <span class="mini quiet">{% filter capfirst %}{% trans entry.content_type.name %}{% endfilter %}</span>
+                    <span class="mini quiet">{% filter capfirst %}{% trans entry.content_type.name %}{% endfilter %}, by {{ entry.user }}</span>
                 {% else %}
                     <span class="mini quiet">{% trans 'Unknown content' %}</span>
                 {% endif %}

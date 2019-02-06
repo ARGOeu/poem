@@ -1,0 +1,11 @@
+django-ajax-selects
+django-reversion
+django>=2.0,<2.1
+djangorestframework
+djangorestframework-api-key
+djangosaml2
+git+https://github.com/vrdel/django-modelclone
+git+https://github.com/vrdel/django-reversion-compare
+psycopg2
+requests
+unidecode

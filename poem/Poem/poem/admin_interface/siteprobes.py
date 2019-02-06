@@ -252,6 +252,11 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
 
     @reversion.create_revision()
     def save_model(self, request, obj, form, change):
+        """
+        In case new_version button is ticked, the new revision is created;
+        in case that new_version button IS NOT ticked, there is no new
+        revision created, only the data in Probe table in db is updated.
+        """
         sh = SharedInfo()
 
         if obj and sh.getgroup():
@@ -343,6 +348,12 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
             self._reversion_get_template_list("revision_form.html"),
             extra_context,
         )
+
+    def history_view(self, request, object_id, extra_context=None):
+        extra_context = extra_context or dict()
+        if request.user.is_authenticated:
+            extra_context.update(dict(include_history_link=True))
+        return super().history_view(request, object_id, extra_context=extra_context)
 
 
 reversion.register(Probe, exclude=["nameversion", "datetime"])

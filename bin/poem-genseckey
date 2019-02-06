@@ -7,7 +7,9 @@ import random
 import sys
 import pwd
 
-validchars = 'abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)'
+# Removed '$' as it will be used as salt by auth.hashers
+# as part of token creation
+validchars = 'abcdefghijklmnopqrstuvwxyz0123456789!@#%^&*(-_=+)'
 owner = 'apache'
 
 def main():
@@ -16,7 +18,7 @@ def main():
     args = parser.parse_args()
 
     SECRET_KEY = ''.join([random.SystemRandom().choice(validchars) \
-                          for i in range(50)])
+                          for i in range(32)])
 
     try:
         secret = open(args.outfile, 'w')

@@ -4,14 +4,17 @@
 
 POEM service is a web application used in ARGO monitoring framework that holds list of services, metrics, metric configurations and Nagios probes used within EGI infrastructure. Services and associated metrics are grouped into POEM profiles that instruct monitoring instances what kind of tests to execute for given service. Additionally, it is a register of probes and Nagios metric configurations exposed to Nagios monitoring instances via REST API and with such integration, it helps in speeding up of testing and deployment of probes.
 
-It is based on Django web framework, specifically extension of its admin interface and several Django packages. EGI users are allowed to sign-in through EGI CheckIn federated authentication mechanism. Application is served with Apache web server and all its data is stored in light SQLite database.
+It is based on Django web framework, specifically extension of its admin interface and several Django packages. EGI users are allowed to sign-in through EGI CheckIn federated authentication mechanism. Application is served with Apache web server and all its data is stored in PostgreSQL database.
 
 POEM service is based on Django 2.x framework and following Django packages from [PyPI](https://pypi.org/):
-* `django-reversion` - provides the basic versioning for Probes and Metric configurations 
-* `django-reversion-compare` - provides the diff view for Probes and Metric configuration progress 
-* `django-modelclone` - simplify deriving of Profiles and Metric configuration from existing data 
 * `django-ajax-selects` - ease the creation of auto-complete fields
+* `django-modelclone` - simplify deriving of Profiles and Metric configuration from existing data 
+* `django-reversion-compare` - provides the diff view for Probes and Metric configuration progress 
+* `django-reversion` - provides the basic versioning for Probes and Metric configurations 
+* `djangorestframework-api-key` - provides non-user token generation and protection
+* `djangorestframework` - provides Token and Session authenticated REST API 
 * `djangosaml2` - enable SAML2 login feature
+* `psycopg2` - PostgreSQL database adapter 
 
 Devel instance: https://poem-devel.argo.grnet.gr/
 
@@ -45,10 +48,10 @@ VENV = /home/pyvenv/poem/
 | Database handler					   | `VENV/bin/poem-db`                                  |
 | Sync (VO, Service types)	   | `VENV/bin/poem-syncservtype, poem-syncvo`           |
 | Profiles handlers					   | `VENV/bin/poem-exportprofiles, poem-importprofiles` |
+| Token set/create 					   | `VENV/bin/poem-token`                               |
 | Static data served by Apache | `VENV/usr/share/poem/`                              |
 | Main application code        | `VENV/lib/python3.6/site-packages/Poem/`            |
 | Log file                     | `VENV/var/log/poem`                                 |
-| Path of SQLite database      | `VENV/var/lib/poem/poemserv.db`                     |
 
 If the default location of virtual environment is inappropriate and needs to be changed, change of it should be reflected by adapting `VENV` configuration variable in `etc/poem/poem.conf`, `etc/poem/poem_logging.conf`, `/etc/httpd/conf.d/poem.conf` and `site-packages/Poem/settings.py`.
 
@@ -77,7 +80,6 @@ Once the Python 3.6 is installed, it needs to be used to create a new virtual en
 ```
 
 > **Notice** how the location of virtual environment is controlled with `WORKON_HOME` variable. Created virtual environment directory will be `$WORKON_HOME/poem`. It needs to be aligned with `VENV` variable in service configuration. 
-
 
 Afterward, the context of virtual environment can be started:
 
@@ -109,6 +111,41 @@ Next, the correct permission needs to be set on virtual environment directory:
 
 ```sh
 % (poem) chown -R apache:apache $VIRTUAL_ENV
+```
+
+### PostgreSQL server setup 
+
+POEM is tested and meant to be running on PostgreSQL 10 DBMS. CentOS 7 operating system delivers [PostgreSQL 10 through Software Collections service](https://www.softwarecollections.org/en/scls/rhscl/rh-postgresql10/) that is installed with the following instructions:
+
+```sh
+% yum -y install centos-release-scl
+% yum -y install scl-utils
+% yum -y install rh-postgresql10
+```
+
+Initalization of database:
+```sh
+% scl enable rh-postgresql10 'postgresql-setup --initdb'
+```
+
+In `/var/opt/rh/rh-postgresql10/lib/pgsql/data/pg_hba.conf`, change default client authentication to password authentication:
+```sh
+# IPv4 local connections:
+host    all             all             127.0.0.1/32            md5
+# IPv6 local connections:
+host    all             all             ::1/128                 md5
+```
+Default `ident` should be replaced by `md5`.
+
+Start the service:
+```sh
+% systemctl start rh-postgresql10-postgresql
+```
+
+Set password for default DB user `postgres`:
+```sh
+% su - postgres -c 'scl enable rh-postgresql10 -- psql'
+postgres=# \password postgres
 ```
 
 ## Configuration
@@ -157,6 +194,20 @@ These control options are used by sync scripts that fetch all available services
 	ServiceType = https://goc.egi.eu/gocdbpi/private/?method=get_service_types 
 	VO = http://operations-portal.egi.eu/xml/voIDCard/public/all/true
 
+### DATABASE
+
+	[DATABASE]
+	Name = postgres
+	User = postgres
+	Password = postgres
+	Host = localhost
+	Port = 5432
+
+* `Name` is the name of database to use for tables
+* `User`, `Password` are credentials that will be used to authenticate to PostgreSQL server
+* `Host` is hostname of the PostgreSQL server
+* `Port` where PostgreSQL server is listening for connections
+
 ### SECURITY
 
 	[SECURITY]
@@ -177,13 +228,20 @@ These control options are used by sync scripts that fetch all available services
 % poem-genseckey -f $VIRTUAL_ENV/etc/poem/secret_key
 ```
 
+Part of the REST API is protected by token so for the clients that consumes those API methods, token needs to be generated and distributed. Tokens can be generated by the superuser from the Admin UI page or with the provided `poem-token` tool. Example is creation a token for the client/tenant EGI:
+```sh
+% workon poem
+% poem-token -t EGI
+```
+
 ### Creating database and starting the service
 
 Prerequisites for creating the empty database are:
-1) `[SUPERUSER]` section is set with desired credentials
-2) `SECRET_KEY` is generated and placed in `$VIRTUAL_ENV/etc/poem/secret_key`
-3) `$VIRTUAL_ENV` has permissions set to `apache:apache`
-4) `poem.conf` Apache configuration is presented in `/opt/rh/httpd24/root/etc/httpd/conf.d/`
+1) PostgreSQL DB server running on `Host`, listening on `Port` and accepting `User` and `Password`
+2) `[SUPERUSER]` section is set with desired credentials
+3) `SECRET_KEY` is generated and placed in `$VIRTUAL_ENV/etc/poem/secret_key`
+4) `$VIRTUAL_ENV` has permissions set to `apache:apache`
+5) `poem.conf` Apache configuration is presented in `/opt/rh/httpd24/root/etc/httpd/conf.d/`
 
 Once all is set, database can be created with provided tool `poem-db`:
 
@@ -191,29 +249,38 @@ Once all is set, database can be created with provided tool `poem-db`:
 % workon poem
 % poem-db -c
 Operations to perform:
-	Apply all migrations: admin, auth, contenttypes, poem, reversion, sessions
+  Apply all migrations: admin, auth, contenttypes, poem, rest_framework_api_key, reversion, sessions
 Running migrations:
-	Applying contenttypes.0001_initial... OK
-	Applying contenttypes.0002_remove_content_type_name... OK
-	Applying auth.0001_initial... OK
-	Applying auth.0002_alter_permission_name_max_length... OK
-	Applying auth.0003_alter_user_email_max_length... OK
-	Applying auth.0004_alter_user_username_opts... OK
-	Applying auth.0005_alter_user_last_login_null... OK
-	Applying auth.0006_require_contenttypes_0002... OK
-	Applying auth.0007_alter_validators_add_error_messages... OK
-	Applying auth.0008_alter_user_username_max_length... OK
-	Applying auth.0009_alter_user_last_name_max_length... OK
-	Applying poem.0001_initial... OK
-	Applying admin.0001_initial... OK
-	Applying admin.0002_logentry_remove_auto_add... OK
-	Applying reversion.0001_squashed_0004_auto_20160611_1202... OK
-	Applying poem.0002_extrev_add... OK
-	Applying reversion.0003_reversion_updates... OK
-	Applying poem.0004_reversion_dbfill... OK
-	Applying sessions.0001_initial... OK
+  Applying contenttypes.0001_initial... OK
+  Applying contenttypes.0002_remove_content_type_name... OK
+  Applying auth.0001_initial... OK
+  Applying auth.0002_alter_permission_name_max_length... OK
+  Applying auth.0003_alter_user_email_max_length... OK
+  Applying auth.0004_alter_user_username_opts... OK
+  Applying auth.0005_alter_user_last_login_null... OK
+  Applying auth.0006_require_contenttypes_0002... OK
+  Applying auth.0007_alter_validators_add_error_messages... OK
+  Applying auth.0008_alter_user_username_max_length... OK
+  Applying auth.0009_alter_user_last_name_max_length... OK
+  Applying poem.0001_initial... OK
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying reversion.0001_squashed_0004_auto_20160611_1202... OK
+  Applying poem.0002_extrev_add... OK
+  Applying poem.0004_reversion_dbfill... OK
+  Applying poem.0005_add_metrictype... OK
+  Applying poem.0006_set_passive... OK
+  Applying poem.0007_allownull_metricgroup... OK
+  Applying poem.0008_probe_ondeletenull... OK
+  Applying poem.0009_poem_nameunique... OK
+  Applying rest_framework_api_key.0001_initial... OK
+  Applying rest_framework_api_key.0002_auto_20180922_1759... OK
+  Applying rest_framework_api_key.0003_auto_20180924_1006... OK
+  Applying rest_framework_api_key.0004_auto_20180924_1303... OK
+  Applying sessions.0001_initial... OK
+Installed 5 object(s) from 1 fixture(s)
+% poem-db -u
 Superuser created successfully.
-Installed 3 object(s) from 1 fixture(s)
 ```
 
 Afterward, Apache server needs to be started:

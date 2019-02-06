@@ -7,7 +7,6 @@ from django.core.exceptions import ImproperlyConfigured
 import saml2
 
 VENV = '/home/pyvenv/poem'
-PROJECT_NAME = 'poem'
 APP_PATH = os_path.abspath(os_path.split(__file__)[0])
 PROJECT_PATH = os_path.abspath(os_path.join(APP_PATH, '..'))
 CONFIG_FILE = '{}/etc/poem/poem.conf'.format(VENV)
@@ -33,13 +32,26 @@ try:
     if not all([SUPERUSER_EMAIL, SUPERUSER_NAME, SUPERUSER_PASS]):
         raise ImproperlyConfigured('Missing superuser value in config file %s' % CONFIG_FILE)
 
+    DBNAME = config.get('DATABASE', 'name')
+    DBUSER = config.get('DATABASE', 'user')
+    DBPASSWORD = config.get('DATABASE', 'password')
+    DBHOST = config.get('DATABASE', 'host')
+    DBPORT = config.get('DATABASE', 'port')
+
+    if not all([DBNAME, DBHOST, DBPORT, DBUSER, DBPASSWORD]):
+        raise ImproperlyConfigured('Missing database settings in %s' % CONFIG_FILE)
 
     DATABASES = {
         'default': {
-            'NAME':  '{}/var/lib/poem/poemserv.db'.format(VENV),
-            'ENGINE': 'django.db.backends.sqlite3',
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': DBNAME,
+            'USER': DBUSER,
+            'PASSWORD': DBPASSWORD,
+            'HOST': DBHOST,
+            'PORT': DBPORT,
         }
     }
+
     CACHES = {
         'default': {
             'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
@@ -56,6 +68,7 @@ try:
 
     SERVICETYPE_URL = config.get('SYNC', 'servicetype')
     VO_URL = config.get('SYNC', 'vo')
+    SERVICE_URL = config.get('SYNC', 'services')
 
     ALLOWED_HOSTS = config.get('SECURITY', 'AllowedHosts')
     CAFILE = config.get('SECURITY', 'CAFile')
@@ -97,7 +110,7 @@ ROOT_URLCONF = 'Poem.urls'
 APPEND_SLASH = True
 
 INSTALLED_APPS = (
-    'django.contrib.admin.apps.SimpleAdminConfig',
+    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.staticfiles',
@@ -108,6 +121,9 @@ INSTALLED_APPS = (
     'modelclone',
     'reversion',
     'reversion_compare',
+    'rest_framework',
+    'rest_framework_api_key',
+    'Poem.api',
     'Poem.poem',
 )
 
@@ -171,6 +187,13 @@ USE_L10N = True
 URL_DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
+# Django REST Framework settings
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ]
+}
+TOKEN_HEADER = 'HTTP_X_API_KEY'
 
 # Django development server settings
 # MEDIA_URL = '/poem_media/'
