@@ -6,6 +6,8 @@ from django.contrib.admin.models import LogEntry
 from django.contrib.admin.sites import AdminSite
 from django.views.decorators.cache import never_cache
 from django.template.response import TemplateResponse
+from django.db import connection
+from django.conf import settings
 
 from Poem.poem.admin_interface.grmetrics import GroupOfMetricsAdmin
 from Poem.poem.admin_interface.grprobes import GroupOfProbesAdmin
@@ -18,12 +20,21 @@ from Poem.poem.admin_interface.siteactions import *
 from Poem.poem.admin_interface.siteservices import *
 from Poem.poem.models import GroupOfMetrics, GroupOfProfiles
 from Poem.poem.models import MetricInstance, Metric, Probe, Profile, UserProfile, VO, ServiceFlavour, GroupOfProfiles, CustUser, Service
-from Poem.settings import SAMLLOGINSTRING
 
 from Poem.api.admin import MyAPIKeyAdmin
 from rest_framework_api_key.models import APIKey
 
 import re
+from configparser import ConfigParser
+
+
+def tenant_samlloginstring():
+    tenant = connection.tenant.name
+
+    config = ConfigParser()
+    config.read(settings.CONFIG_FILE)
+
+    return config.get('GENERAL_' + tenant.upper(), 'samlloginstring')
 
 
 class PublicViews(object):
@@ -141,7 +152,7 @@ class MyAdminSite(PublicViews, AdminSite):
         Extend login view with SAML login string and call PublicViews.login()
         """
         extra_context = extra_context if extra_context else dict()
-        extra_context.update(samlloginstring=SAMLLOGINSTRING)
+        extra_context.update(samlloginstring=tenant_samlloginstring())
 
         return super().login(request, extra_context)
 

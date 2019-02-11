@@ -22,7 +22,6 @@ try:
     # General
     DEBUG = bool(config.get('GENERAL', 'debug'))
     TIME_ZONE = config.get('GENERAL', 'timezone')
-    SAMLLOGINSTRING = config.get('GENERAL', 'samlloginstring')
 
     SUPERUSER_NAME = config.get('SUPERUSER', 'name')
     SUPERUSER_PASS = config.get('SUPERUSER', 'password')
