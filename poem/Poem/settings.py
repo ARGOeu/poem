@@ -20,8 +20,7 @@ try:
         raise ImproperlyConfigured('Unable to parse config file %s' % CONFIG_FILE)
 
     # General
-    DEBUG = bool(config.get('GENERAL','debug'))
-    POEM_NAMESPACE = config.get('GENERAL', 'namespace')
+    DEBUG = bool(config.get('GENERAL', 'debug'))
     TIME_ZONE = config.get('GENERAL', 'timezone')
     SAMLLOGINSTRING = config.get('GENERAL', 'samlloginstring')
 
@@ -63,6 +62,14 @@ try:
             }
         }
     }
+
+    HTTPAUTH = config.getboolean('SYNC', 'useplainhttpauth')
+    HTTPUSER = config.get('SYNC', 'httpuser')
+    HTTPPASS = config.get('SYNC', 'httppass')
+
+    SERVICETYPE_URL = config.get('SYNC', 'servicetype')
+    VO_URL = config.get('SYNC', 'vo')
+    SERVICE_URL = config.get('SYNC', 'services')
 
     HTTPAUTH = config.getboolean('SYNC', 'useplainhttpauth')
     HTTPUSER = config.get('SYNC', 'httpuser')

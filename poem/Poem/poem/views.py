@@ -1,15 +1,26 @@
 from django.shortcuts import render_to_response
 from django.conf import settings
+from django.db import connection
+from django.core.exceptions import ImproperlyConfigured
 from django.http import HttpResponse
 from django.views.generic import View
 from Poem.poem import models
 import json
+from configparser import ConfigParser
 
 def none_to_emptystr(val):
     if val is None:
         return ''
     else:
         return val
+
+def poem_namespace():
+    tenant = connection.tenant.name
+
+    config = ConfigParser()
+    config.read(settings.CONFIG_FILE)
+
+    return config.get('GENERAL_' + tenant.upper(), 'namespace')
 
 
 class Profiles(View):
@@ -105,7 +116,7 @@ class MetricsInProfiles(View):
             metrics_in_profiles = []
             for p in profiles:
                 metrics_in_profiles.append({'name' : p[0], \
-                                            'namespace' : none_to_emptystr(settings.POEM_NAMESPACE), \
+                                            'namespace' : none_to_emptystr(poem_namespace()), \
                                             'description' : none_to_emptystr(p[1]), \
                                             'vo' : p[2],\
                                             'metrics' : [{'service_flavour': m['service_flavour'], \
