@@ -55,22 +55,6 @@ try:
         }
     }
 
-    HTTPAUTH = config.getboolean('SYNC', 'useplainhttpauth')
-    HTTPUSER = config.get('SYNC', 'httpuser')
-    HTTPPASS = config.get('SYNC', 'httppass')
-
-    SERVICETYPE_URL = config.get('SYNC', 'servicetype')
-    VO_URL = config.get('SYNC', 'vo')
-    SERVICE_URL = config.get('SYNC', 'services')
-
-    HTTPAUTH = config.getboolean('SYNC', 'useplainhttpauth')
-    HTTPUSER = config.get('SYNC', 'httpuser')
-    HTTPPASS = config.get('SYNC', 'httppass')
-
-    SERVICETYPE_URL = config.get('SYNC', 'servicetype')
-    VO_URL = config.get('SYNC', 'vo')
-    SERVICE_URL = config.get('SYNC', 'services')
-
     ALLOWED_HOSTS = config.get('SECURITY', 'AllowedHosts')
     CAFILE = config.get('SECURITY', 'CAFile')
     CAPATH = config.get('SECURITY', 'CAPath')
