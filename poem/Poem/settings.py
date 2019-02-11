@@ -23,13 +23,6 @@ try:
     DEBUG = bool(config.get('GENERAL', 'debug'))
     TIME_ZONE = config.get('GENERAL', 'timezone')
 
-    SUPERUSER_NAME = config.get('SUPERUSER', 'name')
-    SUPERUSER_PASS = config.get('SUPERUSER', 'password')
-    SUPERUSER_EMAIL = config.get('SUPERUSER', 'email')
-
-    if not all([SUPERUSER_EMAIL, SUPERUSER_NAME, SUPERUSER_PASS]):
-        raise ImproperlyConfigured('Missing superuser value in config file %s' % CONFIG_FILE)
-
     DBNAME = config.get('DATABASE', 'name')
     DBUSER = config.get('DATABASE', 'user')
     DBPASSWORD = config.get('DATABASE', 'password')
