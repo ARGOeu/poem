@@ -3,15 +3,16 @@ import datetime
 
 from mock import patch
 
-from rest_framework.test import APITestCase, APIRequestFactory, \
-    force_authenticate
 from rest_framework import status
 
 from rest_framework_api_key.models import APIKey
 from rest_framework_api_key.crypto import _generate_token, hash_token
 
+from tenant_schemas.test.cases import TenantTestCase
+from tenant_schemas.test.client import TenantRequestFactory
+
 from Poem.poem.models import *
-from Poem.api.views import *
+from Poem.api import views
 
 from reversion.models import Version, Revision
 
@@ -195,13 +196,14 @@ def create_credentials():
     obj.save()
     return token
 
+
 @patch('Poem.api.permissions.SECRET_KEY', 'top_secret')
 @patch('Poem.api.permissions.TOKEN_HEADER', 'HTTP_X_API_KEY')
-class ListTaggedMetricsAPIViewTests(APITestCase):
+class ListTaggedMetricsAPIViewTests(TenantTestCase):
     def setUp(self):
         self.token = create_credentials()
-        self.view = ListTaggedMetrics.as_view()
-        self.factory = APIRequestFactory()
+        self.view = views.ListTaggedMetrics.as_view()
+        self.factory = TenantRequestFactory(self.tenant)
         self.url_base = '/api/v2/metrics/'
 
         mock_db_for_tagged_metrics_tests()
@@ -214,7 +216,7 @@ class ListTaggedMetricsAPIViewTests(APITestCase):
 
     def test_get_metric_for_a_given_tag_with_all_fields(self):
         request = self.factory.get(self.url_base + 'prod', **{'HTTP_X_API_KEY':
-                                                            self.token})
+                                                                  self.token})
         response = self.view(request, 'prod')
         self.assertEqual(
             response.data,
@@ -296,11 +298,11 @@ class ListTaggedMetricsAPIViewTests(APITestCase):
 
 @patch('Poem.api.permissions.SECRET_KEY', 'top_secret')
 @patch('Poem.api.permissions.TOKEN_HEADER', 'HTTP_X_API_KEY')
-class ListMetricsAPIViewTests(APITestCase):
+class ListMetricsAPIViewTests(TenantTestCase):
     def setUp(self):
         self.token = create_credentials()
-        self.view = ListMetrics.as_view()
-        self.factory = APIRequestFactory()
+        self.view = views.ListMetrics.as_view()
+        self.factory = TenantRequestFactory(self.tenant)
         self.url = '/api/v2/metrics'
 
         mock_db_for_tagged_metrics_tests()
@@ -371,11 +373,11 @@ class ListMetricsAPIViewTests(APITestCase):
 
 @patch('Poem.api.permissions.SECRET_KEY', 'top_secret')
 @patch('Poem.api.permissions.TOKEN_HEADER', 'HTTP_X_API_KEY')
-class ListProfileAPIViewTests(APITestCase):
+class ListProfileAPIViewTests(TenantTestCase):
     def setUp(self):
         self.token = create_credentials()
-        self.view = ListProfile.as_view()
-        self.factory = APIRequestFactory()
+        self.view = views.ListProfile.as_view()
+        self.factory = TenantRequestFactory(self.tenant)
         self.url = '/api/v2/profiles'
 
         mock_db_for_profile_testing()
@@ -424,11 +426,11 @@ class ListProfileAPIViewTests(APITestCase):
 
 @patch('Poem.api.permissions.SECRET_KEY', 'top_secret')
 @patch('Poem.api.permissions.TOKEN_HEADER', 'HTTP_X_API_KEY')
-class DetailProfileAPIViewTests(APITestCase):
+class DetailProfileAPIViewTests(TenantTestCase):
     def setUp(self):
         self.token = create_credentials()
-        self.view = DetailProfile.as_view()
-        self.factory = APIRequestFactory()
+        self.view = views.DetailProfile.as_view()
+        self.factory = TenantRequestFactory(self.tenant)
         self.url_base = '/api/v2/profiles/'
 
         mock_db_for_profile_testing()
