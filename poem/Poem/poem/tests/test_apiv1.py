@@ -1,15 +1,21 @@
 import json
 import datetime
+import mock
 
-from django.test import TestCase
+from tenant_schemas.test.cases import TenantTestCase
+from tenant_schemas.test.client import TenantRequestFactory
 
 from Poem.poem.models import *
+from Poem.poem import views
 
 from reversion.models import Version, Revision
 
 
-class ProfileViewsTests(TestCase):
+class ProfileViewsTests(TenantTestCase):
     def setUp(self):
+        self.factory = TenantRequestFactory(self.tenant)
+        self.view = views.Profiles.as_view()
+
         self.profile = Profile.objects.create(
             name='ARGO_MON',
             version='1.0',
@@ -27,7 +33,8 @@ class ProfileViewsTests(TestCase):
             vo='ops',
             fqan='fqan_text',
         )
-        response = self.client.get('/api/0.2/json/profiles')
+        request = self.factory.get('/api/0.2/json/profiles')
+        response = self.view(request)
         data = json.loads(response.content)
         self.assertEqual(
             data,
@@ -58,7 +65,8 @@ class ProfileViewsTests(TestCase):
             vo='ops',
             fqan=None,
         )
-        response = self.client.get('/api/0.2/json/profiles')
+        request = self.factory.get('/api/0.2/json/profiles')
+        response = self.view(request)
         data = json.loads(response.content)
 
         self.assertEqual(
@@ -105,7 +113,8 @@ class ProfileViewsTests(TestCase):
             fqan='something',
         )
 
-        response = self.client.get('/api/0.2/json/profiles')
+        request = self.factory.get('/api/0.2/json/profiles')
+        response = self.view(request)
         data = json.loads(response.content)
 
         # sorting list of profiles because they are not always obtained in
@@ -147,9 +156,11 @@ class ProfileViewsTests(TestCase):
         )
 
 
-class MetricsInProfilesVIewTests(TestCase):
-    @classmethod
-    def setUpTestData(cls):
+class MetricsInProfilesVIewTests(TenantTestCase):
+    def setUp(self):
+        self.factory = TenantRequestFactory(self.tenant)
+        self.view = views.MetricsInProfiles.as_view()
+
         profile1 = Profile.objects.create(
             name='ARGO_MON_CRITICAL',
             description='Central ARGO-MON_CRITICAL profile.',
@@ -221,9 +232,12 @@ class MetricsInProfilesVIewTests(TestCase):
         )
 
     def test_get_metrics_for_a_given_vo(self):
-        with self.settings(POEM_NAMESPACE='hr.cro-ngi.TEST'):
-            response = self.client.get(
-                '/api/0.2/json/metrics_in_profiles/?vo_name=ops')
+        with mock.patch('Poem.poem.views.poem_namespace',
+                        return_value='hr.cro-ngi.TEST'):
+            request = self.factory.get(
+                '/api/0.2/json/metrics_in_profiles/?vo_name=ops'
+            )
+            response = self.view(request)
             data = json.loads(response.content)
 
             # sorting list of profiles because they are not always obtained in
@@ -274,9 +288,11 @@ class MetricsInProfilesVIewTests(TestCase):
             )
 
     def test_get_metrics_for_multiple_vos(self):
-        with self.settings(POEM_NAMESPACE='hr.cro-ngi.TEST'):
-            response = self.client.get(
+        with mock.patch('Poem.poem.views.poem_namespace',
+                        return_value='hr.cro-ngi.TEST'):
+            request = self.factory.get(
                 '/api/0.2/json/metrics_in_profiles/?vo_name=ops&vo_name=biomed')
+            response = self.view(request)
             data = json.loads(response.content)
 
             # sorting list of profiles because they are not always obtained in
@@ -344,9 +360,11 @@ class MetricsInProfilesVIewTests(TestCase):
             )
 
     def test_get_metrics_for_a_given_vo_and_a_given_profile(self):
-        with self.settings(POEM_NAMESPACE='hr.cro-ngi.TEST'):
-            response = self.client.get('/api/0.2/json/metrics_in_profiles/'
+        with mock.patch('Poem.poem.views.poem_namespace',
+                        return_value='hr.cro-ngi.TEST'):
+            request = self.factory.get('/api/0.2/json/metrics_in_profiles/'
                                        '?vo_name=ops&profile=ARGO_MON')
+            response = self.view(request)
             data = json.loads(response.content)
 
             self.assertEqual(
@@ -374,10 +392,12 @@ class MetricsInProfilesVIewTests(TestCase):
             )
 
     def test_get_metrics_for_a_given_vo_and_multiple_profiles(self):
-        with self.settings(POEM_NAMESPACE='hr.cro-ngi.TEST'):
-            response = self.client.get(
+        with mock.patch('Poem.poem.views.poem_namespace',
+                        return_value='hr.cro-ngi.TEST'):
+            request = self.factory.get(
                 '/api/0.2/json/metrics_in_profiles/?vo_name=ops&profile='
                 'ARGO_MON&profile=ARGO_MON_CRITICAL')
+            response = self.view(request)
             data = json.loads(response.content)
 
             data[0]['profiles'] = sorted(data[0]['profiles'], key=lambda k: k[
@@ -427,10 +447,12 @@ class MetricsInProfilesVIewTests(TestCase):
             )
 
     def test_get_metrics_for_multiple_vos_and_multiple_profiles(self):
-        with self.settings(POEM_NAMESPACE='hr.cro-ngi.TEST'):
-            response = self.client.get(
+        with mock.patch('Poem.poem.views.poem_namespace',
+                        return_value='hr.cro-ngi.TEST'):
+            request = self.factory.get(
                 '/api/0.2/json/metrics_in_profiles/?vo_name=ops&vo_name=biomed'
                 '&profile=ARGO_MON&profile=ARGO_MON_BIOMED')
+            response = self.view(request)
             data = json.loads(response.content)
 
             data[0]['profiles'] = sorted(data[0]['profiles'], key=lambda k: k[
@@ -477,22 +499,27 @@ class MetricsInProfilesVIewTests(TestCase):
             )
 
     def test_get_metrics_without_vo(self):
-        with self.settings(POEM_NAMESPACE='hr.cro-ngi.TEST'):
-            response = self.client.get('/api/0.2/json/metrics_in_profiles/')
+        with mock.patch('Poem.poem.views.poem_namespace',
+                        return_value='hr.cro-ngi.TEST'):
+            request = self.factory.get('/api/0.2/json/metrics_in_profiles/')
+            response = self.view(request)
 
             self.assertEqual(response.content, b'Need the name of VO')
 
     def test_get_metric_with_no_valid_vo(self):
-        with self.settings(POEM_NAMESPACE='hr.cro-ngi.TEST'):
-            response = self.client.get(
+        with mock.patch('Poem.poem.views.poem_namespace',
+                        return_value='hr.cro-ngi.TEST'):
+            request = self.factory.get(
                 '/api/0.2/json/metrics_in_profiles/?vo_name=bla')
+            response = self.view(request)
 
             self.assertEqual(response.content, b'Not valid VO')
 
     def test_get_metric_with_no_namespace(self):
-        with self.settings(POEM_NAMESPACE=None):
-            response = self.client.get(
+        with mock.patch('Poem.poem.views.poem_namespace', return_value=None):
+            request = self.factory.get(
                 '/api/0.2/json/metrics_in_profiles/?vo_name=ops')
+            response = self.view(request)
 
             data = json.loads(response.content)
             data[0]['profiles'] = sorted(data[0]['profiles'], key=lambda k: k[
@@ -541,9 +568,11 @@ class MetricsInProfilesVIewTests(TestCase):
             )
 
     def test_get_metrics_with_no_profile_description(self):
-        with self.settings(POEM_NAMESPACE='hr.cro-ngi.TEST'):
-            response = self.client.get(
+        with mock.patch('Poem.poem.views.poem_namespace',
+                        return_value='hr.cro-ngi.TEST'):
+            request = self.factory.get(
                 '/api/0.2/json/metrics_in_profiles/?vo_name=test')
+            response = self.view(request)
 
             data = json.loads(response.content)
 
@@ -572,9 +601,11 @@ class MetricsInProfilesVIewTests(TestCase):
             )
 
     def test_get_metrics_if_no_metrics_exist_for_the_given_vo(self):
-        with self.settings(POEM_NAMESPACE='hr.cro-ngi.TEST'):
-            response = self.client.get(
+        with mock.patch('Poem.poem.views.poem_namespace',
+                        return_value='hr.cro-ngi.TEST'):
+            request = self.factory.get(
                 '/api/0.2/json/metrics_in_profiles/?vo_name=test_empty')
+            response = self.view(request)
             data = json.loads(response.content)
 
             self.assertEqual(
@@ -597,9 +628,11 @@ class MetricsInProfilesVIewTests(TestCase):
             )
 
 
-class MetricsInGroupViewTests(TestCase):
-    @classmethod
-    def setUpTestData(cls):
+class MetricsInGroupViewTests(TenantTestCase):
+    def setUp(self):
+        self.factory = TenantRequestFactory(self.tenant)
+        self.view = views.MetricsInGroup.as_view()
+
         metric1 = Metrics.objects.create(
             name='org.apel.APEL-Pub',
         )
@@ -620,7 +653,8 @@ class MetricsInGroupViewTests(TestCase):
 
     def test_get_metrics_in_group_for_a_given_group(self):
 
-        response = self.client.get('/api/0.2/json/metrics_in_group/?group=EOSC')
+        request = self.factory.get('/api/0.2/json/metrics_in_group/?group=EOSC')
+        response = self.view(request)
 
         data = json.loads(response.content)
 
@@ -635,32 +669,36 @@ class MetricsInGroupViewTests(TestCase):
 
     def test_get_metrics_in_group_if_no_group(self):
 
-        response = self.client.get(
+        request = self.factory.get(
             '/api/0.2/json/metrics_in_group/')
+        response = self.view(request)
         data = response.content
 
         self.assertEqual(data, b'Need the name of group')
 
     def test_get_metrics_in_group_if_invalid_group_name(self):
 
-        response = self.client.get(
+        request = self.factory.get(
             '/api/0.2/json/metrics_in_group/?group=invalidname')
-
+        response = self.view(request)
         data = response.content
 
         self.assertEqual(data, b'Not a valid group.')
 
     def test_get_metrics_in_group_if_empty_group(self):
-        response = self.client.get(
+        request = self.factory.get(
             '/api/0.2/json/metrics_in_group/?group=Empty_group')
+        response = self.view(request)
         data = json.loads(response.content)
 
         self.assertEqual(data, {'result': []})
 
 
-class MetricsViewTests(TestCase):
-    @classmethod
-    def setUpTestData(cls):
+class MetricsViewTests(TenantTestCase):
+    def setUp(self):
+
+        self.factory = TenantRequestFactory(self.tenant)
+        self.view = views.Metrics.as_view()
 
         user = CustUser.objects.create_user(username='testuser')
 
@@ -817,8 +855,8 @@ class MetricsViewTests(TestCase):
         )
 
     def test_get_metric_for_a_given_tag_with_all_fields(self):
-        response = self.client.get('/api/0.2/json/metrics/?tag=prod')
-
+        request = self.factory.get('/api/0.2/json/metrics/?tag=prod')
+        response = self.view(request)
         data = json.loads(response.content)
 
         self.assertEqual(
@@ -862,20 +900,22 @@ class MetricsViewTests(TestCase):
         )
 
     def test_get_metric_with_no_tag(self):
-        response = self.client.get('/api/0.2/json/metrics/')
-
+        request = self.factory.get('/api/0.2/json/metrics/')
+        response = self.view(request)
         data = response.content
 
         self.assertEqual(data, b'Need the name of tag.')
 
     def test_get_metric_with_invalid_tag(self):
-        response = self.client.get('/api/0.2/json/metrics/?tag=invalidtag')
+        request = self.factory.get('/api/0.2/json/metrics/?tag=invalidtag')
+        response = self.view(request)
         data = response.content
 
         self.assertEqual(data, b'Not a valid tag.')
 
     def test_get_metric_with_all_empty_fields(self):
-        response = self.client.get('/api/0.2/json/metrics/?tag=test_none')
+        request = self.factory.get('/api/0.2/json/metrics/?tag=test_none')
+        response = self.view(request)
         data = json.loads(response.content)
 
         self.assertEqual(
@@ -899,7 +939,8 @@ class MetricsViewTests(TestCase):
         )
 
     def test_get_metrics_if_tag_without_associated_metrics(self):
-        response = self.client.get('/api/0.2/json/metrics/?tag=test_empty')
+        request = self.factory.get('/api/0.2/json/metrics/?tag=test_empty')
+        response = self.view(request)
         data = json.loads(response.content)
 
         self.assertEqual(data, [])
