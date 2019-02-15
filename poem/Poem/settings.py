@@ -1,17 +1,13 @@
 # Django settings
 from os import path as os_path
-from os import environ
 from configparser import ConfigParser, NoSectionError
-from distutils.sysconfig import get_python_lib
 from django.core.exceptions import ImproperlyConfigured
-import saml2
 
 VENV = '/home/pyvenv/poem'
 APP_PATH = os_path.abspath(os_path.split(__file__)[0])
 PROJECT_PATH = os_path.abspath(os_path.join(APP_PATH, '..'))
 CONFIG_FILE = '{}/etc/poem/poem.conf'.format(VENV)
 LOG_CONFIG = '{}/etc/poem/poem_logging.conf'.format(VENV)
-SAML_CONFIG_FILE = '{}/etc/poem/saml2.conf'.format(VENV)
 
 try:
     config = ConfigParser()
@@ -222,15 +218,7 @@ STATIC_URL = '/static/'
 STATIC_ROOT = '{}/usr/share/poem/static/'.format(VENV)
 
 # load SAML settings
-try:
-    if os_path.exists(SAML_CONFIG_FILE):
-        buf = open(SAML_CONFIG_FILE).readlines()
-        buf = ''.join(buf)
-        exec(buf)
-    else:
-        print('%s does not exist' % SAML_CONFIG_FILE)
-        raise SystemExit(1)
-
-except Exception as e:
-    print(e)
-    raise SystemExit(1)
+LOGIN_REDIRECT_URL = '/poem/admin/poem/profile'
+LOGOUT_REDIRECT_URL = '/poem/admin'
+SAML_CONFIG_LOADER = 'poem.saml2.config.get_saml_config'
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
