@@ -220,5 +220,5 @@ STATIC_ROOT = '{}/usr/share/poem/static/'.format(VENV)
 # load SAML settings
 LOGIN_REDIRECT_URL = '/poem/admin/poem/profile'
 LOGOUT_REDIRECT_URL = '/poem/admin'
-SAML_CONFIG_LOADER = 'poem.saml2.config.get_saml_config'
+SAML_CONFIG_LOADER = 'Poem.poem.saml2.config.get_saml_config'
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
