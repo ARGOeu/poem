@@ -7,7 +7,7 @@ usage()
 {
 	printf "Usage: %s [argument]\n" $(basename $0) >&2
 	printf "       [-a]                                  - apply new migration\n" >&2
-	printf "       [-c] -p <public hostname>             - create database\n" >&2
+	printf "       [-c]                                  - create database\n" >&2
 	printf "       [-f]                                  - mark migrations as run without running them\n" >&2
 	printf "       [-h]                                  - usage\n" >&2
 	printf "       [-l]                                  - list migrations\n" >&2
@@ -31,20 +31,12 @@ do
         n)
             schema=$OPTARG ;;
         c)
-            while getopts 'p:' OPTION2
-            do
-                case $OPTION2 in
-                    p)
-                        hostname=$OPTARG
-                        ;;
-                esac
-            done
             su -m -s /bin/sh $RUNASUSER -c \
             "export DJANGO_SETTINGS_MODULE=Poem.settings && \
             python $SITEPACK/Poem/manage.py migrate_schemas --shared"
             su -m -s /bin/sh $RUNASUSER -c \
             "export DJANGO_SETTINGS_MODULE=Poem.settings && \
-            python $SITEPACK/Poem/manage.py create_tenant --name all --hostname $hostname"
+            python $SITEPACK/Poem/manage.py create_tenant --name all"
             ;;
         u)
             while getopts 'n:' OPTION2

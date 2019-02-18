@@ -19,9 +19,14 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('--name', required=True, type=str)
-        parser.add_argument('--hostname', required=True, type=str)
+        parser.add_argument('--hostname', nargs='?', type=str)
 
     def handle(self, *args, **kwargs):
         name = kwargs['name']
-        hostname = kwargs['hostname']
+        # since there is no public page (yet), in case of creating public
+        # tenant, no hostname is required and a dummy value is used
+        if kwargs['hostname']:
+            hostname = kwargs['hostname']
+        else:
+            hostname = 'tenant.com'
         create_tenant(name, hostname)
