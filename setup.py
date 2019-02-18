@@ -36,7 +36,7 @@ setup(name=NAME,
                'bin/poem-exportprofiles', 'bin/poem-genseckey',
                'bin/poem-token', 'bin/poem-syncservices', 'bin/poem-tenant'],
     data_files = [
-        ('etc/poem', ['etc/poem.conf', 'etc/poem_logging.conf', 'etc/saml2.conf']),
+        ('etc/poem', ['etc/poem.conf', 'etc/poem_logging.conf']),
         ('etc/cron.d/', ['cron/poem-syncvosf', 'cron/poem-clearsessions']),
         ('etc/httpd/conf.d', ['poem/apache/poem.conf']),
         ('usr/share/poem/apache', ['poem/apache/poem.wsgi']),
