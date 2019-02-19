@@ -9,8 +9,9 @@ url=$DEFPOEM
 
 usage()
 {
-	printf "Usage: %s [-i] [-f] [-s] [-p <POEM server>] [-h] [PROFILE1 PROFILE2 ...]\n" $(basename $0) >&2
+	printf "Usage: %s [-i] [-t] [-f] [-s] [-p <POEM server>] [-h] [PROFILE1 PROFILE2 ...]\n" $(basename $0) >&2
 	printf "       [-i] - Only import profiles if POEM database is empty\n" >&2
+	printf "       [-t] - tenant schema name\n" >&2
 	printf "       [-s] - Secure HTTP\n" >&2
 	printf "       [-l] - append slash on the end of PI method\n" >&2
 	printf "       [-f] - filename in /tmp with JSON serialized POEM profiles\n" >&2
@@ -21,12 +22,15 @@ usage()
 	exit 2
 }
 
-while getopts 'lishp:f:' OPTION
+while getopts 'lishp:f:t:' OPTION
 do
 	case $OPTION in
 		i)
 			initial="--initial"
 			;;
+	    t)
+	        schema=$OPTARG
+	        ;;
 		l)
 			url=$(echo ${url}\/)
 			;;
@@ -65,12 +69,12 @@ if [[ -f "/${file##*//}" ]]
 then
 	su -m -s /bin/sh $RUNASUSER -c \
 	"export DJANGO_SETTINGS_MODULE=Poem.settings && \
-	django-admin import_profiles --url \"$file\" $*"
+	django-admin tenant_command import_profiles --url \"$file\" --schema $schema $*"
 elif echo $url | grep -q '^http'
 then
 	su -m -s /bin/sh $RUNASUSER -c \
 	"export DJANGO_SETTINGS_MODULE=Poem.settings && \
-	django-admin import_profiles $initial --url $url $*"
+	django-admin tenant_command import_profiles $initial --url $url --schema $schema $*"
 else
 	usage
 	exit 2
