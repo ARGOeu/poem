@@ -1,17 +1,13 @@
 # Django settings
 from os import path as os_path
-from os import environ
 from configparser import ConfigParser, NoSectionError
-from distutils.sysconfig import get_python_lib
 from django.core.exceptions import ImproperlyConfigured
-import saml2
 
 VENV = '/home/pyvenv/poem'
 APP_PATH = os_path.abspath(os_path.split(__file__)[0])
 PROJECT_PATH = os_path.abspath(os_path.join(APP_PATH, '..'))
 CONFIG_FILE = '{}/etc/poem/poem.conf'.format(VENV)
 LOG_CONFIG = '{}/etc/poem/poem_logging.conf'.format(VENV)
-SAML_CONFIG_FILE = '{}/etc/poem/saml2.conf'.format(VENV)
 
 try:
     config = ConfigParser()
@@ -20,17 +16,8 @@ try:
         raise ImproperlyConfigured('Unable to parse config file %s' % CONFIG_FILE)
 
     # General
-    DEBUG = bool(config.get('GENERAL','debug'))
-    POEM_NAMESPACE = config.get('GENERAL', 'namespace')
+    DEBUG = bool(config.get('GENERAL', 'debug'))
     TIME_ZONE = config.get('GENERAL', 'timezone')
-    SAMLLOGINSTRING = config.get('GENERAL', 'samlloginstring')
-
-    SUPERUSER_NAME = config.get('SUPERUSER', 'name')
-    SUPERUSER_PASS = config.get('SUPERUSER', 'password')
-    SUPERUSER_EMAIL = config.get('SUPERUSER', 'email')
-
-    if not all([SUPERUSER_EMAIL, SUPERUSER_NAME, SUPERUSER_PASS]):
-        raise ImproperlyConfigured('Missing superuser value in config file %s' % CONFIG_FILE)
 
     DBNAME = config.get('DATABASE', 'name')
     DBUSER = config.get('DATABASE', 'user')
@@ -43,7 +30,7 @@ try:
 
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.postgresql',
+            'ENGINE': 'tenant_schemas.postgresql_backend',
             'NAME': DBNAME,
             'USER': DBUSER,
             'PASSWORD': DBPASSWORD,
@@ -51,6 +38,8 @@ try:
             'PORT': DBPORT,
         }
     }
+
+    DATABASE_ROUTERS = ('tenant_schemas.routers.TenantSyncRouter',)
 
     CACHES = {
         'default': {
@@ -61,14 +50,6 @@ try:
             }
         }
     }
-
-    HTTPAUTH = config.getboolean('SYNC', 'useplainhttpauth')
-    HTTPUSER = config.get('SYNC', 'httpuser')
-    HTTPPASS = config.get('SYNC', 'httppass')
-
-    SERVICETYPE_URL = config.get('SYNC', 'servicetype')
-    VO_URL = config.get('SYNC', 'vo')
-    SERVICE_URL = config.get('SYNC', 'services')
 
     ALLOWED_HOSTS = config.get('SECURITY', 'AllowedHosts')
     CAFILE = config.get('SECURITY', 'CAFile')
@@ -109,7 +90,13 @@ ROOT_URLCONF = 'Poem.urls'
 
 APPEND_SLASH = True
 
-INSTALLED_APPS = (
+SHARED_APPS = (
+    'tenant_schemas',
+    'Poem.tenants',
+    'django.contrib.contenttypes',
+)
+
+TENANT_APPS = (
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -127,7 +114,30 @@ INSTALLED_APPS = (
     'Poem.poem',
 )
 
+INSTALLED_APPS = (
+    'tenant_schemas',
+    'Poem.tenants',
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.staticfiles',
+    'django.contrib.messages',
+    'django.contrib.sessions',
+    'ajax_select',
+    'djangosaml2',
+    'modelclone',
+    'reversion',
+    'reversion_compare',
+    'rest_framework',
+    'rest_framework_api_key',
+    'Poem.api',
+    'Poem.poem',
+)
+
+TENANT_MODEL = 'tenants.Tenant'
+
 MIDDLEWARE = [
+    'tenant_schemas.middleware.TenantMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -152,6 +162,8 @@ TEMPLATES = [
         },
     },
 ]
+
+TEMPLATE_CONTEXT_PROCESSORS = ('django.core.context_processors.request',)
 
 AJAX_LOOKUP_CHANNELS = {
     'hintsvo' : ('Poem.poem.lookups', 'VOLookup'),
@@ -199,21 +211,14 @@ TOKEN_HEADER = 'HTTP_X_API_KEY'
 # MEDIA_URL = '/poem_media/'
 # MEDIA_ROOT = '{}/usr/share/poem/media/'.format(VENV)
 # STATIC_URL = '/static/'
+DEFAULT_FILE_STORAGE = 'tenant_schemas.storage.TenantFileSystemStorage'
 
 # Apache settings
 STATIC_URL = '/static/'
 STATIC_ROOT = '{}/usr/share/poem/static/'.format(VENV)
 
 # load SAML settings
-try:
-    if os_path.exists(SAML_CONFIG_FILE):
-        buf = open(SAML_CONFIG_FILE).readlines()
-        buf = ''.join(buf)
-        exec(buf)
-    else:
-        print('%s does not exist' % SAML_CONFIG_FILE)
-        raise SystemExit(1)
-
-except Exception as e:
-    print(e)
-    raise SystemExit(1)
+LOGIN_REDIRECT_URL = '/poem/admin/poem/profile'
+LOGOUT_REDIRECT_URL = '/poem/admin'
+SAML_CONFIG_LOADER = 'Poem.poem.saml2.config.get_saml_config'
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
