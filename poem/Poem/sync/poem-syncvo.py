@@ -4,15 +4,12 @@ import django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'Poem.settings')
 django.setup()
 
-import string
 import sys
-import urllib.request
+import requests
 import logging
-import Poem.django_logging
 from Poem import settings
 from Poem.poem import models
 from Poem.tenants.models import Tenant
-from django.db import connection
 from xml.etree import ElementTree
 from tenant_schemas.utils import schema_context, get_public_schema_name
 from configparser import ConfigParser
@@ -39,44 +36,48 @@ def main():
             tenant = Tenant.objects.get(schema_name=schema)
 
             try:
-                ret = urllib.request.urlopen(tenant_vo_url(tenant.name),
-                                             timeout=60).read()
+                ret = requests.get(tenant_vo_url(tenant.name),
+                                   timeout=60).content
             except Exception as e:
-                logger.error('VO card - '+'%s' % (e))
+                logger.error('%s: VO card - '+'%s' % (schema.upper(), e))
                 sys.exit(1)
             try:
                 Root = ElementTree.XML(ret)
                 idcards = Root.findall("IDCard")
             except Exception as e:
-                logger.error('Could not parse VO card - '+'%s' % (e))
+                logger.error('%s: Could not parse VO card - %s' % (
+                    schema.upper(), e))
                 sys.exit(1)
             if len(idcards) > 0:
                 vos = []
                 for vo_element in idcards:
                     dict_vo_element = dict(vo_element.items())
                     if 'Name' not in dict_vo_element or 'Status' not in dict_vo_element:
-                        logger.warning("vo card does not contain 'Name' and 'Status' attributes for %s" % vo_element)
+                        logger.warning("%s: vo card does not contain 'Name' "
+                                       "and 'Status' attributes for %s"
+                                       % (schema.upper(), vo_element))
                     else:
                         if dict_vo_element['Status'].lower() == 'production' and dict_vo_element['Name'] != '':
                             vos.append(dict_vo_element['Name'])
             else:
-                logger.error("Error synchronizing VO due to invalid VO card")
+                logger.error("%s: Error synchronizing VO due to invalid VO "
+                             "card" % schema.upper())
                 sys.exit(1)
 
-            voindb = set([(vo.name,) for vo in models.VO.objects.all()])
+            voindb = set([vo.name for vo in models.VO.objects.all()])
             if len(voindb) != len(vos):
-                svos = set([(vo,) for vo in vos])
-                cur = connection.cursor()
+                svos = set([vo for vo in vos])
                 if len(voindb) < len(vos):
-                    cur.executemany('INSERT INTO poem_vo VALUES (?)', svos.difference(voindb))
-                    logger.info("Added %d VO" %\
-                                (len(vos) - len(voindb)))
+                    for vo in svos.difference(voindb):
+                        models.VO.objects.create(name=vo)
+                    logger.info("%s: Added %d VO"
+                                % (schema.upper(),(len(vos) - len(voindb))))
                 elif len(voindb) > len(vos):
-                    cur.executemany('DELETE FROM poem_vo WHERE name IN (?)', voindb.difference(svos))
-                    logger.info("Deleted %d VO" %\
-                                (len(voindb) - len(vos)))
-                connection.close()
+                    for vo in voindb.difference(svos):
+                        models.VO.objects.filter(name=vo).delete()
+                    logger.info("%s: Deleted %d VO"
+                                % (schema.upper(), (len(voindb) - len(vos))))
             else:
-                logger.info("VO database is up to date")
+                logger.info("%s: VO database is up to date" % schema.upper())
 
 main()
