@@ -16,13 +16,24 @@ fieldset.infoone input#id_new_version {
 
 fieldset.infoone > div > div.field-new_version > div.help {
     margin-top: 2px;
-    padding-left: 0px;
+    padding-left: 5px;
     margin-left: 0px;
 }
 
 fieldset.infoone > div > div.field-new_version > p.help {
     margin-top: 2px;
     padding-left: 0px;
+    margin-left: 0px;
+}
+
+fieldset.infoone input#id_update_metric {
+    width: 30px;
+}
+
+fieldset.infoone > div > div.field-update_metric > div.help {
+    width: 130px;
+    margin-top: 2px;
+    padding-left: 5px;
     margin-left: 0px;
 }
 
