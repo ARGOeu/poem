@@ -40,12 +40,12 @@ def main():
             try:
                 r = requests.get(tenant_service_url(tenant.name))
             except Exception as e:
-                logger.error('Request - %s' % repr(e))
+                logger.error('%s: Request - %s' % (schema.upper(), repr(e)))
                 sys.exit(1)
             try:
                 feed = json.loads(r.text)
             except json.JSONDecodeError:
-                logger.error('Decoding JSON has failed.')
+                logger.error('%s: Decoding JSON has failed.' % schema.upper())
                 sys.exit(1)
             dummy_uptodate = 0
             dummy_added = 0
@@ -66,7 +66,8 @@ def main():
                         Service.objects.create(**data)
                         dummy_added += 1
                     except Exception as e:
-                        logger.error('Could not save data to database - %s' % repr(e))
+                        logger.error('%s: Could not save data to database - %s'
+                                     % (schema.upper(), repr(e)))
                         sys.exit(1)
 
             service_entry_in_db = [serv.id for serv in Service.objects.all()]
