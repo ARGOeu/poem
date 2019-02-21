@@ -19,6 +19,7 @@ class Probe(models.Model):
     group = models.CharField(max_length=1024)
     user = models.CharField(max_length=32, blank=True)
     datetime = models.DateTimeField(blank=True, max_length=32, null=True)
+    update_metric = models.NullBooleanField(default=True)
 
     class Meta:
         permissions = (('probesown', 'Read/Write/Modify'),)
