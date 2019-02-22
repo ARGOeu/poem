@@ -1,0 +1,18 @@
+{
+  "name": "poem",
+  "version": "1.0.0",
+  "description": "React code embedded into POEM Django web application",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "babel": "^6.23.0",
+    "babel-loader": "^8.0.5",
+    "react": "^16.8.3",
+    "webpack": "^4.29.5",
+    "webpack-bundle-tracker": "^0.4.2-beta"
+  }
+}

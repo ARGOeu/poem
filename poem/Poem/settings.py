@@ -1,11 +1,11 @@
 # Django settings
-from os import path as os_path
+import os
 from configparser import ConfigParser, NoSectionError
 from django.core.exceptions import ImproperlyConfigured
 
 VENV = '/home/pyvenv/poem'
-APP_PATH = os_path.abspath(os_path.split(__file__)[0])
-PROJECT_PATH = os_path.abspath(os_path.join(APP_PATH, '..'))
+APP_PATH = os.path.abspath(os.path.split(__file__)[0])
+PROJECT_PATH = os.path.abspath(os.path.join(APP_PATH, '..'))
 CONFIG_FILE = '{}/etc/poem/poem.conf'.format(VENV)
 LOG_CONFIG = '{}/etc/poem/poem_logging.conf'.format(VENV)
 
@@ -110,6 +110,7 @@ TENANT_APPS = (
     'reversion_compare',
     'rest_framework',
     'rest_framework_api_key',
+    'webpack_loader',
     'Poem.api',
     'Poem.poem',
 )
@@ -130,6 +131,7 @@ INSTALLED_APPS = (
     'reversion_compare',
     'rest_framework',
     'rest_framework_api_key',
+    'webpack_loader',
     'Poem.api',
     'Poem.poem',
 )
@@ -222,3 +224,10 @@ LOGIN_REDIRECT_URL = '/poem/admin/poem/profile'
 LOGOUT_REDIRECT_URL = '/poem/admin'
 SAML_CONFIG_LOADER = 'Poem.poem.saml2.config.get_saml_config'
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+WEBPACK_LOADER = {
+    'DEFAULT': {
+        'BUNDLE_DIR_NAME': 'bundles/',
+        'STATS_FILE': os.path.join(PROJECT_PATH, 'webpack-stats.json')
+    }
+}
