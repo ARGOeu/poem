@@ -3,7 +3,6 @@ import django
 import logging
 import requests
 import json
-import sys
 from configparser import ConfigParser
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'Poem.settings')
@@ -41,12 +40,12 @@ def main():
                 r = requests.get(tenant_service_url(tenant.name))
             except Exception as e:
                 logger.error('%s: Request - %s' % (schema.upper(), repr(e)))
-                sys.exit(1)
+                continue
             try:
                 feed = json.loads(r.text)
             except json.JSONDecodeError:
                 logger.error('%s: Decoding JSON has failed.' % schema.upper())
-                sys.exit(1)
+                continue
             dummy_uptodate = 0
             dummy_added = 0
             dummy_deleted = 0
@@ -68,7 +67,7 @@ def main():
                     except Exception as e:
                         logger.error('%s: Could not save data to database - %s'
                                      % (schema.upper(), repr(e)))
-                        sys.exit(1)
+                        continue
 
             service_entry_in_db = [serv.id for serv in Service.objects.all()]
             if len(service_entry_in_db) > len(feed):

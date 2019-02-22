@@ -4,7 +4,6 @@ import django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'Poem.settings')
 django.setup()
 
-import sys
 import requests
 import logging
 from Poem import settings
@@ -40,14 +39,14 @@ def main():
                                    timeout=60).content
             except Exception as e:
                 logger.error('%s: VO card - '+'%s' % (schema.upper(), e))
-                sys.exit(1)
+                continue
             try:
                 Root = ElementTree.XML(ret)
                 idcards = Root.findall("IDCard")
             except Exception as e:
                 logger.error('%s: Could not parse VO card - %s' % (
                     schema.upper(), e))
-                sys.exit(1)
+                continue
             if len(idcards) > 0:
                 vos = []
                 for vo_element in idcards:
@@ -62,7 +61,7 @@ def main():
             else:
                 logger.error("%s: Error synchronizing VO due to invalid VO "
                              "card" % schema.upper())
-                sys.exit(1)
+                continue
 
             voindb = set([vo.name for vo in models.VO.objects.all()])
             if len(voindb) != len(vos):

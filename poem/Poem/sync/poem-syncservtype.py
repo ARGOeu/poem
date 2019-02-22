@@ -14,7 +14,6 @@ import ssl
 from Poem import settings
 from Poem.poem import models
 from Poem.tenants.models import Tenant
-from django.db import connection, transaction
 from xml.etree import ElementTree
 from urllib.parse import urlparse
 from configparser import ConfigParser
@@ -94,20 +93,20 @@ def main():
             except Exception as e:
                 logger.error("%s: Error service flavours feed - %s" % (
                     schema.upper(), repr(e)))
-                raise SystemExit(1)
+                continue
 
             try:
                 Root = ElementTree.XML(ret)
             except Exception as e:
                 logger.error("%s: Error parsing service flavours - %s" % (
                     schema.upper(), e))
-                raise SystemExit(1)
+                continue
 
             elements = Root.findall("SERVICE_TYPE")
             if not elements:
                 logger.error("%s: Error parsing service flavours"
                              % schema.upper())
-                raise SystemExit(1)
+                continue
 
             Feed_List = []
             for element in elements:
