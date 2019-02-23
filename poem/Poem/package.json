@@ -6,13 +6,24 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "author": "Daniel Vrcic <dvrcic@srce.hr>",
   "license": "ISC",
   "devDependencies": {
-    "babel": "^6.23.0",
+    "@babel/core": "^7.3.3",
+    "@babel/preset-env": "^7.3.1",
+    "@babel/preset-react": "^7.0.0",
+    "@babel/preset-stage-0": "^7.0.0",
     "babel-loader": "^8.0.5",
+    "babel-plugin-syntax-dynamic-import": "^6.18.0",
+    "formik": "^1.5.1",
+    "formik-effect": "^1.2.0",
     "react": "^16.8.3",
+    "react-dom": "^16.8.3",
+    "terser-webpack-plugin": "^1.2.2",
     "webpack": "^4.29.5",
-    "webpack-bundle-tracker": "^0.4.2-beta"
-  }
+    "webpack-bundle-analyzer": "^3.0.4",
+    "webpack-bundle-tracker": "^0.4.2-beta",
+    "webpack-cli": "^3.2.3"
+  },
+  "dependencies": {}
 }
