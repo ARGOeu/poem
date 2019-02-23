@@ -214,6 +214,8 @@ TOKEN_HEADER = 'HTTP_X_API_KEY'
 # STATIC_URL = '/static/'
 DEFAULT_FILE_STORAGE = 'tenant_schemas.storage.TenantFileSystemStorage'
 
+STATICFILES_DIRS = [os.path.join(APP_PATH, 'assets')]
+
 # Apache settings
 STATIC_URL = '/static/'
 STATIC_ROOT = '{}/usr/share/poem/static/'.format(VENV)
@@ -224,7 +226,6 @@ LOGOUT_REDIRECT_URL = '/poem/admin'
 SAML_CONFIG_LOADER = 'Poem.poem.saml2.config.get_saml_config'
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
-STATICFILES_DIRS = (os.path.join(APP_PATH, 'assets'))
 
 WEBPACK_LOADER = {
     'DEFAULT': {
