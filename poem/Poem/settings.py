@@ -5,7 +5,6 @@ from django.core.exceptions import ImproperlyConfigured
 
 VENV = '/home/pyvenv/poem'
 APP_PATH = os.path.abspath(os.path.split(__file__)[0])
-PROJECT_PATH = os.path.abspath(os.path.join(APP_PATH, '..'))
 CONFIG_FILE = '{}/etc/poem/poem.conf'.format(VENV)
 LOG_CONFIG = '{}/etc/poem/poem_logging.conf'.format(VENV)
 
@@ -225,9 +224,11 @@ LOGOUT_REDIRECT_URL = '/poem/admin'
 SAML_CONFIG_LOADER = 'Poem.poem.saml2.config.get_saml_config'
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
+STATICFILES_DIRS = (os.path.join(APP_PATH, 'assets'))
+
 WEBPACK_LOADER = {
     'DEFAULT': {
         'BUNDLE_DIR_NAME': 'bundles/',
-        'STATS_FILE': os.path.join(PROJECT_PATH, 'webpack-stats.json')
+        'STATS_FILE': os.path.join(APP_PATH, 'webpack-stats.json')
     }
 }
