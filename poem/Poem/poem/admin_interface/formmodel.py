@@ -1,4 +1,4 @@
-from Poem.poem.models import Profile, Metrics, Probe
+from Poem.poem.models import Profile, Metrics, Probe, Aggregation
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm
 from django.contrib.auth import get_user_model
@@ -22,7 +22,8 @@ class MyModelMultipleChoiceField(ModelMultipleChoiceField):
         self.ftype = kwargs.pop('ftype', None)
         self.name_to_model = {'profiles': Profile,
                               'probes': Probe,
-                              'metrics': Metrics}
+                              'metrics': Metrics,
+                              'aggregations': Aggregation}
         super(ModelMultipleChoiceField, self).__init__(*args, **kwargs)
 
     def label_from_instance(self, obj):
@@ -47,6 +48,7 @@ class MyUserChangeForm(UserChangeForm):
         self.fields['groupsofmetrics'].widget.can_add_related = False
         self.fields['groupsofprobes'].widget.can_add_related = False
         self.fields['groupsofprofiles'].widget.can_add_related = False
+        self.fields['groupsofaggregations'].widget.can_add_related = False
 
     class Meta:
         model = get_user_model()
@@ -58,7 +60,8 @@ class MyFilteredSelectMultiple(FilteredSelectMultiple):
         self.verbose_name = verbose_name
         self.name_to_model = {'profiles': Profile,
                               'probes': Probe,
-                              'metrics': Metrics}
+                              'metrics': Metrics,
+                              'aggregations': Aggregation}
         self.is_stacked = is_stacked
         super(MyFilteredSelectMultiple, self).__init__(verbose_name, is_stacked, attrs, choices)
 

@@ -101,10 +101,10 @@ class GroupOfAggregationsInline(admin.TabularInline):
 
 class AggregationAdmin(admin.ModelAdmin):
     class Media:
-        css = {'all': ('/poem_media/css/siteaggregation.css',)}
+        css = {'all': ('/poem_media/css/siteaggregations.css',)}
 
     def groupname(obj):
-        return obj.group
+        return obj.groupname
     groupname.short_description = 'Group'
 
     class GroupAggregationsListFilter(admin.SimpleListFilter):
@@ -113,7 +113,7 @@ class AggregationAdmin(admin.ModelAdmin):
 
         def lookups(self, request, model_admin):
             qs = model_admin.get_queryset(request)
-            groups = set(qs.values_list('group', flat=True))
+            groups = set(qs.values_list('groupname', flat=True))
             return tuple((x,x) for x in filter(lambda x: x != '', groups))
 
         def queryset(self, request, queryset):
@@ -122,10 +122,9 @@ class AggregationAdmin(admin.ModelAdmin):
             else:
                 return queryset
 
-    list_display = ('name')
+    list_display = ('name', groupname,)
     list_filter= (GroupAggregationsListFilter, )
-    search_fields = ('name',)
-    # inlines = (GroupOfAggregationsInline, )
+    inlines = (GroupOfAggregationsInline, )
     actions = None
     list_per_page = 20
 
@@ -133,7 +132,7 @@ class AggregationAdmin(admin.ModelAdmin):
         return True
 
     def has_add_permission(self, request, obj=None):
-        return False
+        return True
 
     def changelist_view(self, request, extra_context=None):
         return super(AggregationAdmin, self).changelist_view(request, extra_context=extra_context)

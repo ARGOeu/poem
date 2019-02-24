@@ -11,13 +11,14 @@ class Aggregation(models.Model):
     name = models.CharField(max_length=128, null=False,
                             help_text='Name of the Aggregation profile.')
     apiid = models.CharField(max_length=128, help_text='WEB-API ID of Aggregation profile')
+    groupname = models.CharField(max_length=128, default='')
 
     class Meta:
         permissions = (('aggregationsown', 'Read/Write/Modify'),)
         app_label = 'poem'
 
     def __str__(self):
-        return u'%s (%s)' % (self.name, self.version)
+        return u'%s' % (self.name)
 
 
 class GroupOfAggregations(models.Model):
