@@ -203,3 +203,19 @@ class AggregationAdmin(admin.ModelAdmin):
             Aggregation.objects.bulk_create(new_aggregations)
 
         return super(AggregationAdmin, self).changelist_view(request, extra_context=extra_context)
+
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        extra_context = extra_context or {}
+
+        aggregation = Aggregation.objects.get(id=object_id)
+        if aggregation.apiid:
+            props = {
+                'apiid': aggregation.apiid
+            }
+            extra_context = {
+                'props': props
+            }
+
+        return super().change_view(
+            request, object_id, form_url, extra_context=extra_context,
+        )

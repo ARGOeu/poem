@@ -1,5 +1,7 @@
 {% extends "admin/change_form.html" %}
 {% load i18n admin_urls admin_static admin_list admin_modify %}
+{% load json_filters %}
+{% load render_bundle from webpack_loader %}
 
 {% block usertools %}
   <div id="user-tools">
@@ -15,6 +17,13 @@
         {% trans 'Log out' %}</a>
       {% endblock %}
   </div>
+{% endblock %}
+
+{% block extrahead %}
+  {{ block.super }}
+  <script>
+    window.props = {{ props|jsonify|safe }}
+  </script>
 {% endblock %}
 
 {% if not is_popup %}
@@ -74,6 +83,8 @@
   </p>
   {{ adminform.form.non_field_errors }}
 {% endif %}
+
+{% render_bundle 'main' %}
 
 {% block field_sets %}
 {% for fieldset in adminform %}
