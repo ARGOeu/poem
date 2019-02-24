@@ -8,7 +8,9 @@ from django.core.exceptions import PermissionDenied
 from django.utils.translation import ugettext as _
 
 from Poem.poem.models import Aggregation, GroupOfAggregations
+from rest_framework_api_key.models import APIKey
 
+import requests
 
 class SharedInfo:
     def __init__(self, requser=None, grname=None):
@@ -107,8 +109,8 @@ class AggregationForm(ModelForm):
             'apiid': _('WEB-API ID')
         }
         help_texts = {
-            'name': _('Aggregation profile name'),
-            'apiid': _('WEB-API ID of fetched Aggregation profile'),
+            'name': _('WEB-API Aggregation profile name'),
+            'apiid': _('WEB-API ID of Aggregation profile'),
         }
 
 
@@ -179,4 +181,25 @@ class AggregationAdmin(admin.ModelAdmin):
         return True
 
     def changelist_view(self, request, extra_context=None):
+        token = APIKey.objects.get(client_id="WEB-API")
+
+        headers, payload = dict(), dict()
+        headers = {'Accept': 'application/json', 'x-api-key': token.token}
+        response = requests.get('https://web-api-devel.argo.grnet.gr/api/v2/aggregation_profiles',
+                                headers=headers,
+                                timeout=180)
+        response.raise_for_status()
+        profiles = response.json()['data']
+
+        profiles_api = set([p['id'] for p in profiles])
+        profiles_db = set(Aggregation.objects.all().values_list('apiid', flat=True))
+        aggregations_not_indb = profiles_api.difference(profiles_db)
+
+        new_aggregations = []
+        for p in profiles:
+            if p['id'] in aggregations_not_indb:
+                new_aggregations.append(Aggregation(name=p['name'], apiid=p['id'], groupname=''))
+        if new_aggregations:
+            Aggregation.objects.bulk_create(new_aggregations)
+
         return super(AggregationAdmin, self).changelist_view(request, extra_context=extra_context)
