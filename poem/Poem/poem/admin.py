@@ -12,14 +12,16 @@ from django.conf import settings
 from Poem.poem.admin_interface.grmetrics import GroupOfMetricsAdmin
 from Poem.poem.admin_interface.grprobes import GroupOfProbesAdmin
 from Poem.poem.admin_interface.grprofiles import GroupOfProfilesAdmin
+from Poem.poem.admin_interface.graggregations import GroupOfAggregationsAdmin
+from Poem.poem.admin_interface.siteaggregations import *
 from Poem.poem.admin_interface.sitemetrics import *
 from Poem.poem.admin_interface.siteprobes import *
 from Poem.poem.admin_interface.siteprofile import *
 from Poem.poem.admin_interface.userprofile import *
 from Poem.poem.admin_interface.siteactions import *
 from Poem.poem.admin_interface.siteservices import *
-from Poem.poem.models import GroupOfMetrics, GroupOfProfiles
-from Poem.poem.models import MetricInstance, Metric, Probe, Profile, UserProfile, VO, ServiceFlavour, GroupOfProfiles, CustUser, Service
+from Poem.poem.models import GroupOfMetrics, GroupOfProfiles, GroupOfAggregations, GroupOfProfiles
+from Poem.poem.models import MetricInstance, Metric, Probe, Profile, UserProfile, VO, ServiceFlavour, CustUser, Service, Aggregation
 
 from Poem.api.admin import MyAPIKeyAdmin
 from rest_framework_api_key.models import APIKey
@@ -170,7 +172,7 @@ class MyAdminSite(PublicViews, AdminSite):
                 # Reorganize administration page by grouping type of data that
                 # want to be administered:
                 #   Poem = Metrics, Probes, Profiles
-                #   Authnz = GroupOfMetrics, GroupOfProbes, GroupOfProfiles, Users
+                #   Authnz = GroupOfAggregations, GroupOfMetrics, GroupOfProbes, GroupOfProfiles, Users
                 #   API Permissions = API keys
                 app_list = self.get_app_list(request)
                 authnz = dict(
@@ -180,7 +182,7 @@ class MyAdminSite(PublicViews, AdminSite):
                     has_module_perms=True,
                     models=list()
                 )
-                extract = set(['GroupOfProbes', 'GroupOfMetrics',
+                extract = set(['GroupOfAggregations', 'GroupOfProbes', 'GroupOfMetrics',
                                'GroupOfProfiles', 'CustUser'])
 
                 for a in app_list:
@@ -231,7 +233,9 @@ myadmin.register(Metric, MetricAdmin)
 myadmin.register(GroupOfProfiles, GroupOfProfilesAdmin)
 myadmin.register(GroupOfMetrics, GroupOfMetricsAdmin)
 myadmin.register(GroupOfProbes, GroupOfProbesAdmin)
+myadmin.register(GroupOfAggregations, GroupOfAggregationsAdmin)
 myadmin.register(CustUser, UserProfileAdmin)
 myadmin.register(APIKey, MyAPIKeyAdmin)
 myadmin.register(LogEntry, LogEntryAdmin)
 myadmin.register(Service, ServiceAdmin)
+myadmin.register(Aggregation, AggregationAdmin)
