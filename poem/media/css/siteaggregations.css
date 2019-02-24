@@ -14,3 +14,17 @@ th, td {
   vertical-align: middle;
   border: 1px solid #ddd;
 }
+
+#changelist-filter {
+    width: 150px;
+    text-align: left;
+}
+
+.change-list tbody th a, td{
+    font-size: 14px;
+}
+
+.change-list .filtered .results, .change-list .filtered .paginator, .filtered #toolbar, .filtered div.xfull {
+    margin-right: 180px;
+}
+

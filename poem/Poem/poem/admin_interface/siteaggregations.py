@@ -5,6 +5,7 @@ from django.contrib import admin
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied
+from django.utils.translation import ugettext as _
 
 from Poem.poem.models import Aggregation, GroupOfAggregations
 
@@ -54,9 +55,9 @@ class GroupOfAggregationsInlineForms(ModelForm):
 class GroupOfAggregationsInlineChangeForm(GroupOfAggregationsInlineForms):
     qs = GroupOfAggregations.objects.all()
     groupofaggregations = ModelChoiceField(queryset=qs, widget=Select(),
-                                       help_text='Profile is a member of given group')
+                                       help_text='Aggregation profile is a member of given group')
     groupofaggregations.empty_label = '----------------'
-    groupofaggregations.label = 'Group of Aggregations'
+    groupofaggregations.label = 'Group'
 
 
 class GroupOfAggregationsInlineAddForm(GroupOfAggregationsInlineForms):
@@ -64,7 +65,7 @@ class GroupOfAggregationsInlineAddForm(GroupOfAggregationsInlineForms):
         super(GroupOfAggregationsInlineAddForm, self).__init__(*args, **kwargs)
         self.fields['groupofaggregations'].help_text = 'Select one of the groups you are member of'
         self.fields['groupofaggregations'].empty_label = '----------------'
-        self.fields['groupofaggregations'].label = 'Group of Aggregations'
+        self.fields['groupofaggregations'].label = 'Group'
 
 
 class GroupOfAggregationsInline(admin.TabularInline):
@@ -99,6 +100,18 @@ class GroupOfAggregationsInline(admin.TabularInline):
                                                     **kwargs)
 
 
+class AggregationForm(ModelForm):
+    class Meta:
+        labels = {
+            'name': _('Profile name'),
+            'apiid': _('WEB-API ID')
+        }
+        help_texts = {
+            'name': _('Aggregation profile name'),
+            'apiid': _('WEB-API ID of fetched Aggregation profile'),
+        }
+
+
 class AggregationAdmin(admin.ModelAdmin):
     class Media:
         css = {'all': ('/poem_media/css/siteaggregations.css',)}
@@ -127,6 +140,37 @@ class AggregationAdmin(admin.ModelAdmin):
     inlines = (GroupOfAggregationsInline, )
     actions = None
     list_per_page = 20
+    form = AggregationForm
+    fields = ('name', 'apiid')
+
+    def _groupown_turn(self, user, flag):
+        perm_prdel = Permission.objects.get(codename='delete_aggregation')
+        try:
+            perm_grpown = Permission.objects.get(codename='groupown_aggregation')
+        except Permission.DoesNotExist:
+            ct = ContentType.objects.get(app_label='poem', model='aggregation')
+            perm_grpown = Permission.objects.create(codename='groupown_aggregation',
+                                                   content_type=ct,
+                                                   name="Group of aggregation owners")
+        if flag == 'add':
+            user.user_permissions.add(perm_grpown)
+            user.user_permissions.add(perm_prdel)
+        elif flag == 'del':
+            user.user_permissions.remove(perm_grpown)
+            user.user_permissions.remove(perm_prdel)
+
+    def get_form(self, request, obj=None, **kwargs):
+        rquser = SharedInfo(requser=request.user)
+        if obj:
+            if request.user.is_authenticated:
+                ug = request.user.groupsofaggregations.all().values_list('name', flat=True)
+                if obj.groupname in ug:
+                    self._groupown_turn(request.user, 'add')
+                else:
+                    self._groupown_turn(request.user, 'del')
+        elif not request.user.is_superuser:
+            self._groupown_turn(request.user, 'add')
+        return super(AggregationAdmin, self).get_form(request, obj=None, **kwargs)
 
     def has_change_permission(self, request, obj=None):
         return True
