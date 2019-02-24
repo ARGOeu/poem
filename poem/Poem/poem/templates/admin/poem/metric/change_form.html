@@ -43,6 +43,8 @@
     {% else %}
       {{ original|truncatewords:"18" }}
     {% endif %}
+    &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
+    <a href="{% url 'admin:poem_aggregation_changelist' %}">Aggregations</a>
   </div>
   {% endblock %}
 {% endif %}

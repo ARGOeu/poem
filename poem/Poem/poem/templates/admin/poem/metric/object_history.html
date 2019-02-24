@@ -33,6 +33,8 @@
     <a href="{% url opts|admin_urlname:'change' object.pk|admin_urlquote %}">{{ object|truncatewords:"18" }}</a>
     &rsaquo;
     History
+    &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
+    <a href="{% url 'admin:poem_aggregation_changelist' %}">Aggregations</a>
   </div>
   {% endblock %}
 {% endif %}

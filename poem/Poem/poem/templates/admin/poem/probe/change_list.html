@@ -28,6 +28,8 @@
       {{ cl.opts.verbose_name_plural|capfirst }}
       &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
       <a href="{% url 'admin:poem_metric_changelist' %}">Metrics</a>
+      &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
+      <a href="{% url 'admin:poem_aggregation_changelist' %}">Aggregations</a>
     </div>
   {% endblock %}
 {% endif %}
