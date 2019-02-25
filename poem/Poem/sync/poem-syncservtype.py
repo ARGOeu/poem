@@ -6,16 +6,14 @@ django.setup()
 
 import Poem.django_logging
 import base64
-import http.client
 import logging
 import os
-import ssl
+import requests
 
 from Poem import settings
 from Poem.poem import models
 from Poem.tenants.models import Tenant
 from xml.etree import ElementTree
-from urllib.parse import urlparse
 from configparser import ConfigParser
 
 from tenant_schemas.utils import schema_context, get_public_schema_name
@@ -63,32 +61,26 @@ def main():
             for fo in fos:
                 fo.close()
 
-            o = urlparse(data['SERVICETYPE_URL'])
+            url = data['SERVICETYPE_URL']
+
+            headers = dict()
+            if data['HTTPAUTH']:
+                userpass_ascii = '{0}:{1}'.format(data['HTTPUSER'],
+                                                  data['HTTPPASS'])
+                userpass = base64.b64encode(userpass_ascii.encode())
+                headers = {'Authorization': 'Basic ' + userpass.decode()}
+
             try:
-                if o.scheme.startswith('https'):
-                    context = ssl.create_default_context(
-                        cafile=settings.CAFILE,
-                        capath=settings.CAPATH
-                    )
-                    conn = http.client.HTTPSConnection(
-                        host=o.netloc,
-                        key_file=settings.HOST_KEY,
-                        cert_file=settings.HOST_CERT,
-                        timeout=60,
-                        context=context
+                if url.startswith('https'):
+                    req = requests.get(
+                        url,
+                        cert=(settings.HOST_CERT, settings.HOST_KEY),
+                        timeout=60
                     )
                 else:
-                    conn = http.client.HTTPConnection(host=o.netloc)
+                    req = requests.get(url, headers=headers)
 
-                headers = dict()
-                if data['HTTPAUTH']:
-                    userpass_ascii = '{0}:{1}'.format(data['HTTPUSER'],
-                                                      data['HTTPPASS'])
-                    userpass = base64.b64encode(userpass_ascii.encode())
-                    headers={'Authorization': 'Basic ' + userpass.decode()}
-
-                conn.request('GET', o.path + '?' + o.query, headers=headers)
-                ret = conn.getresponse().read()
+                ret = req.content
 
             except Exception as e:
                 logger.error("%s: Error service flavours feed - %s" % (
