@@ -84,7 +84,6 @@
   {{ adminform.form.non_field_errors }}
 {% endif %}
 
-{% render_bundle 'main' %}
 
 {% block field_sets %}
 {% for fieldset in adminform %}
@@ -94,19 +93,17 @@
 
 {% block after_field_sets %}{% endblock %}
 
+{% block after_related_objects %}
+  <div id="react"></div>
+  {% render_bundle 'main' %}
+{% endblock %}
+
 {% block inline_field_sets %}
 {% for inline_admin_formset in inline_admin_formsets %}
   {% include inline_admin_formset.opts.template %}
 {% endfor %}
 {% endblock %}
 
-{% block after_related_objects %}{% endblock %}
-
-{% if user.is_superuser or perms.poem.groupown_aggregation %}
-  {% submit_row %}
-{% else %}
-  <div class="submit-row"><center> This is a read-only instance, please request the corresponding permissions to perform any changes in this form. </center></div>
-{% endif %}
 
 {% if adminform and add %}
    <script type="text/javascript">document.getElementById("{{ adminform.first_field.id_for_label }}").focus();</script>
