@@ -6,11 +6,15 @@ const token = "TOKEN"
 
 const MetricProfileAPI = 'https://web-api-devel.argo.grnet.gr/api/v2/metric_profiles'
 const AggregationProfileAPI = 'https://web-api-devel.argo.grnet.gr/api/v2/aggregation_profiles/'
-
+const TokenAPI = 'https://<tenant-host>/api/v2/internal/tokens'
 
 class App extends Component {
   constructor(props) {
     super(props)
+
+    this.profile_id = props.args.apiid
+    this.tenant_host = TokenAPI.replace('<tenant-host>', props.args.tenant_host)
+
     this.state = {
       loading: false,
       aggregation_profile: {},
@@ -24,23 +28,29 @@ class App extends Component {
 
     this.logic_operations = ["OR", "AND", null] 
     this.endpoint_groups = ["servicegroups", "sites"]
-    this.headers = {"Accept": "application/json", "x-api-key": token}
-
-    this.profile_id = props.args.apiid
-    console.log(this.profile_id)
+    this.headers = {"Accept": "application/json", "x-api-key": null}
   }
 
-  fetchMetricProfiles() {
+  fetchToken() {
+    return fetch(this.tenant_host)
+      .then(response => response.json())
+      .then(array => array[0]['token'])
+      .catch(err => console.log('Something went wrong: ' + err))
+  }
+
+  fetchMetricProfiles(token) {
     return fetch(MetricProfileAPI, 
-      {headers: this.headers})
+      {headers: {"Accept": "application/json",
+                 "x-api-key": token}})
       .then(response => response.json())
       .then(json => json['data']) 
       .catch(err => console.log('Something went wrong: ' + err))
   }
 
-  fetchAggregationProfile(idProfile) {
+  fetchAggregationProfile(token, idProfile) {
     return fetch(AggregationProfileAPI + idProfile, 
-      {headers: this.headers})
+      {headers: {"Accept": "application/json",
+                 "x-api-key": token}})
       .then(response => response.json())
       .then(json => json['data'])
       .then(array => array[0])
@@ -81,7 +91,8 @@ class App extends Component {
   componentWillMount() {
     this.setState({loading: true})
 
-    Promise.all([this.fetchAggregationProfile(this.profile_id), this.fetchMetricProfiles()])
+    this.fetchToken().then(token => 
+      Promise.all([this.fetchAggregationProfile(token, this.profile_id), this.fetchMetricProfiles(token)])
       .then(([aggregp, metricp]) => this.setState(
         {
           aggregation_profile: aggregp, 
@@ -89,6 +100,7 @@ class App extends Component {
           list_services: this.extractListOfServices(aggregp.metric_profile, metricp),
           loading: false
         }))
+    )
   }
 
   render() {

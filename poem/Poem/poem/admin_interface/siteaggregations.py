@@ -210,7 +210,8 @@ class AggregationAdmin(admin.ModelAdmin):
         aggregation = Aggregation.objects.get(id=object_id)
         if aggregation.apiid:
             props = {
-                'apiid': aggregation.apiid
+                'apiid': aggregation.apiid,
+                'tenant_host': request.get_host()
             }
             extra_context = {
                 'props': props
