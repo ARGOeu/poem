@@ -3,7 +3,6 @@ import React, { Component } from 'react';
 import { Formik, Field, FieldArray, Form } from 'formik';
 
 const token = "TOKEN"
-const id_profile="ID_PROFILE"
 
 const MetricProfileAPI = 'https://web-api-devel.argo.grnet.gr/api/v2/metric_profiles'
 const AggregationProfileAPI = 'https://web-api-devel.argo.grnet.gr/api/v2/aggregation_profiles/'
@@ -26,6 +25,9 @@ class App extends Component {
     this.logic_operations = ["OR", "AND", null] 
     this.endpoint_groups = ["servicegroups", "sites"]
     this.headers = {"Accept": "application/json", "x-api-key": token}
+
+    this.profile_id = props.args.apiid
+    console.log(this.profile_id)
   }
 
   fetchMetricProfiles() {
@@ -79,7 +81,7 @@ class App extends Component {
   componentWillMount() {
     this.setState({loading: true})
 
-    Promise.all([this.fetchAggregationProfile(id_profile), this.fetchMetricProfiles()])
+    Promise.all([this.fetchAggregationProfile(this.profile_id), this.fetchMetricProfiles()])
       .then(([aggregp, metricp]) => this.setState(
         {
           aggregation_profile: aggregp, 
