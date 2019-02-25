@@ -2,6 +2,8 @@ from gettext import gettext
 import json
 
 from django.contrib import admin
+from django.urls import reverse
+from django.utils.html import format_html
 from django.utils.text import get_text_list
 
 from Poem.poem.models import *
@@ -171,7 +173,15 @@ class LogEntryAdmin(admin.ModelAdmin):
     new_change_message.short_description = 'change message'
 
     def obj_repr(self, obj):
-        return obj.object_repr
+        urlrepr = format_html(
+            '<a href="{0}">{1}</a>',
+            (
+                reverse('admin:poem_' + obj.content_type.model + '_change',
+                        args=[obj.object_id])
+            ),
+            obj.object_repr,
+        )
+        return urlrepr
     obj_repr.short_description = 'object representation'
 
     list_display = (log_entry_name, 'user', 'action_time')
