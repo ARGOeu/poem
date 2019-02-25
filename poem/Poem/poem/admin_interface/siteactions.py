@@ -175,6 +175,9 @@ class LogEntryAdmin(admin.ModelAdmin):
     obj_repr.short_description = 'object representation'
 
     list_display = (log_entry_name, 'user', 'action_time')
+    list_filter = (
+        ('content_type', admin.RelatedOnlyFieldListFilter),
+    )
     fields = ('content_type', 'user', 'action_time', 'obj_repr',
               'new_change_message')
     readonly_fields = (
