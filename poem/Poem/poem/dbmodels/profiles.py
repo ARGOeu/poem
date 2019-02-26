@@ -26,6 +26,7 @@ class Profile(models.Model):
         unique_together = ('name', 'version')
         permissions = (('profileown', 'Read/Write/Modify'),)
         app_label = 'poem'
+        verbose_name = 'Profile'
 
     def __str__(self):
         return u'%s' % (self.name)

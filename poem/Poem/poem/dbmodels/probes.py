@@ -22,6 +22,7 @@ class Probe(models.Model):
 
     class Meta:
         permissions = (('probesown', 'Read/Write/Modify'),)
+        verbose_name = 'Probe'
         app_label = 'poem'
 
     def __str__(self):
