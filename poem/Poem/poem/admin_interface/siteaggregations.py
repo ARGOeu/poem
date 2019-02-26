@@ -204,6 +204,21 @@ class AggregationAdmin(admin.ModelAdmin):
 
         return super(AggregationAdmin, self).changelist_view(request, extra_context=extra_context)
 
+    def add_view(self, request, form_url='', extra_context=None):
+        extra_context = extra_context or {}
+
+        props = {
+            'tenant_host': request.get_host(),
+            'view': 'add'
+        }
+        extra_context = {
+            'props': props
+        }
+
+        return super().add_view(
+            request, form_url, extra_context=extra_context,
+        )
+
     def change_view(self, request, object_id, form_url='', extra_context=None):
         extra_context = extra_context or {}
 
@@ -211,7 +226,8 @@ class AggregationAdmin(admin.ModelAdmin):
         if aggregation.apiid:
             props = {
                 'apiid': aggregation.apiid,
-                'tenant_host': request.get_host()
+                'tenant_host': request.get_host(),
+                'view': 'change'
             }
             extra_context = {
                 'props': props

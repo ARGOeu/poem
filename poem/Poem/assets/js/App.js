@@ -2,8 +2,6 @@ import React, { Component } from 'react';
 //import './App.css';
 import { Formik, Field, FieldArray, Form } from 'formik';
 
-const token = "TOKEN"
-
 const MetricProfileAPI = 'https://web-api-devel.argo.grnet.gr/api/v2/metric_profiles'
 const AggregationProfileAPI = 'https://web-api-devel.argo.grnet.gr/api/v2/aggregation_profiles/'
 const TokenAPI = 'https://<tenant-host>/api/v2/internal/tokens'
@@ -12,8 +10,9 @@ class App extends Component {
   constructor(props) {
     super(props)
 
-    this.profile_id = props.args.apiid
-    this.tenant_host = TokenAPI.replace('<tenant-host>', props.args.tenant_host)
+    this.profile_id = props.django.apiid
+    this.django_view = props.django.view
+    this.tenant_host = TokenAPI.replace('<tenant-host>', props.django.tenant_host)
 
     this.state = {
       loading: false,
@@ -91,16 +90,38 @@ class App extends Component {
   componentWillMount() {
     this.setState({loading: true})
 
-    this.fetchToken().then(token => 
-      Promise.all([this.fetchAggregationProfile(token, this.profile_id), this.fetchMetricProfiles(token)])
-      .then(([aggregp, metricp]) => this.setState(
-        {
-          aggregation_profile: aggregp, 
-          list_metric_profiles: metricp,
-          list_services: this.extractListOfServices(aggregp.metric_profile, metricp),
-          loading: false
-        }))
-    )
+    if (this.django_view === 'change') {
+      this.fetchToken().then(token => 
+        Promise.all([this.fetchAggregationProfile(token, this.profile_id), this.fetchMetricProfiles(token)])
+        .then(([aggregp, metricp]) => this.setState(
+          {
+            aggregation_profile: aggregp, 
+            list_metric_profiles: metricp,
+            list_services: this.extractListOfServices(aggregp.metric_profile, metricp),
+            loading: false
+          }))
+      )
+    }
+    else if (this.django_view === 'add') {
+      let empty_aggregation_profile = {
+        name: '',
+        metric_operation: '',
+        profile_operation: '',
+        endpoint_group: '',
+        metric_profile: {
+          name: ''
+        },
+        groups: []
+      }
+      this.fetchToken().then(token => this.fetchMetricProfiles(token))
+        .then(metricp => this.setState(
+          {
+            aggregation_profile: empty_aggregation_profile,
+            list_metric_profiles: metricp,
+            list_services: [],
+            loading: false
+          }))
+    }
   }
 
   render() {
@@ -111,7 +132,7 @@ class App extends Component {
         { 
           (loading) ? 
             <div>Loading profiles...</div> : 
-            (!aggregation_profile && !list_metric_profiles && !list_services) ?
+            (!aggregation_profile && !list_metric_profiles) ?
               <div>No profile loaded</div> :
               <Formik
                 initialValues={{
@@ -189,27 +210,38 @@ const DropDown = ({field, data=[], placeholder="----------", prefix=""}) =>
     )}
   </Field>
 
-const GroupList = ({name, form, list_services, list_operations}) =>
+const GroupList = ({name, form, list_services, list_operations, push}) =>
   <div className="groups">
     { (form.values.groups.length === 0) ?
-          <p>No Groups listed. (Add a group)</p> :
-          form.values[name].map((group, i) =>
-            <FieldArray
-              key={i}
-              name="groups"
-              render={props => (
-                <Group
-                  {...props}
-                  key={i}
-                  operation={group.operation}
-                  services={group.services}
-                  list_services={list_services}
-                  list_operations={list_operations}
-                  groupindex={i}
-                  last={i === form.values[name].length - 1}
-                />
-              )}
-            />
+        <div className="group-add">
+          <p>No Groups listed. (Add a group)</p> 
+          <button
+            type="button"
+            onClick={() => push({name: '-----------', 
+                                  operation: '----',
+                                  services: [{name: '-----------', 
+                                            operation: '----'}]})}
+          >
+            Add new group
+          </button>
+        </div> :
+        form.values[name].map((group, i) =>
+          <FieldArray
+            key={i}
+            name="groups"
+            render={props => (
+              <Group
+                {...props}
+                key={i}
+                operation={group.operation}
+                services={group.services}
+                list_services={list_services}
+                list_operations={list_operations}
+                groupindex={i}
+                last={i === form.values[name].length - 1}
+              />
+            )}
+          />
         )
     }
   </div>
