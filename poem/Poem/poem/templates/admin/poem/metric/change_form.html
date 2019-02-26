@@ -153,6 +153,32 @@
   });
 </script>
 
+<script type="text/javascript">
+  $(document).ready(function() {
+    var field = $('#id_probeversion');
+    var name = $('#id_probeversion').val();
+    var json_probe_info = '/poem/api/v2/internal/probes/' + name.split(" ")[0];
+    $.getJSON(json_probe_info).done(function(json) {
+        var items = [];
+        items.push("<ul class=probeinfo> ");
+        items.push("<li><a href='/poem/admin/poem/probe/"+json.id+"/change/'>"+json.name+"</a></li>");
+        items.push(" <li> "+json.description+" </li>");
+        items.push(" <li> "+json.comment+" </li>");
+        items.push(" </ul>");
+        html = items.join("");
+        $('.field-box.field-probeversion').append(html);
+      });
+    field.hover(
+      function() {
+        $('ul.probeinfo').slideDown('medium').delay(1500);
+      },
+      function() {
+        $('ul.probeinfo').slideUp('medium');
+      }
+    );
+   });
+</script>
+
 {# JavaScript for prepopulated fields #}
 {% prepopulated_fields_js %}
 
