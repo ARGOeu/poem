@@ -8,6 +8,8 @@ from django.utils.text import get_text_list
 
 from Poem.poem.models import *
 
+from reversion.models import Version, Revision
+
 
 def get_new_logentry_name(obj):
     if obj.is_addition():
@@ -173,12 +175,32 @@ class LogEntryAdmin(admin.ModelAdmin):
     new_change_message.short_description = 'change message'
 
     def obj_repr(self, obj):
+        if obj.content_type.model in ('probe', 'metric'):
+            vers = Version.objects.filter(
+                object_id=obj.object_id,
+                object_repr=obj.object_repr,
+                content_type_id=obj.content_type.id
+            )
+            revs = []
+            for ver in vers:
+                revs.append(Revision.objects.get(id=ver.id).date_created)
+
+            date = min(revs, key=lambda x: abs(x - obj.action_time))
+            ver = vers[revs.index(date)]
+
+            url = '/poem/admin/poem/{}/{}/history/{}/'.format(
+                obj.content_type.model,
+                obj.object_id,
+                ver.id
+            )
+        else:
+            url = '/poem/admin/poem/{}/{}/change/'.format(
+                obj.content_type.model,
+                obj.object_id
+            )
         urlrepr = format_html(
             '<a href="{0}">{1}</a>',
-            (
-                reverse('admin:poem_' + obj.content_type.model + '_change',
-                        args=[obj.object_id])
-            ),
+            (url),
             obj.object_repr,
         )
         return urlrepr
