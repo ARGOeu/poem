@@ -155,3 +155,50 @@ class ListUsersAPIViewTests(TenantTestCase):
         request = self.factory.get(self.url)
         response = self.view(request)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class ListProbesAPIViewTests(TenantTestCase):
+    def setUp(self):
+        self.factory = TenantRequestFactory(self.tenant)
+        self.view = views.ListProbes.as_view()
+        self.url_base = '/api/v2/internal/probes/'
+        self.user = CustUser.objects.create(username='testuser')
+
+        Probe.objects.create(
+            name='ams-probe',
+            version='0.1.7',
+            description='Probe is inspecting AMS service by trying to publish '
+                        'and consume randomly generated messages.',
+            comment='Initial version.',
+            repository='https://github.com/ARGOeu/nagios-plugins-argo',
+            docurl='https://github.com/ARGOeu/nagios-plugins-argo/blob/master/'
+                   'README.md',
+            group='ARGOTEST'
+        )
+
+    def test_get_probe(self):
+        request = self.factory.get(self.url_base + 'ams-probe')
+        force_authenticate(request, user=self.user)
+        response = self.view(request, 'ams-probe')
+        self.assertEqual(
+            response.data,
+            {
+                'id': 1,
+                'name': 'ams-probe',
+                'description': 'Probe is inspecting AMS service by trying to '
+                               'publish and consume randomly generated '
+                               'messages.',
+                'comment': 'Initial version.'
+            }
+        )
+
+    def test_get_probe_permission_denied_in_case_of_no_authorization(self):
+        request = self.factory.get(self.url_base + 'ams-probe')
+        response = self.view(request, 'ams-probe')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_get_probe_empty_dict_in_case_of_nonexisting_probe(self):
+        request = self.factory.get(self.url_base + 'nonexisting_probe')
+        force_authenticate(request, user=self.user)
+        response = self.view(request, 'nonexisting_probe')
+        self.assertEqual(response.data, {})
