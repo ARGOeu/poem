@@ -1,10 +1,11 @@
 import React, { Component } from 'react';
-//import './App.css';
-import { Formik, Field, FieldArray, Form } from 'formik';
+import { Formik, Field, FieldArray, Form, connect } from 'formik';
+import FormikEffect from './FormikEffect.js'
 
 const MetricProfileAPI = 'https://web-api-devel.argo.grnet.gr/api/v2/metric_profiles'
 const AggregationProfileAPI = 'https://web-api-devel.argo.grnet.gr/api/v2/aggregation_profiles/'
 const TokenAPI = 'https://<tenant-host>/api/v2/internal/tokens'
+
 
 class App extends Component {
   constructor(props) {
@@ -105,8 +106,8 @@ class App extends Component {
     else if (this.django_view === 'add') {
       let empty_aggregation_profile = {
         name: '',
-        metric_operation: '',
-        profile_operation: '',
+        metric_operation: 'AND',
+        profile_operation: 'AND',
         endpoint_group: '',
         metric_profile: {
           name: ''
@@ -147,6 +148,15 @@ class App extends Component {
                 render = {props => (
                   <Form>
                     <section>
+                      <FormikEffect onChange={(current, prev) => {
+                        if (current.values.metric_profile !== prev.values.metric_profile) {
+                            let selected_profile = {name: current.values.metric_profile}
+                            this.setState({list_services:
+                                this.extractListOfServices(selected_profile,
+                                list_metric_profiles)})
+                        }
+                        }}
+                      />
                       <p>
                         <label>Aggregation profile: </label>
                         <Field type="text" name="name"/>
@@ -171,7 +181,7 @@ class App extends Component {
                           name="metric_profile" 
                           component={DropDown} 
                           data={list_metric_profiles.map(e => e.name)}
-                          onChange={this.onMetricProfileChange}/> 
+                        />
                       </p>
                       <p>
                         <label>Endpoint group: </label>
