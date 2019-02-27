@@ -24,6 +24,24 @@ th, td {
     font-size: 14px;
 }
 
+.groups {
+    width: 800px;
+    display: inline-flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+
+.group {
+    width: 380px;
+}
+
+select {
+    background: #F6F6F6;
+    text-align: center;
+}
+
 .change-list .filtered .results, .change-list .filtered .paginator, .filtered #toolbar, .filtered div.xfull {
     margin-right: 180px;
 }
