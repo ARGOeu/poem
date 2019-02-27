@@ -8,217 +8,218 @@ const TokenAPI = 'https://<tenant-host>/api/v2/internal/tokens'
 
 
 class App extends Component {
-  constructor(props) {
-    super(props)
+    constructor(props) {
+        super(props)
 
-    this.profile_id = props.django.apiid
-    this.django_view = props.django.view
-    this.tenant_host = TokenAPI.replace('<tenant-host>', props.django.tenant_host)
+        this.profile_id = props.django.apiid
+        this.django_view = props.django.view
+        this.tenant_host = TokenAPI.replace('<tenant-host>', props.django.tenant_host)
 
-    this.state = {
-      loading: false,
-      aggregation_profile: {},
-      metric_profile: {},
-      list_metric_profiles: {},
+        this.state = {
+        loading: false,
+        aggregation_profile: {},
+        metric_profile: {},
+        list_metric_profiles: {},
+        }
+        this.fetchMetricProfiles = this.fetchMetricProfiles.bind(this)
+        this.fetchAggregationProfile = this.fetchAggregationProfile.bind(this)
+        this.extractListOfMetricsProfiles = this.extractListOfMetricsProfiles.bind(this)
+        this.onMetricProfileChange = this.onMetricProfileChange.bind(this)
+
+        this.logic_operations = ["OR", "AND", null] 
+        this.endpoint_groups = ["servicegroups", "sites"]
+        this.headers = {"Accept": "application/json", "x-api-key": null}
     }
-    this.fetchMetricProfiles = this.fetchMetricProfiles.bind(this)
-    this.fetchAggregationProfile = this.fetchAggregationProfile.bind(this)
-    this.extractListOfMetricsProfiles = this.extractListOfMetricsProfiles.bind(this)
-    this.onMetricProfileChange = this.onMetricProfileChange.bind(this)
+    fetchToken() {
+        return fetch(this.tenant_host)
+            .then(response => response.json())
+            .then(array => array[0]['token'])
+            .catch(err => console.log('Something went wrong: ' + err))
+    }
 
-    this.logic_operations = ["OR", "AND", null] 
-    this.endpoint_groups = ["servicegroups", "sites"]
-    this.headers = {"Accept": "application/json", "x-api-key": null}
-  }
+    fetchMetricProfiles(token) {
+        return fetch(MetricProfileAPI, 
+            {headers: {"Accept": "application/json",
+                "x-api-key": token}})
+            .then(response => response.json())
+            .then(json => json['data']) 
+            .catch(err => console.log('Something went wrong: ' + err))
+    }
 
-  fetchToken() {
-    return fetch(this.tenant_host)
-      .then(response => response.json())
-      .then(array => array[0]['token'])
-      .catch(err => console.log('Something went wrong: ' + err))
-  }
-
-  fetchMetricProfiles(token) {
-    return fetch(MetricProfileAPI, 
-      {headers: {"Accept": "application/json",
+    fetchAggregationProfile(token, idProfile) {
+        return fetch(AggregationProfileAPI + idProfile, 
+            {headers: {"Accept": "application/json",
                  "x-api-key": token}})
-      .then(response => response.json())
-      .then(json => json['data']) 
-      .catch(err => console.log('Something went wrong: ' + err))
-  }
-
-  fetchAggregationProfile(token, idProfile) {
-    return fetch(AggregationProfileAPI + idProfile, 
-      {headers: {"Accept": "application/json",
-                 "x-api-key": token}})
-      .then(response => response.json())
-      .then(json => json['data'])
-      .then(array => array[0])
-      .catch(err => console.log('Something went wrong: ' + err))
-  }
-
-  onMetricProfileChange(event) {
-    let selected_profile = {name: event.target.value}
-    let list_services = this.extractListOfServices(selected_profile,
-                                                   this.state.list_metric_profiles)
-    this.setState({list_services: list_services})
-  }
-
-  extractListOfMetricsProfiles(allProfiles) {
-    var list_profiles = []
-
-    allProfiles.forEach(profile => {
-      var i = list_profiles['length']
-      var {name, id} = profile
-
-      list_profiles[i] = {name, id}
-      i += 1
-    })
-
-    return list_profiles
-  }
-
-  extractListOfServices(profileFromAggregation, listMetricProfiles)
-  {
-    let targetProfile = listMetricProfiles.filter(p => p.name === profileFromAggregation.name)
-
-    let list_services = targetProfile[0].services.map(s => s.service)
-    list_services[list_services['length']] = null
-
-    return list_services 
-  }
-
-  componentWillMount() {
-    this.setState({loading: true})
-
-    if (this.django_view === 'change') {
-      this.fetchToken().then(token => 
-        Promise.all([this.fetchAggregationProfile(token, this.profile_id), this.fetchMetricProfiles(token)])
-        .then(([aggregp, metricp]) => this.setState(
-          {
-            aggregation_profile: aggregp, 
-            list_metric_profiles: metricp,
-            list_services: this.extractListOfServices(aggregp.metric_profile, metricp),
-            loading: false
-          }))
-      )
+            .then(response => response.json())
+            .then(json => json['data'])
+            .then(array => array[0])
+            .catch(err => console.log('Something went wrong: ' + err))
     }
-    else if (this.django_view === 'add') {
-      let empty_aggregation_profile = {
-        name: '',
-        metric_operation: 'AND',
-        profile_operation: 'AND',
-        endpoint_group: '',
-        metric_profile: {
-          name: ''
-        },
-        groups: []
-      }
-      this.fetchToken().then(token => this.fetchMetricProfiles(token))
-        .then(metricp => this.setState(
-          {
-            aggregation_profile: empty_aggregation_profile,
-            list_metric_profiles: metricp,
-            list_services: [],
-            loading: false
-          }))
-    }
-  }
 
-  render() {
-    const {aggregation_profile, list_metric_profiles, list_services, loading} = this.state
+    onMetricProfileChange(event) {
+        let selected_profile = {name: event.target.value}
+        let list_services = this.extractListOfServices(selected_profile,
+            this.state.list_metric_profiles)
+        this.setState({list_services: list_services})
+    }
+
+    extractListOfMetricsProfiles(allProfiles) {
+        var list_profiles = []
+
+        allProfiles.forEach(profile => {
+            var i = list_profiles['length']
+            var {name, id} = profile
+
+            list_profiles[i] = {name, id}
+            i += 1
+        })
+
+        return list_profiles
+    }
+
+
+    extractListOfServices(profileFromAggregation, listMetricProfiles)
+    {
+        let targetProfile = listMetricProfiles.filter(p => p.name === profileFromAggregation.name)
+
+        let list_services = targetProfile[0].services.map(s => s.service)
+        list_services[list_services['length']] = null
+
+        return list_services 
+    }
+
+    componentWillMount() {
+        this.setState({loading: true})
+
+        if (this.django_view === 'change') {
+            this.fetchToken().then(token => 
+                Promise.all([this.fetchAggregationProfile(token, this.profile_id), this.fetchMetricProfiles(token)])
+                .then(([aggregp, metricp]) => this.setState(
+            {
+                aggregation_profile: aggregp, 
+                list_metric_profiles: metricp,
+                list_services: this.extractListOfServices(aggregp.metric_profile, metricp),
+                loading: false
+            }))
+            )
+        }
+        else if (this.django_view === 'add') {
+            let empty_aggregation_profile = {
+                name: '',
+                metric_operation: '',
+                profile_operation: '',
+                endpoint_group: '',
+                metric_profile: {
+                    name: ''
+                },
+                groups: []
+          }
+            this.fetchToken().then(token => this.fetchMetricProfiles(token))
+                .then(metricp => this.setState(
+            {
+                aggregation_profile: empty_aggregation_profile,
+                list_metric_profiles: metricp,
+                list_services: [],
+                loading: false
+            }))
+        }
+    }
+
+    render() {
+        const {aggregation_profile, list_metric_profiles, list_services, loading} = this.state
 
     return (
-      <div className="App">
-        { 
-          (loading) ? 
-            <div>Loading profiles...</div> : 
-            (!aggregation_profile && !list_metric_profiles) ?
-              <div>No profile loaded</div> :
-              <Formik
-                initialValues={{
-                  name: aggregation_profile.name, 
-                  metric_operation: aggregation_profile.metric_operation,
-                  profile_operation: aggregation_profile.profile_operation,
-                  metric_profile: aggregation_profile.metric_profile.name,
-                  endpoint_group: aggregation_profile.endpoint_group,
-                  groups: aggregation_profile.groups
-                }}  
-                onSubmit = {(values, actions) => alert(JSON.stringify(values, null, 2))}
-                render = {props => (
-                  <Form>
-                    <section>
-                      <FormikEffect onChange={(current, prev) => {
-                        if (current.values.metric_profile !== prev.values.metric_profile) {
-                            let selected_profile = {name: current.values.metric_profile}
-                            this.setState({list_services:
-                                this.extractListOfServices(selected_profile,
-                                list_metric_profiles)})
-                        }
-                        }}
-                      />
-                      <p>
-                        <label>Aggregation profile: </label>
-                        <Field type="text" name="name"/>
-                      </p>
-                      <p>
-                        <label>Metric operation: </label>
-                        <Field 
-                          name="metric_operation" 
-                          component={DropDown} 
-                          data={this.logic_operations}/> 
-                      </p>
-                      <p>
-                        <label>Profile operation: </label>
-                        <Field 
-                          name="profile_operation" 
-                          component={DropDown} 
-                          data={this.logic_operations}/> 
-                      </p>
-                      <p>
-                        <label>Metric profile: </label>
-                        <Field 
-                          name="metric_profile" 
-                          component={DropDown} 
-                          data={list_metric_profiles.map(e => e.name)}
-                        />
-                      </p>
-                      <p>
-                        <label>Endpoint group: </label>
-                        <Field 
-                          name="endpoint_group" 
-                          component={DropDown} 
-                          data={this.endpoint_groups}/> 
-                      </p>
-                      <FieldArray
-                        name="groups"
-                        render={props => (
-                          <GroupList
-                            {...props}
-                            list_services={list_services}
-                            list_operations={this.logic_operations}
-                          />)}
-                      />
-                    </section>
-                    <button type="submit">Save</button>
-                  </Form>
-                )}
-              />
-        }
-      </div>
-    );
-  }
+        <div className="App">
+            { 
+                (loading) ? 
+                    <div>Loading profiles...</div> : 
+                    (!aggregation_profile && !list_metric_profiles) ?
+                    <div>No profile loaded</div> :
+                    <Formik
+                        initialValues={{
+                            name: aggregation_profile.name, 
+                            metric_operation: aggregation_profile.metric_operation,
+                            profile_operation: aggregation_profile.profile_operation,
+                            metric_profile: aggregation_profile.metric_profile.name,
+                            endpoint_group: aggregation_profile.endpoint_group,
+                            groups: aggregation_profile.groups
+                        }}  
+                        onSubmit = {(values, actions) => alert(JSON.stringify(values, null, 2))}
+                        render = {props => (
+                            <Form>
+                            <section>
+                            <FormikEffect onChange={(current, prev) => {
+                                if (current.values.metric_profile !== prev.values.metric_profile) {
+                                    let selected_profile = {name: current.values.metric_profile}
+                                    this.setState({list_services:
+                                        this.extractListOfServices(selected_profile,
+                                        list_metric_profiles)})
+                                }
+                            }}
+                            />
+                            <p>
+                                <label>Aggregation profile: </label>
+                                <Field type="text" name="name" placeholder="Name of aggregation profile"/>
+                            </p>
+                            <p>
+                                <label>Metric operation: </label>
+                                <Field 
+                                    name="metric_operation" 
+                                    component={DropDown} 
+                                    data={this.logic_operations}
+                                    placeholder="AND/OR"/> 
+                            </p>
+                            <p>
+                                <label>Profile operation: </label>
+                                <Field 
+                                    name="profile_operation" 
+                                    component={DropDown} 
+                                    data={this.logic_operations}/> 
+                            </p>
+                            <p>
+                                <label>Metric profile: </label>
+                                <Field 
+                                    name="metric_profile" 
+                                    component={DropDown} 
+                                    data={list_metric_profiles.map(e => e.name)}
+                                />
+                            </p>
+                            <p>
+                                <label>Endpoint group: </label>
+                                <Field 
+                                    name="endpoint_group" 
+                                    component={DropDown} 
+                                    data={this.endpoint_groups}/> 
+                            </p>
+                            <FieldArray
+                                name="groups"
+                                render={props => (
+                                    <GroupList
+                                        {...props}
+                                        list_services={list_services}
+                                        list_operations={this.logic_operations}
+                                    />)}
+                            />
+                            </section>
+                            <button type="submit">Save</button>
+                            </Form>
+                        )}
+                    />
+            }
+        </div>
+    );}
 }
 
-const DropDown = ({field, data=[], placeholder="----------", prefix=""}) => 
-  <Field component="select"
-    name={prefix ? `${prefix}.${field.name}` : field.name} 
-    text={field.value}
-    placeholder={placeholder}> 
-    {data.map((name, i) =>
-      <option key={i} text={name}>{name}</option>
-    )}
-  </Field>
+const DropDown = ({field, data=[], placeholder="", prefix=""}) => 
+    <Field component="select"
+        name={prefix ? `${prefix}.${field.name}` : field.name} 
+        text={field.value}>
+        {
+            data.map((name, i) => 
+                <option key={i} text={name}>{name}</option>
+            )
+        }
+    </Field>
 
 const GroupList = ({name, form, list_services, list_operations, push}) =>
   <div className="groups">
@@ -257,104 +258,106 @@ const GroupList = ({name, form, list_services, list_operations, push}) =>
   </div>
 
 const Group = ({name, operation, services, list_operations, list_services, form, groupindex, remove, push, last}) =>
-  <div className={`groups.${groupindex}`} key={groupindex}>
-      <Field
-        name={`groups.${groupindex}.name`}> 
-      </Field>
-      <DropDown 
-        field={{name: "operation", value: operation}}
-        data={list_operations}
-        prefix={`groups.${groupindex}`}
-      />
-      <button
-        type="button"
-        onClick={() => remove(groupindex)}
-      >
+    <div className={`groups.${groupindex}`} key={groupindex}>
+        <Field
+            name={`groups.${groupindex}.name`}> 
+        </Field>
+        <DropDown 
+            field={{name: "operation", value: operation}}
+            data={list_operations}
+            prefix={`groups.${groupindex}`}
+        />
+        <button
+            type="button"
+            onClick={() => remove(groupindex)}
+        >
         -
-      </button>
-      { (last) ?
-          <div className="group-add">
-            <button
-              type="button"
-              onClick={() => push({name: '-----------', 
+        </button>
+        { 
+            (last) ?
+            <div className="group-add">
+                <button
+                    type="button"
+                    onClick={() => push({name: '-----------', 
                                    operation: '----',
                                    services: [{name: '-----------', 
                                               operation: '----'}]})}
-            >
-              Add new group
-            </button>
-          </div> :
-          null 
-      }
-      <FieldArray
-        name={`groups.${groupindex}`}
-        render={props => (
-          <ServiceList
-            list_services={list_services}
-            list_operations={list_operations}
-            services={services}
-            groupindex={groupindex}
-            form={form}
-          />)}
-      />
-  </div>
+                >
+                Add new group
+                </button>
+            </div> :
+                null 
+        }
+        <FieldArray
+            name={`groups.${groupindex}`}
+            render={props => (
+                <ServiceList
+                list_services={list_services}
+                    list_operations={list_operations}
+                    services={services}
+                    groupindex={groupindex}
+                    form={form}
+                />)}
+        />
+    </div>
 
 const ServiceList = ({services, list_services=[], list_operations=[], groupindex, form}) =>
-  <div className="services">
-    { (services.length === 0) ?
-        <p>No Services listed. (Add a service)</p> :
-        services.map((service, i) =>
-          <FieldArray
-            key={i}
-            name={`groups.${groupindex}.services`}
-            render={props => (
-              <Service
-                {...props}
-                key={i}
-                operation={service.operation} 
-                list_services={list_services} 
-                list_operations={list_operations} 
-                groupindex={groupindex}
-                index={i}
-                last={i === services.length - 1}
-              />
-            )}
-          />
-        )
-    }
-  </div>
+    <div className="services">
+        { 
+            (services.length === 0) ?
+                <p>No Services listed. (Add a service)</p> :
+                services.map((service, i) =>
+                    <FieldArray
+                        key={i}
+                        name={`groups.${groupindex}.services`}
+                        render={props => (
+                            <Service
+                                {...props}
+                                key={i}
+                                operation={service.operation} 
+                                list_services={list_services} 
+                                list_operations={list_operations} 
+                                groupindex={groupindex}
+                                index={i}
+                                last={i === services.length - 1}
+                            />
+                        )}
+                    />
+            )
+        }
+    </div>
 
 const Service = ({name, operation, list_services, list_operations, groupindex, index, remove, push, last}) => 
-  <div className={`services.${index}`}>
-    <DropDown 
-      field={{name: "name", value: name}}
-      data={list_services} 
-      prefix={`groups.${groupindex}.services.${index}`}
-    />
-    <DropDown 
-      field={{name: "operation", value: operation}}
-      data={list_operations}
-      placeholder="OPERATION"
-      prefix={`groups.${groupindex}.services.${index}`}
-    />
-    <button
-      type="button"
-      onClick={() => remove(index)}
-    >
-      -
-    </button>
-    { (last) ?
-        <div className="services-add">
-          <button
+    <div className={`services.${index}`}>
+        <DropDown 
+            field={{name: "name", value: name}}
+            data={list_services} 
+            prefix={`groups.${groupindex}.services.${index}`}
+        />
+        <DropDown 
+            field={{name: "operation", value: operation}}
+            data={list_operations}
+            placeholder="OPERATION"
+            prefix={`groups.${groupindex}.services.${index}`}
+        />
+        <button
             type="button"
-            onClick={() => push({name: '-----------', operation: ''})}
-          >
-            Add new service
-          </button>
-        </div> :
-        null
-    }
-  </div>
+            onClick={() => remove(index)}
+        >
+        -
+        </button>
+        { (last) ?
+                <div className="services-add">
+                <button
+                    type="button"
+                    onClick={() => push({name: '-----------', operation: ''})}
+                >
+                Add new service
+                </button>
+                </div> :
+                null
+        }
+    </div>
 
 
 export default App;
