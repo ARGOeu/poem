@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('poem', '0010_service'),
+        ('poem', '0014_custuser_groupsofaggregations'),
     ]
 
     operations = [
