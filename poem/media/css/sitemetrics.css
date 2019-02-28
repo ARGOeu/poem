@@ -147,3 +147,17 @@ div.module table#change-history > tbody th:nth-of-type(1) {
 .change-list .filtered .results, .change-list .filtered .paginator, .filtered #toolbar, .filtered div.xfull {
     margin-right: 180px;
 }
+
+form#metric_form .aligned ul{
+    display:none;
+    background-color: white;
+    border: 0.1px solid gray;
+    margin-left: 60px;
+    width: 300px;
+    position: absolute;
+    z-index: 10;
+}
+
+form#metric_form .aligned ul li{
+    padding: 5px;
+}

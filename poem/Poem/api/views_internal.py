@@ -57,3 +57,19 @@ class ListUsers(APIView):
                                                                flat=True)
         results = sorted(users)
         return Response({'result': results})
+
+
+class ListProbes(APIView):
+    authentication_classes = (SessionAuthentication,)
+
+    def get(self, request, probe_name):
+        try:
+            probes = poem_models.Probe.objects.get(name=probe_name)
+        except poem_models.Probe.DoesNotExist:
+            result = dict()
+        else:
+            result = dict(id=probes.id,
+                          name=probes.name,
+                          description=probes.description,
+                          comment=probes.comment)
+        return Response(result)

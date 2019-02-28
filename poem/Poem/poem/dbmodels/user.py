@@ -121,8 +121,8 @@ class CustUser(CustAbstractUser):
 
     class Meta:
         app_label = 'poem'
-        verbose_name = _('user')
-        verbose_name_plural = _('users')
+        verbose_name = _('User')
+        verbose_name_plural = _('Users')
 
     def get_absolute_url(self):
         return "/users/%s/" % urlquote(self.username)
