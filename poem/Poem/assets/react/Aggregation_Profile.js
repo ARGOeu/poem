@@ -227,20 +227,30 @@ const DropDown = ({field, data=[], prefix=""}) =>
         }
     </Field>
 
+const ButtonAdd = ({label, obj={}, operation=f=>f}) => 
+    <button
+        type="button"
+        onClick={() => operation(obj)}>
+        {label}
+    </button>
+
+const ButtonRemove = ({label, index=0, operation=f=>f}) => 
+    <button
+        type="button"
+        onClick={() => operation(index)}>
+        {label}
+    </button>
+
 const GroupList = ({name, form, list_services, list_operations, push}) =>
     <div className="groups">
         { (form.values.groups.length === 0) ?
                 <div className="group-add">
                     <p>No Groups listed. (Add a group)</p> 
-                    <button
-                        type="button"
-                        onClick={() => push({name: '', 
-                            operation: '',
-                            services: [{name: '', 
-                                operation: ''}]})}
-                    >
-                        Add new group
-                    </button>
+                    <ButtonAdd 
+                        label="Add new group"
+                        obj={{name: '', operation: '',
+                              services: [{name: '', operation: ''}]}}
+                        operation={push}/>
                 </div> :
                 form.values[name].map((group, i) =>
                     <FieldArray
@@ -274,12 +284,10 @@ const Group = ({name, operation, services, list_operations, list_services, form,
             data={list_operations}
             prefix={`groups.${groupindex}`}
         />
-        <button
-            type="button"
-            onClick={() => remove(groupindex)}
-        >
-        -
-        </button>
+        <ButtonRemove
+            label="X"
+            index={groupindex}
+            operation={remove}/>
         <FieldArray
             name={`groups.${groupindex}`}
             render={props => (
@@ -294,25 +302,27 @@ const Group = ({name, operation, services, list_operations, list_services, form,
         { 
             (last) ?
             <div className="group-add">
-                <button
-                    type="button"
-                    onClick={() => push({name: '', 
-                                   operation: '',
-                                   services: [{name: '', 
-                                              operation: ''}]})}
-                >
-                Add new group
-                </button>
+                <ButtonAdd 
+                    label="Add new group"
+                    obj={{name: '', operation: '',
+                          services: [{name: '', operation: ''}]}}
+                    operation={push}/>
             </div> :
                 null 
         }
     </div>
 
-const ServiceList = ({services, list_services=[], list_operations=[], groupindex, form}) =>
+const ServiceList = ({services, list_services=[], list_operations=[], groupindex, push}) =>
     <div className="services">
         { 
             (services.length === 0) ?
-                <p>No Services listed. (Add a service)</p> :
+                <div className="services-add">
+                    <p>No Services listed. (Add a service)</p>
+                    <ButtonAdd 
+                        label="Add new service"
+                        obj={{name: '', operation: ''}}
+                        operation={push}/>
+                </div> :
                 services.map((service, i) =>
                     <FieldArray
                         key={i}
@@ -346,20 +356,16 @@ const Service = ({name, operation, list_services, list_operations, groupindex, i
             data={list_operations}
             prefix={`groups.${groupindex}.services.${index}`}
         />
-        <button
-            type="button"
-            onClick={() => remove(index)}
-        >
-        -
-        </button>
+        <ButtonRemove
+            label="X"
+            index={index}
+            operation={remove}/>
         { (last) ?
                 <div className="services-add">
-                <button
-                    type="button"
-                    onClick={() => push({name: '', operation: ''})}
-                >
-                Add new service
-                </button>
+                    <ButtonAdd
+                        label="Add new service"
+                        obj={{name: '', operation: ''}}
+                        operation={push}/>
                 </div> :
                 null
         }
