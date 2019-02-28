@@ -10,3 +10,5 @@ include bin/*
 recursive-include poem/media *.css *.js *.jpg *.png *.gif
 recursive-include poem/Poem/poem/templates *.html
 recursive-include poem/Poem/poem/fixtures/ *.json
+recursive-include poem/Poem/ *.json
+recursive-include poem/Poem/ *.js
