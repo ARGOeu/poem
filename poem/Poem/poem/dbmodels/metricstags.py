@@ -84,6 +84,7 @@ class Metric(models.Model):
 
     class Meta:
         app_label = 'poem'
+        verbose_name = 'Metric'
         unique_together = (('name', 'tag'),)
 
     def __str__(self):
