@@ -113,14 +113,14 @@ class GroupOfProfilesInlineChangeForm(GroupOfProfilesInlineForms):
     groupofprofiles = ModelChoiceField(queryset=qs, widget=Select(),
                                        help_text='Profile is a member of given group')
     groupofprofiles.empty_label = '----------------'
-    groupofprofiles.label = 'Group of profiles'
+    groupofprofiles.label = 'Group'
 
 class GroupOfProfilesInlineAddForm(GroupOfProfilesInlineForms):
     def __init__(self, *args, **kwargs):
         super(GroupOfProfilesInlineAddForm, self).__init__(*args, **kwargs)
         self.fields['groupofprofiles'].help_text = 'Select one of the groups you are member of'
         self.fields['groupofprofiles'].empty_label = '----------------'
-        self.fields['groupofprofiles'].label = 'Group of profiles'
+        self.fields['groupofprofiles'].label = 'Group'
 
 
 class GroupOfProfilesInline(admin.TabularInline):

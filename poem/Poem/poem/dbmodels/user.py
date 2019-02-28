@@ -2,6 +2,7 @@ from Poem import settings
 from Poem.poem.dbmodels.probes import GroupOfProbes
 from Poem.poem.dbmodels.profiles import GroupOfProfiles
 from Poem.poem.dbmodels.metricstags import GroupOfMetrics
+from Poem.poem.dbmodels.aggregations import GroupOfAggregations
 from django.contrib import auth
 from django.contrib.auth.models import UserManager, Permission, AbstractBaseUser
 from django.core import validators
@@ -22,13 +23,16 @@ class CustPermissionsMixin(models.Model):
         help_text=_('Specific permissions for this user.'),
         related_name="user_set", related_query_name="user")
     groupsofprofiles = models.ManyToManyField(GroupOfProfiles, verbose_name=('groups of profiles'),
-        blank=True, help_text=_('The groups of profiles that this user belongs to'),
+        blank=True, help_text=_('The groups of profiles that user will control'),
         related_name='user_set', related_query_name='user')
     groupsofmetrics = models.ManyToManyField(GroupOfMetrics, verbose_name=('groups of metrics'),
-        blank=True, help_text=_('The groups of metrics that this user belongs to'),
+        blank=True, help_text=_('The groups of metrics that user will control'),
         related_name='user_set', related_query_name='user')
     groupsofprobes = models.ManyToManyField(GroupOfProbes, verbose_name=('groups of probes'),
-        blank=True, help_text=_('The groups of probes that this user belongs to'),
+        blank=True, help_text=_('The groups of probes that user will control'),
+        related_name='user_set', related_query_name='user')
+    groupsofaggregations = models.ManyToManyField(GroupOfAggregations, verbose_name=('groups of aggregations'),
+        blank=True, help_text=_('The groups of aggregations that user will control'),
         related_name='user_set', related_query_name='user')
 
     class Meta:
