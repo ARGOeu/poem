@@ -85,6 +85,11 @@ fieldset > legend > button {
 .service > select {
     -webkit-appearance: none;
     appearance: none;
+    border-radius: 0px;
+}
+
+.service {
+    padding-left: 12px;
 }
 
 select {
