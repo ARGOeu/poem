@@ -1,6 +1,7 @@
 django-ajax-selects
 django-reversion
 django-tenant-schemas
+django-webpack-loader
 django>=2.0,<2.1
 djangorestframework
 djangorestframework-api-key
