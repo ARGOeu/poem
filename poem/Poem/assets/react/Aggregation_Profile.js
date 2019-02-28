@@ -275,41 +275,45 @@ const GroupList = ({name, form, list_services, list_operations, push}) =>
 
 const Group = ({name, operation, services, list_operations, list_services, form, groupindex, remove, push, last}) =>
     <div className="group" key={groupindex}>
-        <Field
-            name={`groups.${groupindex}.name`}
-            placeholder="Name of service group">
-        </Field>
-        <DropDown 
-            field={{name: "operation", value: operation}}
-            data={list_operations}
-            prefix={`groups.${groupindex}`}
-        />
-        <ButtonRemove
-            label="X"
-            index={groupindex}
-            operation={remove}/>
-        <FieldArray
-            name={`groups.${groupindex}`}
-            render={props => (
-                <ServiceList
-                list_services={list_services}
-                    list_operations={list_operations}
-                    services={services}
-                    groupindex={groupindex}
-                    form={form}
-                />)}
-        />
-        { 
-            (last) ?
-            <div className="group-add">
-                <ButtonAdd 
-                    label="Add new group"
-                    obj={{name: '', operation: '',
-                          services: [{name: '', operation: ''}]}}
-                    operation={push}/>
-            </div> :
-                null 
-        }
+        <fieldset>
+            <legend>
+                <Field
+                    name={`groups.${groupindex}.name`}
+                    placeholder="Name of service group">
+                </Field>
+                <DropDown 
+                    field={{name: "operation", value: operation}}
+                    data={list_operations}
+                    prefix={`groups.${groupindex}`}
+                />
+                <ButtonRemove
+                    label="X"
+                    index={groupindex}
+                    operation={remove}/>
+            </legend>
+            <FieldArray
+                name={`groups.${groupindex}`}
+                render={props => (
+                    <ServiceList
+                        list_services={list_services}
+                        list_operations={list_operations}
+                        services={services}
+                        groupindex={groupindex}
+                        form={form}
+                    />)}
+            />
+            { 
+                (last) ?
+                <div className="group-add">
+                    <ButtonAdd 
+                        label="Add new group"
+                        obj={{name: '', operation: '',
+                              services: [{name: '', operation: ''}]}}
+                        operation={push}/>
+                </div> :
+                    null 
+            }
+        </fieldset>
     </div>
 
 const ServiceList = ({services, list_services=[], list_operations=[], groupindex, push}) =>
@@ -361,12 +365,12 @@ const Service = ({name, operation, list_services, list_operations, groupindex, i
             index={index}
             operation={remove}/>
         { (last) ?
-                <div className="services-add">
-                    <ButtonAdd
-                        label="Add new service"
-                        obj={{name: '', operation: ''}}
-                        operation={push}/>
-                </div> :
+            <div className="services-add">
+                <ButtonAdd
+                    label="Add new service"
+                    obj={{name: '', operation: ''}}
+                    operation={push}/>
+            </div> :
                 null
         }
     </div>
