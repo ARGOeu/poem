@@ -4,7 +4,7 @@ import FormikEffect from './FormikEffect.js'
 
 const MetricProfileAPI = 'https://web-api-devel.argo.grnet.gr/api/v2/metric_profiles'
 const AggregationProfileAPI = 'https://web-api-devel.argo.grnet.gr/api/v2/aggregation_profiles/'
-const TokenAPI = 'https://<tenant-host>/api/v2/internal/tokens'
+const TokenAPI = 'https://<tenant-host>/poem/api/v2/internal/tokens'
 
 
 class App extends Component {
