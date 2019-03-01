@@ -77,8 +77,7 @@ class App extends Component {
     }
 
 
-    extractListOfServices(profileFromAggregation, listMetricProfiles)
-    {
+    extractListOfServices(profileFromAggregation, listMetricProfiles) {
         let targetProfile = listMetricProfiles.filter(p => p.name === profileFromAggregation.name)
 
         return targetProfile[0].services.map(s => s.service)
@@ -130,9 +129,7 @@ class App extends Component {
     }
 
     insertDummyGroup(groups) {
-        let arr = [...groups, {name: 'dummy', operation: 'OR', services: [{name: 'dummy', operation: 'OR'}]}]
-        console.log(arr)
-        return arr 
+        return  [...groups, {name: 'dummy', operation: 'OR', services: [{name: 'dummy', operation: 'OR'}]}] 
     }
 
     render() {
