@@ -25,7 +25,7 @@ th, td {
 }
 
 .groups {
-    width: 800px;
+    width: 1000px;
     display: inline-flex;
     flex-direction: row;
     flex-wrap: wrap;
@@ -35,57 +35,103 @@ th, td {
 
 .group {
     padding-top: 30px;
-    width: 380px;
+    width: 490px;
+    padding-left: 10px;
 }
 
-fieldset
+fieldset.groups-fieldset
 {
     padding:10px;
     background: white;
+    width: 390px;
     border:1px solid #76ABC3;
+    border-radius: 4px;
+    box-shadow:0 0 1px #999;
+    float: left;
+
 }
-fieldset > legend
+fieldset.groups-fieldset > legend
 {
     margin-bottom:4px;
     margin-left:10px;
     color: #76ABC3;
     align: center;
 }
-fieldset > legend > input {
+fieldset.groups-fieldset > legend > input {
     border: 1px solid #76ABC3;
+    border-radius: 4px;
     text-align: center; 
     background-color: #76ABC3;
     color: white;
-    font-color: white;
     font-weight: bold;
      
 }
 
-fieldset > legend > select {
-    border: 1px solid #76ABC3;
-    text-align: center; 
-    -webkit-appearance: none;
-    appearance: none;
-    border-left: none;
-    height: 24px;
-    border-radius: 0px;
-    padding: 0px 0px;
-    margin: 1px 0px;
-}
-
-fieldset > legend > button {
-    background-color: #a41515;
-    border: 4px solid #a41515;
+fieldset.groups-fieldset > legend > button {
+    background-color: #ad696b;
+    border: 4px solid #ad696b;
     color: white;
     text-align: center;
     align: center;
     text-decoration: none;
+    border-radius: 8px;
+    font-weight: bold;
+    transition-duration: 0.4s;
+}
+
+fieldset.groups-fieldset > legend > button:hover {
+    background-color: #663e3f;
+    border: 4px solid #663e3f;
+    color: white;
+}
+
+fieldset.services-fieldset > legend > select {
+    border: 1px solid #76ABC3;
+    text-align: center; 
+    margin-left: auto;
+    margin-right: auto;
+    float: center;
+    align: center;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 24px;
+    border-radius: 4px;
+    padding: 0px 0px;
+}
+
+fieldset.services-fieldset
+{
+    padding:10px;
+    background: white;
+    border:1px dashed #76ABC3;
+    border-radius: 4px;
+    box-shadow:0 0 1px #999;
+    float: left;
+    margin-left: 10px;
+
+}
+fieldset.services-fieldset > legend
+{
+    margin-bottom:4px;
+    margin-left:10px;
+    color: #76ABC3;
+    align: center;
+}
+
+.group-operation {
+    margin-top: 50px;
+    margin-right: 14px;
+    background-color: #76ABC3;
+    color: white;
+    font-weight: bold;
+    padding: 6px;
+    float: right;
+    border-radius: 4px;
 }
 
 .service > select {
     -webkit-appearance: none;
     appearance: none;
-    border-radius: 0px;
 }
 
 .service {
