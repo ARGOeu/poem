@@ -129,6 +129,36 @@ fieldset.services-fieldset > legend
     border-radius: 4px;
 }
 
+.wrap-group-add {
+    display: table;
+}
+
+.group-add {
+    width: 200px;
+    height: 100px;
+    float: right;
+    margin-top: 80px;
+    margin-right: 260px;
+    background-color: #ad696b;
+    border: 4px solid #ad696b;
+    color: white;
+    text-align: center;
+    align: center;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: bold;
+    transition-duration: 0.4s;
+    display: table-cell;
+    vertical-align: middle;
+}
+.group-add:hover {
+    background-color: #663e3f;
+    border: 4px solid #663e3f;
+    color: white;
+    display: table-cell;
+    vertical-align: middle;
+}
+
 .service > select {
     -webkit-appearance: none;
     appearance: none;

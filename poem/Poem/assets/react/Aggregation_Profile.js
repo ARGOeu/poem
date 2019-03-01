@@ -129,6 +129,12 @@ class App extends Component {
         }
     }
 
+    insertDummyGroup(groups) {
+        let arr = [...groups, {name: 'dummy', operation: 'OR', services: [{name: 'dummy', operation: 'OR'}]}]
+        console.log(arr)
+        return arr 
+    }
+
     render() {
         const {aggregation_profile, list_metric_profiles, list_services, loading} = this.state
 
@@ -146,7 +152,7 @@ class App extends Component {
                             profile_operation: aggregation_profile.profile_operation,
                             metric_profile: aggregation_profile.metric_profile.name,
                             endpoint_group: aggregation_profile.endpoint_group,
-                            groups: aggregation_profile.groups
+                            groups: this.insertDummyGroup(aggregation_profile.groups)
                         }}  
                         onSubmit = {(values, actions) => alert(JSON.stringify(values, null, 2))}
                         render = {props => (
@@ -274,46 +280,44 @@ const GroupList = ({name, form, list_services, list_operations, push}) =>
     </div>
 
 const Group = ({name, operation, services, list_operations, list_services, form, groupindex, remove, push, last}) =>
-    <div className="group" key={groupindex}>
-        <fieldset className="groups-fieldset">
-            <legend>
-                <Field
-                    name={`groups.${groupindex}.name`}
-                    placeholder="Name of service group">
-                </Field>
-                <ButtonRemove
-                    label="X"
-                    index={groupindex}
-                    operation={remove}/>
-            </legend>
-            <FieldArray
-                name={`groups.${groupindex}`}
-                render={props => (
-                    <ServiceList
-                        list_services={list_services}
-                        list_operations={list_operations}
-                        services={services}
-                        groupindex={groupindex}
-                        groupoperation={operation}
-                        form={form}
-                    />)}
-            />
-            { 
-                (last) ?
-                <div className="group-add">
-                    <ButtonAdd 
-                        label="Add new group"
-                        obj={{name: '', operation: '',
-                              services: [{name: '', operation: ''}]}}
-                        operation={push}/>
-                </div> :
-                    null 
-            }
-        </fieldset>
-        <div className="group-operation" key={groupindex}>
-            {form.values.profile_operation}
+    (!last) ?
+        <div className="group" key={groupindex}>
+            <fieldset className="groups-fieldset">
+                <legend>
+                    <Field
+                        name={`groups.${groupindex}.name`}
+                        placeholder="Name of service group">
+                    </Field>
+                    <ButtonRemove
+                        label="X"
+                        index={groupindex}
+                        operation={remove}/>
+                </legend>
+                <FieldArray
+                    name={`groups.${groupindex}`}
+                    render={props => (
+                        <ServiceList
+                            list_services={list_services}
+                            list_operations={list_operations}
+                            services={services}
+                            groupindex={groupindex}
+                            groupoperation={operation}
+                            form={form}
+                        />)}
+                />
+            </fieldset>
+            <div className="group-operation" key={groupindex}>
+                {form.values.profile_operation}
+            </div>
         </div>
-    </div>
+    :
+        <div className="wrap-group-add"
+            onClick={() => push({name: '', operation: '',
+                                 services: [{name: '', operation: ''}]})}>
+            <div className="group-add">
+                Add new Service Group
+            </div>
+        </div> 
 
 const ServiceList = ({services, list_services=[], list_operations=[], groupindex, groupoperation, push}) =>
     <fieldset className="services-fieldset">
