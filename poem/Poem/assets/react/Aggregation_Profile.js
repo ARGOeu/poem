@@ -255,40 +255,30 @@ const ButtonRemove = ({label, index=0, operation=f=>f}) =>
         {label}
     </button>
 
-const GroupList = ({name, form, list_services, list_operations, last_service_operation, push}) =>
-    <div className="groups">
-        { (form.values.groups.length === 0) ?
-                <div className="group-add">
-                    <p>No Groups listed. (Add a group)</p> 
-                    <ButtonAdd 
-                        label="Add new group"
-                        obj={{name: '', operation: '',
-                              services: [{name: '', operation: ''}]}}
-                        operation={push}/>
-                </div> :
-                form.values[name].map((group, i) =>
-                    <FieldArray
+const GroupList = ({name, form, list_services, list_operations, last_service_operation, insert}) =>
+    <div className="groups"> {
+        form.values[name].map((group, i) =>
+            <FieldArray
+                key={i}
+                name="groups"
+                render={props => (
+                    <Group
+                        {...props}
                         key={i}
-                        name="groups"
-                        render={props => (
-                            <Group
-                                {...props}
-                                key={i}
-                                operation={group.operation}
-                                services={group.services}
-                                list_services={list_services}
-                                list_operations={list_operations}
-                                last_service_operation={last_service_operation}
-                                groupindex={i}
-                                last={i === form.values[name].length - 1}
-                            />
-                        )}
+                        operation={group.operation}
+                        services={group.services}
+                        list_services={list_services}
+                        list_operations={list_operations}
+                        last_service_operation={last_service_operation}
+                        groupindex={i}
+                        last={i === form.values[name].length - 1}
                     />
-                )
-        }
-    </div>
+                )}
+            />
+        )
+    }</div>
 
-const Group = ({name, operation, services, list_operations, list_services, last_service_operation, form, groupindex, remove, push, last}) =>
+const Group = ({name, operation, services, list_operations, list_services, last_service_operation, form, groupindex, remove, insert, last}) =>
     (!last) ?
         <div className="group" key={groupindex}>
             <fieldset className="groups-fieldset">
@@ -322,7 +312,7 @@ const Group = ({name, operation, services, list_operations, list_services, last_
         </div>
     :
         <div className="wrap-group-add"
-            onClick={() => push({name: '', operation: '',
+            onClick={() => insert(groupindex, {name: '', operation: '',
                                  services: [{name: '', operation: ''}]})}>
             <div className="group-add">
                 Add new Service Group
