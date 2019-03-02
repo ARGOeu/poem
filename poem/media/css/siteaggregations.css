@@ -44,7 +44,7 @@ fieldset.groups-fieldset
     padding:10px;
     background: white;
     width: 390px;
-    border:1px solid #76ABC3;
+    border:1px solid #416090;
     border-radius: 4px;
     box-shadow:0 0 1px #999;
     float: left;
@@ -58,13 +58,11 @@ fieldset.groups-fieldset > legend
     align: center;
 }
 fieldset.groups-fieldset > legend > input {
-    border: 1px solid #76ABC3;
+    border: 1px solid #416090 ;
     border-radius: 4px;
     text-align: center; 
-    background-color: #76ABC3;
+    background-color: #416090;
     color: white;
-    font-weight: bold;
-     
 }
 
 fieldset.groups-fieldset > legend > button {
@@ -109,6 +107,7 @@ fieldset.services-fieldset > legend
 
 fieldset.services-fieldset > legend > select {
     border: 1px solid #76ABC3;
+    background-color: #76ABC3;
     text-align: center; 
     margin-left: auto;
     margin-right: auto;
@@ -119,6 +118,11 @@ fieldset.services-fieldset > legend > select {
     height: 24px;
     border-radius: 4px;
     padding: 0px 0px;
+    color: white;
+}
+
+fieldset.services-fieldset > legend > select:hover {
+    background-color: #5e889c;
 }
 
 .group-operation {
@@ -126,7 +130,6 @@ fieldset.services-fieldset > legend > select {
     margin-right: 14px;
     background-color: #76ABC3;
     color: white;
-    font-weight: bold;
     float: right;
     border-radius: 4px;
 }
@@ -138,7 +141,6 @@ fieldset.services-fieldset > legend > select {
     background-color: #76ABC3;
     border: 0px;
     color: white;
-    font-weight: bold;
     padding: 6px;
 }
 
