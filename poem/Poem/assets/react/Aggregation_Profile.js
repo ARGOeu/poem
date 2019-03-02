@@ -76,6 +76,16 @@ class App extends Component {
         return list_profiles
     }
 
+    insertOperationFromPrevious(index, array) {
+        if (array.length) {
+            let last = array.length - 1
+
+            return array[last]['operation']
+        }
+        else {
+            return ''
+        }
+    }
 
     extractListOfServices(profileFromAggregation, listMetricProfiles) {
         let targetProfile = listMetricProfiles.filter(p => p.name === profileFromAggregation.name)
@@ -204,6 +214,7 @@ class App extends Component {
                                         {...props}
                                         list_services={this.insertSelectPlaceholder(list_services, '<Service flavour>')}
                                         list_operations={this.insertSelectPlaceholder(this.logic_operations, '<Operation>')}
+                                        last_service_operation={this.insertOperationFromPrevious}
                                     />)}
                             />
                             </section>
@@ -244,7 +255,7 @@ const ButtonRemove = ({label, index=0, operation=f=>f}) =>
         {label}
     </button>
 
-const GroupList = ({name, form, list_services, list_operations, push}) =>
+const GroupList = ({name, form, list_services, list_operations, last_service_operation, push}) =>
     <div className="groups">
         { (form.values.groups.length === 0) ?
                 <div className="group-add">
@@ -267,6 +278,7 @@ const GroupList = ({name, form, list_services, list_operations, push}) =>
                                 services={group.services}
                                 list_services={list_services}
                                 list_operations={list_operations}
+                                last_service_operation={last_service_operation}
                                 groupindex={i}
                                 last={i === form.values[name].length - 1}
                             />
@@ -276,7 +288,7 @@ const GroupList = ({name, form, list_services, list_operations, push}) =>
         }
     </div>
 
-const Group = ({name, operation, services, list_operations, list_services, form, groupindex, remove, push, last}) =>
+const Group = ({name, operation, services, list_operations, list_services, last_service_operation, form, groupindex, remove, push, last}) =>
     (!last) ?
         <div className="group" key={groupindex}>
             <fieldset className="groups-fieldset">
@@ -296,6 +308,7 @@ const Group = ({name, operation, services, list_operations, list_services, form,
                         <ServiceList
                             list_services={list_services}
                             list_operations={list_operations}
+                            last_service_operation={last_service_operation}
                             services={services}
                             groupindex={groupindex}
                             groupoperation={operation}
@@ -316,7 +329,7 @@ const Group = ({name, operation, services, list_operations, list_services, form,
             </div>
         </div> 
 
-const ServiceList = ({services, list_services=[], list_operations=[], groupindex, groupoperation, push}) =>
+const ServiceList = ({services, list_services=[], list_operations=[], last_service_operation, groupindex, groupoperation, form, push}) =>
     <fieldset className="services-fieldset">
         <legend align="center">
             <DropDown 
@@ -345,9 +358,11 @@ const ServiceList = ({services, list_services=[], list_operations=[], groupindex
                                 operation={service.operation} 
                                 list_services={list_services} 
                                 list_operations={list_operations} 
+                                last_service_operation={last_service_operation}
                                 groupindex={groupindex}
                                 index={i}
                                 last={i === services.length - 1}
+                                form={form}
                             />
                         )}
                     />
@@ -355,7 +370,7 @@ const ServiceList = ({services, list_services=[], list_operations=[], groupindex
         }
     </fieldset>
 
-const Service = ({name, operation, list_services, list_operations, groupindex, index, remove, push, last}) => 
+const Service = ({name, operation, list_services, list_operations, last_service_operation, groupindex, index, remove, insert, last, form}) => 
     <div className="service" key={index}>
         <DropDown 
             field={{name: "name", value: name}}
@@ -371,15 +386,12 @@ const Service = ({name, operation, list_services, list_operations, groupindex, i
             label="-"
             index={index}
             operation={remove}/>
-        { (last) ?
-            <div className="services-add">
-                <ButtonAdd
-                    label="+"
-                    obj={{name: '', operation: ''}}
-                    operation={push}/>
-            </div> :
-                null
-        }
+        <button
+            type="button"
+            onClick={() => insert(index + 1, {name: '', operation: 
+                last_service_operation(index, form.values.groups[groupindex].services)})}>
+            +
+        </button>
     </div>
 
 

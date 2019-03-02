@@ -165,6 +165,7 @@ fieldset.services-fieldset > legend > select {
 .service > select {
     -webkit-appearance: none;
     appearance: none;
+		border-color: #76ABC3;
 }
 
 .service {
