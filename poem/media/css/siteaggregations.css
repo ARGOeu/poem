@@ -127,9 +127,27 @@ fieldset.services-fieldset > legend > select {
     background-color: #76ABC3;
     color: white;
     font-weight: bold;
-    padding: 6px;
     float: right;
     border-radius: 4px;
+}
+
+.group-operation > select {
+    -webkit-appearance: none;
+    appearance: none;
+    padding: 0px 0px;
+    background-color: #76ABC3;
+    border: 0px;
+    color: white;
+    font-weight: bold;
+    padding: 6px;
+}
+
+.group-operation:hover {
+    background-color: #5e889c;
+}
+
+.group-operation > select:hover {
+    background-color: #5e889c;
 }
 
 .wrap-group-add {
@@ -165,7 +183,7 @@ fieldset.services-fieldset > legend > select {
 .service > select {
     -webkit-appearance: none;
     appearance: none;
-		border-color: #76ABC3;
+    border-color: #76ABC3;
 }
 
 .service {

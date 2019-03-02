@@ -319,7 +319,9 @@ const Group = ({name, operation, services, list_operations, list_services, last_
                 />
             </fieldset>
             <div className="group-operation" key={groupindex}>
-                {form.values.profile_operation}
+                <DropDown
+                    field={{name: 'profile_operation', value: form.values.profile_operation}}
+                    data={list_operations}/>
             </div>
         </div>
     :
