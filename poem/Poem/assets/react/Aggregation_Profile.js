@@ -138,6 +138,17 @@ class App extends Component {
         }
     }
 
+    onSubmitHandle(values, actions) {
+        let last_group_element = values.groups[values.groups.length - 1]
+
+        if (last_group_element['name'] == 'dummy' && 
+            last_group_element.services[0]['name'] == 'dummy') {
+            values.groups.pop()
+        }
+
+        alert(JSON.stringify(values, null, 2))
+    }
+
     insertDummyGroup(groups) {
         return  [...groups, {name: 'dummy', operation: 'OR', services: [{name: 'dummy', operation: 'OR'}]}] 
     }
@@ -161,7 +172,7 @@ class App extends Component {
                             endpoint_group: aggregation_profile.endpoint_group,
                             groups: this.insertDummyGroup(aggregation_profile.groups)
                         }}  
-                        onSubmit = {(values, actions) => alert(JSON.stringify(values, null, 2))}
+                        onSubmit = {(values, actions) => this.onSubmitHandle(values, actions)}
                         render = {props => (
                             <Form>
                             <section>
