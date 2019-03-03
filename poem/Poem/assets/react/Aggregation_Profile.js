@@ -325,10 +325,10 @@ const Group = ({name, operation, services, list_operations, list_services, last_
             </div>
         </div>
     :
-        <div className="wrap-group-add"
-            onClick={() => insert(groupindex, {name: '', operation: '',
-                                 services: [{name: '', operation: ''}]})}>
-            <div className="group-add">
+        <div className="wrap-group-add">
+            <div className="group-add"
+                onClick={() => insert(groupindex, {name: '', operation: '',
+                                     services: [{name: '', operation: ''}]})}>
                 Add new Service Group
             </div>
         </div> 
