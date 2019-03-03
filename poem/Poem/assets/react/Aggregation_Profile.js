@@ -159,84 +159,84 @@ class App extends Component {
 
         return (
             <div className="App">
-                { 
-                    (loading) ? 
-                        <div>Loading profiles...</div> : 
-                        (!aggregation_profile && !list_metric_profiles) ?
-                        <div>No profile loaded</div> :
-                        <Formik
-                            initialValues={{
-                                name: aggregation_profile.name, 
-                                metric_operation: aggregation_profile.metric_operation,
-                                profile_operation: aggregation_profile.profile_operation,
-                                metric_profile: aggregation_profile.metric_profile.name,
-                                endpoint_group: aggregation_profile.endpoint_group,
-                                groups: this.insertDummyGroup(
-                                    this.insertEmptyServiceForNoServices(aggregation_profile.groups)
-                                )
-                            }}  
-                            onSubmit = {(values, actions) => this.onSubmitHandle(values, actions)}
-                            render = {props => (
-                                <Form>
-                                <section>
-                                <FormikEffect onChange={(current, prev) => {
-                                    if (current.values.metric_profile !== prev.values.metric_profile) {
-                                        let selected_profile = {name: current.values.metric_profile}
-                                        this.setState({list_services:
-                                            this.extractListOfServices(selected_profile,
-                                            list_metric_profiles)})
-                                    }
-                                }}
+            { 
+                (loading) ? 
+                    <div>Loading profiles...</div> : 
+                    (!aggregation_profile && !list_metric_profiles) ?
+                    <div>No profile loaded</div> :
+                    <Formik
+                        initialValues={{
+                            name: aggregation_profile.name, 
+                            metric_operation: aggregation_profile.metric_operation,
+                            profile_operation: aggregation_profile.profile_operation,
+                            metric_profile: aggregation_profile.metric_profile.name,
+                            endpoint_group: aggregation_profile.endpoint_group,
+                            groups: this.insertDummyGroup(
+                                this.insertEmptyServiceForNoServices(aggregation_profile.groups)
+                            )
+                        }}  
+                        onSubmit = {(values, actions) => this.onSubmitHandle(values, actions)}
+                        render = {props => (
+                            <Form>
+                            <section>
+                            <FormikEffect onChange={(current, prev) => {
+                                if (current.values.metric_profile !== prev.values.metric_profile) {
+                                    let selected_profile = {name: current.values.metric_profile}
+                                    this.setState({list_services:
+                                        this.extractListOfServices(selected_profile,
+                                        list_metric_profiles)})
+                                }
+                            }}
+                            />
+                            <p>
+                                <label>Aggregation profile: </label>
+                                <Field type="text" name="name" placeholder="Name of aggregation profile"/>
+                            </p>
+                            <p>
+                                <label>Metric operation: </label>
+                                <Field 
+                                    name="metric_operation" 
+                                    component={DropDown} 
+                                    data={this.insertSelectPlaceholder(this.logic_operations, '')}/> 
+                            </p>
+                            <p>
+                                <label>Profile operation: </label>
+                                <Field 
+                                    name="profile_operation" 
+                                    component={DropDown} 
+                                    data={this.insertSelectPlaceholder(this.logic_operations, '')}/> 
+                            </p>
+                            <p>
+                                <label>Metric profile: </label>
+                                <Field 
+                                    name="metric_profile" 
+                                    component={DropDown} 
+                                    data={this.insertSelectPlaceholder(list_metric_profiles.map(e => e.name), '')}
                                 />
-                                <p>
-                                    <label>Aggregation profile: </label>
-                                    <Field type="text" name="name" placeholder="Name of aggregation profile"/>
-                                </p>
-                                <p>
-                                    <label>Metric operation: </label>
-                                    <Field 
-                                        name="metric_operation" 
-                                        component={DropDown} 
-                                        data={this.insertSelectPlaceholder(this.logic_operations, '<Operation>')}/> 
-                                </p>
-                                <p>
-                                    <label>Profile operation: </label>
-                                    <Field 
-                                        name="profile_operation" 
-                                        component={DropDown} 
-                                        data={this.insertSelectPlaceholder(this.logic_operations, '<Operation>')}/> 
-                                </p>
-                                <p>
-                                    <label>Metric profile: </label>
-                                    <Field 
-                                        name="metric_profile" 
-                                        component={DropDown} 
-                                        data={this.insertSelectPlaceholder(list_metric_profiles.map(e => e.name), '<Metric profile>')}
-                                    />
-                                </p>
-                                <p>
-                                    <label>Endpoint group: </label>
-                                    <Field 
-                                        name="endpoint_group" 
-                                        component={DropDown} 
-                                        data={this.insertSelectPlaceholder(this.endpoint_groups, '<Endpoint group>')}/> 
-                                </p>
-                                <FieldArray
-                                    name="groups"
-                                    render={props => (
-                                        <GroupList
-                                            {...props}
-                                            list_services={this.insertSelectPlaceholder(list_services, '<Service flavour>')}
-                                            list_operations={this.insertSelectPlaceholder(this.logic_operations, '<Operation>')}
-                                            last_service_operation={this.insertOperationFromPrevious}
-                                        />)}
-                                />
-                                </section>
-                                <button type="submit">Save</button>
-                                </Form>
-                            )}
-                        />
-                }
+                            </p>
+                            <p>
+                                <label>Endpoint group: </label>
+                                <Field 
+                                    name="endpoint_group" 
+                                    component={DropDown} 
+                                    data={this.insertSelectPlaceholder(this.endpoint_groups, '')}/> 
+                            </p>
+                            <FieldArray
+                                name="groups"
+                                render={props => (
+                                    <GroupList
+                                        {...props}
+                                        list_services={this.insertSelectPlaceholder(list_services, '')}
+                                        list_operations={this.insertSelectPlaceholder(this.logic_operations, '')}
+                                        last_service_operation={this.insertOperationFromPrevious}
+                                    />)}
+                            />
+                            </section>
+                            <button type="submit">Save</button>
+                            </Form>
+                        )}
+                    />
+            }
             </div>
         );}
     }
