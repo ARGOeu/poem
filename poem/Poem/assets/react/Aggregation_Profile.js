@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
-import { Formik, Field, FieldArray, Form, connect } from 'formik';
+import { Formik, Field, FieldArray, Form } from 'formik';
 import FormikEffect from './FormikEffect.js'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faPlus, faTimes } from '@fortawesome/free-solid-svg-icons'
 
 const MetricProfileAPI = 'https://web-api-devel.argo.grnet.gr/api/v2/metric_profiles'
 const AggregationProfileAPI = 'https://web-api-devel.argo.grnet.gr/api/v2/aggregation_profiles/'
@@ -190,21 +192,27 @@ class App extends Component {
                             />
                             <p>
                                 <label>Aggregation profile: </label>
-                                <Field type="text" name="name" placeholder="Name of aggregation profile"/>
+                                <Field 
+                                    type="text" 
+                                    name="name" 
+                                    placeholder="Name of aggregation profile"
+                                    required={true}/>
                             </p>
                             <p>
                                 <label>Metric operation: </label>
                                 <Field 
                                     name="metric_operation" 
                                     component={DropDown} 
-                                    data={this.insertSelectPlaceholder(this.logic_operations, '')}/> 
+                                    data={this.insertSelectPlaceholder(this.logic_operations, '')}
+                                    required={true}/> 
                             </p>
                             <p>
                                 <label>Profile operation: </label>
                                 <Field 
                                     name="profile_operation" 
                                     component={DropDown} 
-                                    data={this.insertSelectPlaceholder(this.logic_operations, '')}/> 
+                                    data={this.insertSelectPlaceholder(this.logic_operations, '')}
+                                    required={true}/> 
                             </p>
                             <p>
                                 <label>Metric profile: </label>
@@ -212,6 +220,7 @@ class App extends Component {
                                     name="metric_profile" 
                                     component={DropDown} 
                                     data={this.insertSelectPlaceholder(list_metric_profiles.map(e => e.name), '')}
+                                    required={true}
                                 />
                             </p>
                             <p>
@@ -219,7 +228,8 @@ class App extends Component {
                                 <Field 
                                     name="endpoint_group" 
                                     component={DropDown} 
-                                    data={this.insertSelectPlaceholder(this.endpoint_groups, '')}/> 
+                                    data={this.insertSelectPlaceholder(this.endpoint_groups, '')}
+                                    required={true}/> 
                             </p>
                             <FieldArray
                                 name="groups"
@@ -297,7 +307,8 @@ const Group = ({name, operation, services, list_operations, list_services, last_
                 <legend>
                     <Field
                         name={`groups.${groupindex}.name`}
-                        placeholder="Name of service group">
+                        placeholder="Name of service group"
+                        required={true}>
                     </Field>
                     <ButtonRemove
                         label="X"
@@ -329,7 +340,8 @@ const Group = ({name, operation, services, list_operations, list_services, last_
             <div className="group-add"
                 onClick={() => insert(groupindex, {name: '', operation: '',
                                      services: [{name: '', operation: ''}]})}>
-                Add new Service Group
+                <FontAwesomeIcon icon={faPlus} color="#70bf2b"/>
+                &nbsp;&nbsp;&nbsp;&nbsp;Add new Service Group
             </div>
         </div> 
 
@@ -380,15 +392,16 @@ const Service = ({name, operation, list_services, list_operations, last_service_
             data={list_operations}
             prefix={`groups.${groupindex}.services.${index}`}
         />
-        <ButtonRemove
-            label="-"
-            index={index}
-            operation={remove}/>
+        <button
+            type="button"
+            onClick={() => remove(index)}>
+            <FontAwesomeIcon icon={faTimes} color="#dd4646"/>
+        </button>
         <button
             type="button"
             onClick={() => insert(index + 1, {name: '', operation: 
                 last_service_operation(index, form.values.groups[groupindex].services)})}>
-            +
+            <FontAwesomeIcon icon={faPlus} color="#70bf2b"/>
         </button>
     </div>
 
