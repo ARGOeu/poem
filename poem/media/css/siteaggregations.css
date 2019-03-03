@@ -212,3 +212,41 @@ select {
     margin-right: 180px;
 }
 
+div.profile-operation {
+    border-bottom: 1px solid #eee;
+    padding: 10px 0px 10px 10px;
+}
+
+div.aggregation-profile {
+    border-bottom: 1px solid #eee;
+    padding: 10px;
+    display: block;
+    line-height: 1;
+}
+
+div.metric-operation {
+    padding: 10px 0px 0px 10px;
+}
+
+div.metric-profile {
+    padding: 10px 0px 0px 10px;
+}
+
+div.endpoint-group {
+    border-bottom: 1px solid #eee;
+    padding: 10px;
+}
+
+div > label {
+    width: 160px;
+    float: left;
+    font-weight: bold;
+    color: #333;
+    line-height: 1;
+}
+
+div.help {
+    margin-left: 160px;
+    padding: 0px;
+
+}

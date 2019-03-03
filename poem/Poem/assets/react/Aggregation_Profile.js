@@ -190,31 +190,37 @@ class App extends Component {
                                 }
                             }}
                             />
-                            <p>
-                                <label>Aggregation profile: </label>
+                            <div className="aggregation-profile">
+                                <label>Aggregation name: </label>
                                 <Field 
                                     type="text" 
                                     name="name" 
                                     placeholder="Name of aggregation profile"
                                     required={true}/>
-                            </p>
-                            <p>
+                            </div>
+                            <div className="metric-operation">
                                 <label>Metric operation: </label>
                                 <Field 
                                     name="metric_operation" 
                                     component={DropDown} 
                                     data={this.insertSelectPlaceholder(this.logic_operations, '')}
                                     required={true}/> 
-                            </p>
-                            <p>
-                                <label>Profile operation: </label>
+                                <div className="help">
+                                    Logical operation that will be applied between metrics of each service flavour 
+                                </div>
+                            </div>
+                            <div className="profile-operation">
+                                <label>Aggregation operation: </label>
                                 <Field 
                                     name="profile_operation" 
                                     component={DropDown} 
                                     data={this.insertSelectPlaceholder(this.logic_operations, '')}
                                     required={true}/> 
-                            </p>
-                            <p>
+                                <div className="help">
+                                    Logical operation that will be applied between defined service groups
+                                </div>
+                            </div>
+                            <div className="metric-profile">
                                 <label>Metric profile: </label>
                                 <Field 
                                     name="metric_profile" 
@@ -222,15 +228,29 @@ class App extends Component {
                                     data={this.insertSelectPlaceholder(list_metric_profiles.map(e => e.name), '')}
                                     required={true}
                                 />
-                            </p>
-                            <p>
+                                <div className="help">
+                                   Metric profile associated to Aggregation profile. Service flavours defined in service groups originate from selected metric profile. 
+                                </div>
+                            </div>
+                            <div className="endpoint-group">
                                 <label>Endpoint group: </label>
                                 <Field 
                                     name="endpoint_group" 
                                     component={DropDown} 
                                     data={this.insertSelectPlaceholder(this.endpoint_groups, '')}
-                                    required={true}/> 
-                            </p>
+                                    required={true}
+                                    /> 
+                            </div>
+                            <h2 
+                                style={{fontWeight: 400, 
+                                    padding: '8px', 
+                                    color: 'white', 
+                                    fontSize: '12px', 
+                                    letterSpacing: '0.5px', 
+                                    textTransform: 'uppercase', 
+                                    background: '#79AEC8'}}>
+                                Service groups
+                            </h2>
                             <FieldArray
                                 name="groups"
                                 render={props => (
