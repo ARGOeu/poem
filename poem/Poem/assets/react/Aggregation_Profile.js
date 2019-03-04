@@ -262,7 +262,9 @@ class App extends Component {
                                     />)}
                             />
                             </section>
-                            <button type="submit">Save</button>
+                            <div class="submit-row">
+                                <button id="submit-button" type="submit">Save</button>
+                            </div>
                             </Form>
                         )}
                     />
