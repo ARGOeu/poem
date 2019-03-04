@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
-import { Formik, Field, FieldArray, Form, connect } from 'formik';
+import { Formik, Field, FieldArray, Form } from 'formik';
 import FormikEffect from './FormikEffect.js'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faPlus, faTimes } from '@fortawesome/free-solid-svg-icons'
 
 const MetricProfileAPI = 'https://web-api-devel.argo.grnet.gr/api/v2/metric_profiles'
 const AggregationProfileAPI = 'https://web-api-devel.argo.grnet.gr/api/v2/aggregation_profiles/'
@@ -24,7 +26,6 @@ class App extends Component {
         this.fetchMetricProfiles = this.fetchMetricProfiles.bind(this)
         this.fetchAggregationProfile = this.fetchAggregationProfile.bind(this)
         this.extractListOfMetricsProfiles = this.extractListOfMetricsProfiles.bind(this)
-        this.onMetricProfileChange = this.onMetricProfileChange.bind(this)
 
         this.logic_operations = ["OR", "AND"] 
         this.endpoint_groups = ["servicegroups", "sites"]
@@ -55,13 +56,6 @@ class App extends Component {
             .catch(err => console.log('Something went wrong: ' + err))
     }
 
-    onMetricProfileChange(event) {
-        let selected_profile = {name: event.target.value}
-        let list_services = this.extractListOfServices(selected_profile,
-            this.state.list_metric_profiles)
-        this.setState({list_services: list_services})
-    }
-
     extractListOfMetricsProfiles(allProfiles) {
         var list_profiles = []
 
@@ -76,9 +70,18 @@ class App extends Component {
         return list_profiles
     }
 
+    insertOperationFromPrevious(index, array) {
+        if (array.length) {
+            let last = array.length - 1
 
-    extractListOfServices(profileFromAggregation, listMetricProfiles)
-    {
+            return array[last]['operation']
+        }
+        else {
+            return ''
+        }
+    }
+
+    extractListOfServices(profileFromAggregation, listMetricProfiles) {
         let targetProfile = listMetricProfiles.filter(p => p.name === profileFromAggregation.name)
 
         return targetProfile[0].services.map(s => s.service)
@@ -117,7 +120,7 @@ class App extends Component {
                     name: ''
                 },
                 groups: []
-          }
+            }
             this.fetchToken().then(token => this.fetchMetricProfiles(token))
                 .then(metricp => this.setState(
             {
@@ -129,11 +132,35 @@ class App extends Component {
         }
     }
 
+    onSubmitHandle(values, actions) {
+        let last_group_element = values.groups[values.groups.length - 1]
+
+        if (last_group_element['name'] == 'dummy' && 
+            last_group_element.services[0]['name'] == 'dummy') {
+            values.groups.pop()
+        }
+
+        alert(JSON.stringify(values, null, 2))
+    }
+
+    insertEmptyServiceForNoServices(groups) {
+        groups.forEach(group => {
+            if (group.services.length === 0) {
+                group.services.push({name: '', operation: ''})
+            }
+        })
+        return groups
+    }
+
+    insertDummyGroup(groups) {
+        return  [...groups, {name: 'dummy', operation: 'OR', services: [{name: 'dummy', operation: 'OR'}]}] 
+    }
+
     render() {
         const {aggregation_profile, list_metric_profiles, list_services, loading} = this.state
 
-    return (
-        <div className="App">
+        return (
+            <div className="App">
             { 
                 (loading) ? 
                     <div>Loading profiles...</div> : 
@@ -146,9 +173,11 @@ class App extends Component {
                             profile_operation: aggregation_profile.profile_operation,
                             metric_profile: aggregation_profile.metric_profile.name,
                             endpoint_group: aggregation_profile.endpoint_group,
-                            groups: aggregation_profile.groups
+                            groups: this.insertDummyGroup(
+                                this.insertEmptyServiceForNoServices(aggregation_profile.groups)
+                            )
                         }}  
-                        onSubmit = {(values, actions) => alert(JSON.stringify(values, null, 2))}
+                        onSubmit = {(values, actions) => this.onSubmitHandle(values, actions)}
                         render = {props => (
                             <Form>
                             <section>
@@ -161,57 +190,88 @@ class App extends Component {
                                 }
                             }}
                             />
-                            <p>
-                                <label>Aggregation profile: </label>
-                                <Field type="text" name="name" placeholder="Name of aggregation profile"/>
-                            </p>
-                            <p>
+                            <div className="aggregation-profile">
+                                <label>Aggregation name: </label>
+                                <Field 
+                                    type="text" 
+                                    name="name" 
+                                    placeholder="Name of aggregation profile"
+                                    required={true}/>
+                            </div>
+                            <div className="metric-operation">
                                 <label>Metric operation: </label>
                                 <Field 
                                     name="metric_operation" 
                                     component={DropDown} 
-                                    data={this.insertSelectPlaceholder(this.logic_operations, '<Operation>')}/> 
-                            </p>
-                            <p>
-                                <label>Profile operation: </label>
+                                    data={this.insertSelectPlaceholder(this.logic_operations, '')}
+                                    required={true}/> 
+                                <div className="help">
+                                    Logical operation that will be applied between metrics of each service flavour 
+                                </div>
+                            </div>
+                            <div className="profile-operation">
+                                <label>Aggregation operation: </label>
                                 <Field 
                                     name="profile_operation" 
                                     component={DropDown} 
-                                    data={this.insertSelectPlaceholder(this.logic_operations, '<Operation>')}/> 
-                            </p>
-                            <p>
+                                    data={this.insertSelectPlaceholder(this.logic_operations, '')}
+                                    required={true}/> 
+                                <div className="help">
+                                    Logical operation that will be applied between defined service groups
+                                </div>
+                            </div>
+                            <div className="metric-profile">
                                 <label>Metric profile: </label>
                                 <Field 
                                     name="metric_profile" 
                                     component={DropDown} 
-                                    data={this.insertSelectPlaceholder(list_metric_profiles.map(e => e.name), '<Metric profile>')}
+                                    data={this.insertSelectPlaceholder(list_metric_profiles.map(e => e.name), '')}
+                                    required={true}
                                 />
-                            </p>
-                            <p>
+                                <div className="help">
+                                   Metric profile associated to Aggregation profile. Service flavours defined in service groups originate from selected metric profile. 
+                                </div>
+                            </div>
+                            <div className="endpoint-group">
                                 <label>Endpoint group: </label>
                                 <Field 
                                     name="endpoint_group" 
                                     component={DropDown} 
-                                    data={this.insertSelectPlaceholder(this.endpoint_groups, '<Endpoint group>')}/> 
-                            </p>
+                                    data={this.insertSelectPlaceholder(this.endpoint_groups, '')}
+                                    required={true}
+                                    /> 
+                            </div>
+                            <h2 
+                                style={{fontWeight: 400, 
+                                    padding: '8px', 
+                                    color: 'white', 
+                                    fontSize: '12px', 
+                                    letterSpacing: '0.5px', 
+                                    textTransform: 'uppercase', 
+                                    background: '#79AEC8'}}>
+                                Service groups
+                            </h2>
                             <FieldArray
                                 name="groups"
                                 render={props => (
                                     <GroupList
                                         {...props}
-                                        list_services={this.insertSelectPlaceholder(list_services, '<Service flavour>')}
-                                        list_operations={this.insertSelectPlaceholder(this.logic_operations, '<Operation>')}
+                                        list_services={this.insertSelectPlaceholder(list_services, '')}
+                                        list_operations={this.insertSelectPlaceholder(this.logic_operations, '')}
+                                        last_service_operation={this.insertOperationFromPrevious}
                                     />)}
                             />
                             </section>
-                            <button type="submit">Save</button>
+                            <div class="submit-row">
+                                <button id="submit-button" type="submit">Save</button>
+                            </div>
                             </Form>
                         )}
                     />
             }
-        </div>
-    );}
-}
+            </div>
+        );}
+    }
 
 
 const DropDown = ({field, data=[], prefix=""}) => 
@@ -227,114 +287,122 @@ const DropDown = ({field, data=[], prefix=""}) =>
         }
     </Field>
 
-const GroupList = ({name, form, list_services, list_operations, push}) =>
-    <div className="groups">
-        { (form.values.groups.length === 0) ?
-                <div className="group-add">
-                    <p>No Groups listed. (Add a group)</p> 
-                    <button
-                        type="button"
-                        onClick={() => push({name: '', 
-                            operation: '',
-                            services: [{name: '', 
-                                operation: ''}]})}
-                    >
-                        Add new group
-                    </button>
-                </div> :
-                form.values[name].map((group, i) =>
-                    <FieldArray
+
+const ButtonRemove = ({label, index=0, operation=f=>f}) => 
+    <button
+        type="button"
+        onClick={() => operation(index)}>
+        {label}
+    </button>
+
+
+const GroupList = ({name, form, list_services, list_operations, last_service_operation, insert}) =>
+    <div className="groups"> 
+    {
+        form.values[name].map((group, i) =>
+            <FieldArray
+                key={i}
+                name="groups"
+                render={props => (
+                    <Group
+                        {...props}
                         key={i}
-                        name="groups"
-                        render={props => (
-                            <Group
-                                {...props}
-                                key={i}
-                                operation={group.operation}
-                                services={group.services}
-                                list_services={list_services}
-                                list_operations={list_operations}
-                                groupindex={i}
-                                last={i === form.values[name].length - 1}
-                            />
-                        )}
+                        operation={group.operation}
+                        services={group.services}
+                        list_services={list_services}
+                        list_operations={list_operations}
+                        last_service_operation={last_service_operation}
+                        groupindex={i}
+                        last={i === form.values[name].length - 1}
                     />
-                )
-        }
+                )}
+            />
+        )
+    }
     </div>
 
-const Group = ({name, operation, services, list_operations, list_services, form, groupindex, remove, push, last}) =>
-    <div className="group" key={groupindex}>
-        <Field
-            name={`groups.${groupindex}.name`}
-            placeholder="Name of service group">
-        </Field>
-        <DropDown 
-            field={{name: "operation", value: operation}}
-            data={list_operations}
-            prefix={`groups.${groupindex}`}
-        />
-        <button
-            type="button"
-            onClick={() => remove(groupindex)}
-        >
-        -
-        </button>
-        <FieldArray
-            name={`groups.${groupindex}`}
-            render={props => (
-                <ServiceList
-                list_services={list_services}
-                    list_operations={list_operations}
-                    services={services}
-                    groupindex={groupindex}
-                    form={form}
-                />)}
-        />
-        { 
-            (last) ?
-            <div className="group-add">
-                <button
-                    type="button"
-                    onClick={() => push({name: '', 
-                                   operation: '',
-                                   services: [{name: '', 
-                                              operation: ''}]})}
-                >
-                Add new group
-                </button>
-            </div> :
-                null 
-        }
-    </div>
 
-const ServiceList = ({services, list_services=[], list_operations=[], groupindex, form}) =>
-    <div className="services">
+const Group = ({name, operation, services, list_operations, list_services, last_service_operation, form, groupindex, remove, insert, last}) =>
+    (!last) ?
+        <div className="group" key={groupindex}>
+            <fieldset className="groups-fieldset">
+                <legend>
+                    <Field
+                        name={`groups.${groupindex}.name`}
+                        placeholder="Name of service group"
+                        required={true}>
+                    </Field>
+                    <ButtonRemove
+                        label="X"
+                        index={groupindex}
+                        operation={remove}/>
+                </legend>
+                <FieldArray
+                    name={`groups.${groupindex}`}
+                    render={props => (
+                        <ServiceList
+                            list_services={list_services}
+                            list_operations={list_operations}
+                            last_service_operation={last_service_operation}
+                            services={services}
+                            groupindex={groupindex}
+                            groupoperation={operation}
+                            form={form}
+                        />)}
+                />
+            </fieldset>
+            <div className="group-operation" key={groupindex}>
+                <DropDown
+                    field={{name: 'profile_operation', value: form.values.profile_operation}}
+                    data={list_operations}/>
+            </div>
+        </div>
+    :
+        <div className="wrap-group-add">
+            <div className="group-add"
+                onClick={() => insert(groupindex, {name: '', operation: '',
+                                     services: [{name: '', operation: ''}]})}>
+                <FontAwesomeIcon icon={faPlus} color="#70bf2b"/>
+                &nbsp;&nbsp;&nbsp;&nbsp;Add new Service Group
+            </div>
+        </div> 
+
+
+const ServiceList = ({services, list_services=[], list_operations=[], last_service_operation, groupindex, groupoperation, form, push}) =>
+    <fieldset className="services-fieldset">
+        <legend align="center">
+            <DropDown 
+                field={{name: "operation", value: groupoperation}}
+                data={list_operations}
+                prefix={`groups.${groupindex}`}
+            />
+        </legend>
         { 
-            (services.length === 0) ?
-                <p>No Services listed. (Add a service)</p> :
-                services.map((service, i) =>
-                    <FieldArray
-                        key={i}
-                        name={`groups.${groupindex}.services`}
-                        render={props => (
-                            <Service
-                                {...props}
-                                key={i}
-                                operation={service.operation} 
-                                list_services={list_services} 
-                                list_operations={list_operations} 
-                                groupindex={groupindex}
-                                index={i}
-                                last={i === services.length - 1}
-                            />
-                        )}
-                    />
+            services.map((service, i) =>
+                <FieldArray
+                    key={i}
+                    name={`groups.${groupindex}.services`}
+                    render={props => (
+                        <Service
+                            {...props}
+                            key={i}
+                            operation={service.operation} 
+                            list_services={list_services} 
+                            list_operations={list_operations} 
+                            last_service_operation={last_service_operation}
+                            groupindex={groupindex}
+                            index={i}
+                            last={i === services.length - 1}
+                            form={form}
+                        />
+                    )}
+                />
             )
         }
-    </div>
+    </fieldset>
 
-const Service = ({name, operation, list_services, list_operations, groupindex, index, remove, push, last}) => 
+
+const Service = ({name, operation, list_services, list_operations, last_service_operation, groupindex, index, remove, insert, last, form}) => 
     <div className="service" key={index}>
         <DropDown 
             field={{name: "name", value: name}}
@@ -348,21 +416,15 @@ const Service = ({name, operation, list_services, list_operations, groupindex, i
         />
         <button
             type="button"
-            onClick={() => remove(index)}
-        >
-        -
+            onClick={() => remove(index)}>
+            <FontAwesomeIcon icon={faTimes} color="#dd4646"/>
         </button>
-        { (last) ?
-                <div className="services-add">
-                <button
-                    type="button"
-                    onClick={() => push({name: '', operation: ''})}
-                >
-                Add new service
-                </button>
-                </div> :
-                null
-        }
+        <button
+            type="button"
+            onClick={() => insert(index + 1, {name: '', operation: 
+                last_service_operation(index, form.values.groups[groupindex].services)})}>
+            <FontAwesomeIcon icon={faPlus} color="#70bf2b"/>
+        </button>
     </div>
 
 
