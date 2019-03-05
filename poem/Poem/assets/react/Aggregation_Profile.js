@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlus, faTimes } from '@fortawesome/free-solid-svg-icons'
 
 const MetricProfileAPI = 'https://web-api-devel.argo.grnet.gr/api/v2/metric_profiles'
-const AggregationProfileAPI = 'https://web-api-devel.argo.grnet.gr/api/v2/aggregation_profiles/'
+const AggregationProfileAPI = 'https://web-api-devel.argo.grnet.gr/api/v2/aggregation_profiles'
 const TokenAPI = 'https://<tenant-host>/poem/api/v2/internal/tokens'
 
 
@@ -47,7 +47,7 @@ class App extends Component {
     }
 
     fetchAggregationProfile(token, idProfile) {
-        return fetch(AggregationProfileAPI + idProfile, 
+        return fetch(AggregationProfileAPI + '/' + idProfile, 
             {headers: {"Accept": "application/json",
                  "x-api-key": token}})
             .then(response => response.json())
@@ -104,8 +104,9 @@ class App extends Component {
                 .then(([aggregp, metricp]) => this.setState(
             {
                 aggregation_profile: aggregp, 
-                list_metric_profiles: this.extractListOfMetricsProfiles(metricp),
+                list_id_metric_profiles: this.extractListOfMetricsProfiles(metricp),
                 list_services: this.extractListOfServices(aggregp.metric_profile, metricp),
+                list_complete_metric_profiles: metricp,
                 loading: false
             }))
             )
@@ -125,7 +126,8 @@ class App extends Component {
                 .then(metricp => this.setState(
             {
                 aggregation_profile: empty_aggregation_profile,
-                list_metric_profiles: this.extractListOfMetricsProfiles(metricp),
+                list_id_metric_profiles: this.extractListOfMetricsProfiles(metricp),
+                list_complete_metric_profiles: metricp,
                 list_services: [],
                 loading: false
             }))
@@ -140,12 +142,31 @@ class App extends Component {
             values.groups.pop()
         }
 
-        let match_profile = this.state.list_metric_profiles.filter((e) => 
+        //TODO: fetch from DB schema
+        values.namespace = "egi"
+
+        let match_profile = this.state.list_id_metric_profiles.filter((e) => 
             values.metric_profile === e.name)
 
         values.metric_profile = match_profile[0]
 
-        alert(JSON.stringify(values, null, 2))
+        if (this.django_view === 'add') {
+            this.fetchToken().then(token => fetch(AggregationProfileAPI, {
+                method: 'POST',
+                mode: 'cors',
+                cache: 'no-cache',
+                credentials: 'same-origin',
+                headers: {'Accept': 'application/json', 
+                          'Content-Type': 'application/json',
+                          'x-api-key': token},
+                body: JSON.stringify(values),
+            }).then(response => {
+                if (!response.ok) {
+                    alert(`Error: ${response.status}, ${response.statusText}`)
+                }
+            }).catch(err => console.log('Something went wrong: ' + err))
+            ).catch(err => console.log('Something went wrong: ' + err))
+        }
     }
 
     insertEmptyServiceForNoServices(groups) {
@@ -162,14 +183,15 @@ class App extends Component {
     }
 
     render() {
-        const {aggregation_profile, list_metric_profiles, list_services, loading} = this.state
+        const {aggregation_profile, list_id_metric_profiles,
+            list_complete_metric_profiles, list_services, loading} = this.state
 
         return (
             <div className="App">
             { 
                 (loading) ? 
                     <div>Loading profiles...</div> : 
-                    (!aggregation_profile && !list_metric_profiles) ?
+                    (!aggregation_profile && !list_id_metric_profiles) ?
                     <div>No profile loaded</div> :
                     <Formik
                         initialValues={{
@@ -191,7 +213,7 @@ class App extends Component {
                                     let selected_profile = {name: current.values.metric_profile}
                                     this.setState({list_services:
                                         this.extractListOfServices(selected_profile,
-                                        list_metric_profiles)})
+                                        list_complete_metric_profiles)})
                                 }
                             }}
                             />
@@ -230,7 +252,7 @@ class App extends Component {
                                 <Field 
                                     name="metric_profile" 
                                     component={DropDown} 
-                                    data={this.insertSelectPlaceholder(list_metric_profiles.map(e => e.name), '')}
+                                    data={this.insertSelectPlaceholder(list_id_metric_profiles.map(e => e.name), '')}
                                     required={true}
                                 />
                                 <div className="help">
@@ -334,7 +356,7 @@ const Group = ({name, operation, services, list_operations, list_services, last_
                 <legend>
                     <Field
                         name={`groups.${groupindex}.name`}
-                        placeholder="Name of service flavour group"
+                        placeholder="Name of service group"
                         required={true}>
                     </Field>
                     <ButtonRemove
