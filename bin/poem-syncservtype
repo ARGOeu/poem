@@ -10,5 +10,5 @@ then
 fi
 
 su -m -s /bin/sh $RUNASUSER -c \
-"export DJANGO_SETTINGS_MODULE=Poem.settings && \
+"export DJANGO_SETTINGS_MODULE=Poem.settings REQUESTS_CA_BUNDLE=/etc/pki/tls/certs/ca-bundle.crt && \
 python $SITEPACK/Poem/sync/poem-syncservtype.py"
