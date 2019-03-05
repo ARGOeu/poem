@@ -18,10 +18,10 @@ class App extends Component {
         this.tenant_host = TokenAPI.replace('<tenant-host>', props.django.tenant_host)
 
         this.state = {
-        loading: false,
-        aggregation_profile: {},
-        metric_profile: {},
-        list_metric_profiles: {},
+            loading: false,
+            aggregation_profile: {},
+            metric_profile: {},
+            list_metric_profiles: {},
         }
         this.fetchMetricProfiles = this.fetchMetricProfiles.bind(this)
         this.fetchAggregationProfile = this.fetchAggregationProfile.bind(this)
@@ -104,7 +104,7 @@ class App extends Component {
                 .then(([aggregp, metricp]) => this.setState(
             {
                 aggregation_profile: aggregp, 
-                list_metric_profiles: metricp,
+                list_metric_profiles: this.extractListOfMetricsProfiles(metricp),
                 list_services: this.extractListOfServices(aggregp.metric_profile, metricp),
                 loading: false
             }))
@@ -125,7 +125,7 @@ class App extends Component {
                 .then(metricp => this.setState(
             {
                 aggregation_profile: empty_aggregation_profile,
-                list_metric_profiles: metricp,
+                list_metric_profiles: this.extractListOfMetricsProfiles(metricp),
                 list_services: [],
                 loading: false
             }))
@@ -139,6 +139,11 @@ class App extends Component {
             last_group_element.services[0]['name'] == 'dummy') {
             values.groups.pop()
         }
+
+        let match_profile = this.state.list_metric_profiles.filter((e) => 
+            values.metric_profile === e.name)
+
+        values.metric_profile = match_profile[0]
 
         alert(JSON.stringify(values, null, 2))
     }
@@ -262,7 +267,7 @@ class App extends Component {
                                     />)}
                             />
                             </section>
-                            <div class="submit-row">
+                            <div className="submit-row">
                                 <button id="submit-button" type="submit">Save</button>
                             </div>
                             </Form>
