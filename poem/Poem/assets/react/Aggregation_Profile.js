@@ -222,7 +222,7 @@ class App extends Component {
                                     data={this.insertSelectPlaceholder(this.logic_operations, '')}
                                     required={true}/> 
                                 <div className="help">
-                                    Logical operation that will be applied between defined service groups
+                                    Logical operation that will be applied between defined service flavour groups
                                 </div>
                             </div>
                             <div className="metric-profile">
@@ -234,7 +234,7 @@ class App extends Component {
                                     required={true}
                                 />
                                 <div className="help">
-                                   Metric profile associated to Aggregation profile. Service flavours defined in service groups originate from selected metric profile. 
+                                   Metric profile associated to Aggregation profile. Service flavours defined in service flavour groups originate from selected metric profile. 
                                 </div>
                             </div>
                             <div className="endpoint-group">
@@ -254,7 +254,7 @@ class App extends Component {
                                     letterSpacing: '0.5px', 
                                     textTransform: 'uppercase', 
                                     background: '#79AEC8'}}>
-                                Service groups
+                                Service flavour groups
                             </h2>
                             <FieldArray
                                 name="groups"
@@ -334,7 +334,7 @@ const Group = ({name, operation, services, list_operations, list_services, last_
                 <legend>
                     <Field
                         name={`groups.${groupindex}.name`}
-                        placeholder="Name of service group"
+                        placeholder="Name of service flavour group"
                         required={true}>
                     </Field>
                     <ButtonRemove
@@ -368,7 +368,7 @@ const Group = ({name, operation, services, list_operations, list_services, last_
                 onClick={() => insert(groupindex, {name: '', operation: '',
                                      services: [{name: '', operation: ''}]})}>
                 <FontAwesomeIcon icon={faPlus} color="#70bf2b"/>
-                &nbsp;&nbsp;&nbsp;&nbsp;Add new Service Group
+                &nbsp;&nbsp;&nbsp;&nbsp;Add new Service Flavour Group
             </div>
         </div> 
 
