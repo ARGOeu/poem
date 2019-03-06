@@ -113,6 +113,7 @@ class App extends Component {
         }
         else if (this.django_view === 'add') {
             let empty_aggregation_profile = {
+                id: '',
                 name: '',
                 metric_operation: '',
                 profile_operation: '',
@@ -163,6 +164,8 @@ class App extends Component {
             }).then(response => {
                 if (!response.ok) {
                     alert(`Error: ${response.status}, ${response.statusText}`)
+                } else {
+                    response.json().then(r => console.log(r))
                 }
             }).catch(err => console.log('Something went wrong: ' + err))
             ).catch(err => console.log('Something went wrong: ' + err))
@@ -195,6 +198,7 @@ class App extends Component {
                     <div>No profile loaded</div> :
                     <Formik
                         initialValues={{
+                            id: aggregation_profile.id,
                             name: aggregation_profile.name, 
                             metric_operation: aggregation_profile.metric_operation,
                             profile_operation: aggregation_profile.profile_operation,
@@ -291,6 +295,11 @@ class App extends Component {
                             </section>
                             <div className="submit-row">
                                 <button id="submit-button" type="submit">Save</button>
+                                <div className="wrap-delete-button">
+                                    <div className="delete-button">
+                                        Delete
+                                    </div>
+                                </div>
                             </div>
                             </Form>
                         )}

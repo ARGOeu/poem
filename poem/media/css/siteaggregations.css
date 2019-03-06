@@ -152,6 +152,29 @@ fieldset.services-fieldset > legend > select:hover {
     background-color: #5e889c;
 }
 
+.wrap-delete-button {
+    display:table;
+}
+
+.delete-button {
+    float: left;
+    background-color: #ba2121;
+    border: none;
+    color: white;
+    align: center;
+    border-radius: 4px;
+    display: table-cell;
+    vertical-align: middle;
+    padding: 8px 13px;
+    cursor: pointer;
+}
+
+.delete-button:hover {
+    background-color: #993333;
+    color: white;
+    border-radius: 4px;
+}
+
 .wrap-group-add {
     display: table;
 }
