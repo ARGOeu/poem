@@ -3,6 +3,7 @@ import { Formik, Field, FieldArray, Form } from 'formik';
 import FormikEffect from './FormikEffect.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlus, faTimes } from '@fortawesome/free-solid-svg-icons'
+import Popup from 'react-popup';
 
 const MetricProfileAPI = 'https://web-api-devel.argo.grnet.gr/api/v2/metric_profiles'
 const AggregationProfileAPI = 'https://web-api-devel.argo.grnet.gr/api/v2/aggregation_profiles'
@@ -15,7 +16,8 @@ class App extends Component {
 
         this.profile_id = props.django.apiid
         this.django_view = props.django.view
-        this.tenant_host = TokenAPI.replace('<tenant-host>', props.django.tenant_host)
+        this.tokenapi = TokenAPI.replace('<tenant-host>', props.django.tenant_host)
+        this.tenant_host = props.django.tenant_host
 
         this.state = {
             loading: false,
@@ -31,7 +33,7 @@ class App extends Component {
         this.endpoint_groups = ["servicegroups", "sites"]
     }
     fetchToken() {
-        return fetch(this.tenant_host)
+        return fetch(this.tokenapi)
             .then(response => response.json())
             .then(array => array[0]['token'])
             .catch(err => console.log('Something went wrong: ' + err))
@@ -185,9 +187,23 @@ class App extends Component {
                 if (!response.ok) {
                     alert(`Error: ${response.status}, ${response.statusText}`)
                 } else {
-                    response.json().then(r => console.log(r))
-                }
-            }).catch(err => console.log('Something went wrong: ' + err))
+                    response.json().then(r =>
+                        Popup.create(
+                            {
+                                title: null,
+                                content: r.status.message,
+                                buttons: {
+                                    right: [{
+                                        text: 'OK',
+                                        className: 'success',
+                                        action: () => {
+                                            window.location = `https://${this.tenant_host}/admin/poem/aggregation`
+                                            Popup.close()
+                                        }
+                                    }]
+                                }
+                            }))
+            }}).catch(err => console.log('Something went wrong: ' + err))
             ).catch(err => console.log('Something went wrong: ' + err))
     }
 
