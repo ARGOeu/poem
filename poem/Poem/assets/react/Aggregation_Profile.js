@@ -172,6 +172,25 @@ class App extends Component {
         }
     }
 
+    onDeleteHandle(idProfile) {
+        this.fetchToken().then(token => fetch(AggregationProfileAPI + '/' + idProfile, {
+                method: 'DELETE',
+                mode: 'cors',
+                cache: 'no-cache',
+                credentials: 'same-origin',
+                headers: {'Accept': 'application/json', 
+                          'Content-Type': 'application/json',
+                          'x-api-key': token},
+            }).then(response => {
+                if (!response.ok) {
+                    alert(`Error: ${response.status}, ${response.statusText}`)
+                } else {
+                    response.json().then(r => console.log(r))
+                }
+            }).catch(err => console.log('Something went wrong: ' + err))
+            ).catch(err => console.log('Something went wrong: ' + err))
+    }
+
     insertEmptyServiceForNoServices(groups) {
         groups.forEach(group => {
             if (group.services.length === 0) {
@@ -296,7 +315,8 @@ class App extends Component {
                             <div className="submit-row">
                                 <button id="submit-button" type="submit">Save</button>
                                 <div className="wrap-delete-button">
-                                    <div className="delete-button">
+                                    <div className="delete-button"
+                                        onClick={() => this.onDeleteHandle(props.values.id)}>
                                         Delete
                                     </div>
                                 </div>
