@@ -51,8 +51,6 @@ try:
     }
 
     ALLOWED_HOSTS = config.get('SECURITY', 'AllowedHosts')
-    CAFILE = config.get('SECURITY', 'CAFile')
-    CAPATH = config.get('SECURITY', 'CAPath')
     HOST_CERT = config.get('SECURITY', 'HostCert')
     HOST_KEY = config.get('SECURITY', 'HostKey')
     SECRETKEY_PATH = config.get('SECURITY', 'SecretKeyPath')
