@@ -8,7 +8,7 @@ import Popup from 'react-popup';
 const MetricProfileAPI = 'https://web-api-devel.argo.grnet.gr/api/v2/metric_profiles'
 const AggregationProfileAPI = 'https://web-api-devel.argo.grnet.gr/api/v2/aggregation_profiles'
 const TokenAPI = 'https://<tenant-host>/poem/api/v2/internal/tokens'
-
+const AggregationChangeListView = 'https://<tenant-host>/poem/admin/poem/aggregation'
 
 class App extends Component {
     constructor(props) {
@@ -17,7 +17,7 @@ class App extends Component {
         this.profile_id = props.django.apiid
         this.django_view = props.django.view
         this.tokenapi = TokenAPI.replace('<tenant-host>', props.django.tenant_host)
-        this.tenant_host = props.django.tenant_host
+        this.django_changelistview = AggregationChangeListView.replace('<tenant-host>', props.django.tenant_host) 
 
         this.state = {
             loading: false,
@@ -165,46 +165,66 @@ class App extends Component {
                 body: JSON.stringify(values),
             }).then(response => {
                 if (!response.ok) {
-                    alert(`Error: ${response.status}, ${response.statusText}`)
+                    Popup.alert(`Error: ${response.status}, ${response.statusText}`)
                 } else {
-                    response.json().then(r => console.log(r))
+                    response.json().then(r => Popup.alert(r.status.message))
                 }
-            }).catch(err => console.log('Something went wrong: ' + err))
-            ).catch(err => console.log('Something went wrong: ' + err))
+            }).catch(err => Popup.alert('Something went wrong: ' + err))
+            ).catch(err => Popup.alert('Something went wrong: ' + err))
         }
     }
 
     onDeleteHandle(idProfile) {
-        this.fetchToken().then(token => fetch(AggregationProfileAPI + '/' + idProfile, {
-                method: 'DELETE',
-                mode: 'cors',
-                cache: 'no-cache',
-                credentials: 'same-origin',
-                headers: {'Accept': 'application/json', 
-                          'Content-Type': 'application/json',
-                          'x-api-key': token},
-            }).then(response => {
-                if (!response.ok) {
-                    alert(`Error: ${response.status}, ${response.statusText}`)
-                } else {
-                    response.json().then(r =>
-                        Popup.create(
-                            {
-                                title: null,
-                                content: r.status.message,
-                                buttons: {
-                                    right: [{
-                                        text: 'OK',
-                                        className: 'success',
-                                        action: () => {
-                                            window.location = `https://${this.tenant_host}/admin/poem/aggregation`
-                                            Popup.close()
-                                        }
-                                    }]
-                                }
-                            }))
-            }}).catch(err => console.log('Something went wrong: ' + err))
-            ).catch(err => console.log('Something went wrong: ' + err))
+        Popup.create(
+            {
+                title: null,
+                content: 'Are you sure you want to delete Aggregation profile?',
+                buttons: {
+                    right: [{
+                        text: "Yes I'm sure",
+                        className: 'danger',
+                        action: () => {
+                            this.fetchToken().then(token => fetch(AggregationProfileAPI + '/' + idProfile, {
+                                    method: 'DELETE',
+                                    mode: 'cors',
+                                    cache: 'no-cache',
+                                    credentials: 'same-origin',
+                                    headers: {'Accept': 'application/json', 
+                                            'Content-Type': 'application/json',
+                                            'x-api-key': token},
+                                }).then(response => {
+                                    if (!response.ok) {
+                                        Popup.alert(`Error: ${response.status}, ${response.statusText}`)
+                                    } else {
+                                        response.json().then(r =>
+                                            Popup.create(
+                                                {
+                                                    title: null,
+                                                    content: r.status.message,
+                                                    buttons: {
+                                                        right: [{
+                                                            text: 'OK',
+                                                            action: () => {
+                                                                window.location = this.AggregationChangeListView 
+                                                                Popup.close()
+                                                            }
+                                                        }]
+                                                    }
+                                                }))
+                                }}).catch(err => Popup.alert('Something went wrong: ' + err))
+                                ).catch(err => Popup.alert('Something went wrong: ' + err))
+                            Popup.close()
+                        }
+                    }],
+                    left: [{
+                        text: "No, take me back",
+                        action: () => {
+                            Popup.close()
+                        }
+                    }]
+                }
+            }
+        )
     }
 
     insertEmptyServiceForNoServices(groups) {
