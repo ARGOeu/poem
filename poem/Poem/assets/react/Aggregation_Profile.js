@@ -7,7 +7,7 @@ import Popup from 'react-popup';
 
 const MetricProfileAPI = 'https://web-api-devel.argo.grnet.gr/api/v2/metric_profiles'
 const AggregationProfileAPI = 'https://web-api-devel.argo.grnet.gr/api/v2/aggregation_profiles'
-const TokenAPI = 'https://<tenant-host>/poem/api/v2/internal/tokens'
+const TokenAPI = 'https://<tenant-host>/poem/api/v2/internal/tokens/WEB-API'
 const AggregationChangeListView = 'https://<tenant-host>/poem/admin/poem/aggregation'
 
 class App extends Component {
@@ -35,7 +35,6 @@ class App extends Component {
     fetchToken() {
         return fetch(this.tokenapi)
             .then(response => response.json())
-            .then(array => array[0]['token'])
             .catch(err => console.log('Something went wrong: ' + err))
     }
 
@@ -167,10 +166,25 @@ class App extends Component {
                 if (!response.ok) {
                     Popup.alert(`Error: ${response.status}, ${response.statusText}`)
                 } else {
-                    response.json().then(r => Popup.alert(r.status.message))
+                    response.json().then(r => {
+                                            Popup.create(
+                                                {
+                                                    title: null,
+                                                    content: r.status.message,
+                                                    buttons: {
+                                                        right: [{
+                                                            text: 'OK',
+                                                            action: () => {
+                                                                window.location = this.django_changelistview
+                                                                Popup.close()
+                                                            }
+                                                        }]
+                                                    }
+                                                }
+                                            )
+                    }).catch(err => Popup.alert('Something went wrong: ' + err))
                 }
-            }).catch(err => Popup.alert('Something went wrong: ' + err))
-            ).catch(err => Popup.alert('Something went wrong: ' + err))
+            })).catch(err => Popup.alert('Something went wrong: ' + err))
         }
     }
 
@@ -205,7 +219,7 @@ class App extends Component {
                                                         right: [{
                                                             text: 'OK',
                                                             action: () => {
-                                                                window.location = this.AggregationChangeListView 
+                                                                window.location = this.django_changelistview
                                                                 Popup.close()
                                                             }
                                                         }]
