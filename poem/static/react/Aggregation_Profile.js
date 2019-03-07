@@ -165,7 +165,8 @@ class App extends Component {
             }).then(response => {
                 if (!response.ok) {
                     Popup.alert(`Error: ${response.status}, ${response.statusText}`)
-                } else {
+                } 
+                else {
                     response.json().then(r => {
                                             Popup.create(
                                                 {
@@ -185,6 +186,42 @@ class App extends Component {
                     }).catch(err => Popup.alert('Something went wrong: ' + err))
                 }
             })).catch(err => Popup.alert('Something went wrong: ' + err))
+        }
+        else if (this.django_view === 'change') {
+            this.fetchToken().then(token => fetch(AggregationProfileAPI + '/' + values.id, {
+                method: 'PUT',
+                mode: 'cors',
+                cache: 'no-cache',
+                credentials: 'same-origin',
+                headers: {'Accept': 'application/json', 
+                          'Content-Type': 'application/json',
+                          'x-api-key': token},
+                body: JSON.stringify(values),
+            }).then(response => {
+                if (!response.ok) {
+                    Popup.alert(`Error: ${response.status}, ${response.statusText}`)
+                }
+                else {
+                    response.json().then(r => {
+                                            Popup.create(
+                                                {
+                                                    title: null,
+                                                    content: r.status.message,
+                                                    buttons: {
+                                                        right: [{
+                                                            text: 'OK',
+                                                            action: () => {
+                                                                window.location = this.django_changelistview
+                                                                Popup.close()
+                                                            }
+                                                        }]
+                                                    }
+                                                }
+                                            )
+                    }).catch(err => Popup.alert('Something went wrong: ' + err))
+                }
+            }).catch(err => Popup.alert('Something went wrong: ' + err))
+            .catch(err => Popup.alert('Something went wrong: ' + err)))
         }
     }
 
