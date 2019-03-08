@@ -3,10 +3,16 @@ from rest_framework import serializers
 from Poem.poem import models
 
 
+class AggregationProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = ('name', 'apiid', 'groupname')
+        model = models.Aggregation
+
+
 class MetricInstanceSerializer(serializers.ModelSerializer):
     class Meta:
-        model = models.MetricInstance
         fields = ('service_flavour', 'metric')
+        model = models.MetricInstance
 
 
 class ProfileSerializer(serializers.ModelSerializer):

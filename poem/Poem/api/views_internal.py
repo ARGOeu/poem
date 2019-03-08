@@ -1,12 +1,14 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.authentication import SessionAuthentication
+from rest_framework import status
 
 from rest_framework_api_key import models as api_models
 
 from Poem.poem import models as poem_models
 
 from .views import NotFound
+from . import serializers
 
 
 class ListMetricsInGroup(APIView):
@@ -95,6 +97,18 @@ class ListGroupsForUser(APIView):
             return Response(results[group.lower()])
         else:
             return Response({'result': results})
+
+
+class ListAggregations(APIView):
+    authentication_classes= (SessionAuthentication,)
+
+    def post(self, request, format=None):
+        serializer = serializers.AggregationProfileSerializer
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class ListProbes(APIView):
     authentication_classes = (SessionAuthentication,)
