@@ -131,7 +131,7 @@ class App extends Component {
                 .then(([aggregp, metricp]) => this.setState(
             {
                 aggregation_profile: aggregp,
-                groups_field: null,
+                groups_field: '',
                 list_id_metric_profiles: this.extractListOfMetricsProfiles(metricp),
                 list_services: this.extractListOfServices(aggregp.metric_profile, metricp),
                 list_complete_metric_profiles: metricp,
@@ -155,7 +155,8 @@ class App extends Component {
                 .then(([metricp, usergroups]) => this.setState(
             {
                 aggregation_profile: empty_aggregation_profile,
-                groups_field: usergroups,
+                groups_field: '',
+                list_user_groups: usergroups,
                 list_id_metric_profiles: this.extractListOfMetricsProfiles(metricp),
                 list_complete_metric_profiles: metricp,
                 list_services: [],
@@ -283,7 +284,8 @@ class App extends Component {
 
     render() {
         const {aggregation_profile, list_id_metric_profiles,
-            list_complete_metric_profiles, groups_field, list_services, loading} = this.state
+            list_complete_metric_profiles, list_user_groups, groups_field,
+            list_services, loading} = this.state
 
         return (
             <div className="App">
@@ -296,7 +298,7 @@ class App extends Component {
                         initialValues={{
                             id: aggregation_profile.id,
                             name: aggregation_profile.name,
-                            groups_field: groups_field, 
+                            groups_field: this.django_view === 'add'? '' : groups_field, 
                             metric_operation: aggregation_profile.metric_operation,
                             profile_operation: aggregation_profile.profile_operation,
                             metric_profile: aggregation_profile.metric_profile.name,
@@ -374,7 +376,7 @@ class App extends Component {
                                 <Field 
                                     name="groups_field" 
                                     component={DropDown} 
-                                    data={this.insertSelectPlaceholder(groups_field, '')}
+                                    data={this.insertSelectPlaceholder(list_user_groups, '')}
                                     required={true}
                                 /> 
                                 <div className="help">
