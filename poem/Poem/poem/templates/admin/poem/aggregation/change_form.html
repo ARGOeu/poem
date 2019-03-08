@@ -7,8 +7,8 @@
   <div id="user-tools">
       {% trans 'Welcome,' %}
       <strong>{% firstof user.get_short_name user.get_username %}
-        {% if user.groupsofprofiles.count %}
-          ({% for group in user.groupsofprofiles.all %}{{ group.name }}{% if not forloop.last %},{% endif %}{% if forloop.last %}){% endif %}
+        {% if user.groupsofaggregations.count %}
+          ({% for group in user.groupsofaggregations.all %}{{ group.name }}{% if not forloop.last %},{% endif %}{% if forloop.last %}){% endif %}
           {% endfor %}
         {% endif %}
       </strong>.
