@@ -179,7 +179,12 @@ class AggregationAdmin(admin.ModelAdmin):
         return True
 
     def has_add_permission(self, request, obj=None):
-        return True
+        if request.user.is_superuser and GroupOfAggregations.objects.count():
+            return True
+        if request.user.is_authenticated and request.user.groupsofaggregations.count():
+            return True
+        else:
+            return False
 
     def changelist_view(self, request, extra_context=None):
         token = APIKey.objects.get(client_id="WEB-API")
