@@ -59,6 +59,29 @@ class ListUsers(APIView):
         return Response({'result': results})
 
 
+class ListGroupsForUser(APIView):
+    authentication_classes = (SessionAuthentication,)
+
+    def get(self, request, group=None):
+        user = request.user
+
+        groupsofaggregations = user.groupsofaggregations.all().values_list('name', flat=True)
+        results = {'aggregations': groupsofaggregations}
+
+        groupsofprofiles = user.groupsofprofiles.all().values_list('name', flat=True)
+        results.update({'profiles': groupsofprofiles})
+
+        groupsofprobes = user.groupsofprobes.all().values_list('name', flat=True)
+        results.update({'probes': groupsofprobes})
+
+        groupsofmetrics = user.groupsofmetrics.all().values_list('name', flat=True)
+        results.update({'metrics': groupsofmetrics})
+
+        if group:
+            return Response(results[group.lower()])
+        else:
+            return Response({'result': results})
+
 class ListProbes(APIView):
     authentication_classes = (SessionAuthentication,)
 
