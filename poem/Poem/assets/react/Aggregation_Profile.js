@@ -16,6 +16,7 @@ class App extends Component {
 
         this.profile_id = props.django.apiid
         this.django_view = props.django.view
+        this.namespace = props.django.tenant_schema
         this.tokenapi = TokenAPI.replace('<tenant-host>', props.django.tenant_host)
         this.django_changelistview = AggregationChangeListView.replace('<tenant-host>', props.django.tenant_host) 
 
@@ -179,8 +180,7 @@ class App extends Component {
             values.groups.pop()
         }
 
-        //TODO: fetch from DB schema
-        values.namespace = "egi"
+        values.namespace = this.namespace 
 
         let match_profile = this.state.list_id_metric_profiles.filter((e) => 
             values.metric_profile === e.name)

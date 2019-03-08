@@ -8,6 +8,7 @@ from django.core.exceptions import PermissionDenied
 from django.utils.translation import ugettext as _
 
 from Poem.poem.models import Aggregation, GroupOfAggregations
+from Poem.tenants.models import Tenant
 from rest_framework_api_key.models import APIKey
 
 import requests
@@ -210,9 +211,11 @@ class AggregationAdmin(admin.ModelAdmin):
 
     def add_view(self, request, form_url='', extra_context=None):
         extra_context = extra_context or {}
+        schema = Tenant.objects.get(domain_url=request.get_host()).schema_name
 
         props = {
             'tenant_host': request.get_host(),
+            'tenant_schema': schema,
             'view': 'add'
         }
         extra_context = {
@@ -225,12 +228,14 @@ class AggregationAdmin(admin.ModelAdmin):
 
     def change_view(self, request, object_id, form_url='', extra_context=None):
         extra_context = extra_context or {}
+        schema = Tenant.objects.get(domain_url=request.get_host()).schema_name
 
         aggregation = Aggregation.objects.get(id=object_id)
         if aggregation.apiid:
             props = {
                 'apiid': aggregation.apiid,
                 'tenant_host': request.get_host(),
+                'tenant_schema': schema,
                 'view': 'change'
             }
             extra_context = {
