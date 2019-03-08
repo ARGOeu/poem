@@ -8,6 +8,7 @@ import Popup from 'react-popup';
 const MetricProfileAPI = 'https://web-api-devel.argo.grnet.gr/api/v2/metric_profiles'
 const AggregationProfileAPI = 'https://web-api-devel.argo.grnet.gr/api/v2/aggregation_profiles'
 const TokenAPI = 'https://<tenant-host>/poem/api/v2/internal/tokens/WEB-API'
+const GroupsAPI = 'https://<tenant-host>/poem/api/v2/internal/groups/aggregations'
 const AggregationChangeListView = 'https://<tenant-host>/poem/admin/poem/aggregation'
 
 class App extends Component {
@@ -18,6 +19,7 @@ class App extends Component {
         this.django_view = props.django.view
         this.namespace = props.django.tenant_schema
         this.tokenapi = TokenAPI.replace('<tenant-host>', props.django.tenant_host)
+        this.groupsapi = GroupsAPI.replace('<tenant-host>', props.django.tenant_host)
         this.django_changelistview = AggregationChangeListView.replace('<tenant-host>', props.django.tenant_host) 
 
         this.state = {
@@ -36,6 +38,12 @@ class App extends Component {
 
     fetchToken() {
         return fetch(this.tokenapi)
+            .then(response => response.json())
+            .catch(err => console.log('Something went wrong: ' + err))
+    }
+
+    fetchUserGroups() {
+        return fetch(this.groupsapi)
             .then(response => response.json())
             .catch(err => console.log('Something went wrong: ' + err))
     }
@@ -122,7 +130,8 @@ class App extends Component {
                 Promise.all([this.fetchAggregationProfile(token, this.profile_id), this.fetchMetricProfiles(token)])
                 .then(([aggregp, metricp]) => this.setState(
             {
-                aggregation_profile: aggregp, 
+                aggregation_profile: aggregp,
+                groups_field: null,
                 list_id_metric_profiles: this.extractListOfMetricsProfiles(metricp),
                 list_services: this.extractListOfServices(aggregp.metric_profile, metricp),
                 list_complete_metric_profiles: metricp,
@@ -142,10 +151,11 @@ class App extends Component {
                 },
                 groups: []
             }
-            this.fetchToken().then(token => this.fetchMetricProfiles(token))
-                .then(metricp => this.setState(
+            this.fetchToken().then(token => Promise.all([this.fetchMetricProfiles(token), this.fetchUserGroups()]))
+                .then(([metricp, usergroups]) => this.setState(
             {
                 aggregation_profile: empty_aggregation_profile,
+                groups_field: usergroups,
                 list_id_metric_profiles: this.extractListOfMetricsProfiles(metricp),
                 list_complete_metric_profiles: metricp,
                 list_services: [],
@@ -273,7 +283,7 @@ class App extends Component {
 
     render() {
         const {aggregation_profile, list_id_metric_profiles,
-            list_complete_metric_profiles, list_services, loading} = this.state
+            list_complete_metric_profiles, groups_field, list_services, loading} = this.state
 
         return (
             <div className="App">
@@ -285,7 +295,8 @@ class App extends Component {
                     <Formik
                         initialValues={{
                             id: aggregation_profile.id,
-                            name: aggregation_profile.name, 
+                            name: aggregation_profile.name,
+                            groups_field: groups_field, 
                             metric_operation: aggregation_profile.metric_operation,
                             profile_operation: aggregation_profile.profile_operation,
                             metric_profile: aggregation_profile.metric_profile.name,
@@ -356,7 +367,19 @@ class App extends Component {
                                     component={DropDown} 
                                     data={this.insertSelectPlaceholder(this.endpoint_groups, '')}
                                     required={true}
-                                    /> 
+                                /> 
+                            </div>
+                            <div className="aggregation-groups">
+                                <label>Group: </label>
+                                <Field 
+                                    name="groups_field" 
+                                    component={DropDown} 
+                                    data={this.insertSelectPlaceholder(groups_field, '')}
+                                    required={true}
+                                /> 
+                                <div className="help">
+                                   Aggregation profile is a member of a given group. 
+                                </div>
                             </div>
                             <h2 
                                 style={{fontWeight: 400, 
