@@ -65,17 +65,31 @@ class ListGroupsForUser(APIView):
     def get(self, request, group=None):
         user = request.user
 
-        groupsofaggregations = user.groupsofaggregations.all().values_list('name', flat=True)
-        results = {'aggregations': groupsofaggregations}
+        if user.is_superuser:
+            groupsofaggregations = poem_models.GroupOfAggregations.objects.all().values_list('name', flat=True)
+            results = {'aggregations': groupsofaggregations}
 
-        groupsofprofiles = user.groupsofprofiles.all().values_list('name', flat=True)
-        results.update({'profiles': groupsofprofiles})
+            groupsofprofiles = poem_models.GroupOfProfiles.objects.all().values_list('name', flat=True)
+            results.update({'profiles': groupsofprofiles})
 
-        groupsofprobes = user.groupsofprobes.all().values_list('name', flat=True)
-        results.update({'probes': groupsofprobes})
+            groupsofprobes = poem_models.GroupOfProbes.objects.all().values_list('name', flat=True)
+            results.update({'probes': groupsofprobes})
 
-        groupsofmetrics = user.groupsofmetrics.all().values_list('name', flat=True)
-        results.update({'metrics': groupsofmetrics})
+            groupsofmetrics = poem_models.GroupOfMetrics.objects.all().values_list('name', flat=True)
+            results.update({'metrics': groupsofmetrics})
+
+        else:
+            groupsofaggregations = user.groupsofaggregations.all().values_list('name', flat=True)
+            results = {'aggregations': groupsofaggregations}
+
+            groupsofprofiles = user.groupsofprofiles.all().values_list('name', flat=True)
+            results.update({'profiles': groupsofprofiles})
+
+            groupsofprobes = user.groupsofprobes.all().values_list('name', flat=True)
+            results.update({'probes': groupsofprobes})
+
+            groupsofmetrics = user.groupsofmetrics.all().values_list('name', flat=True)
+            results.update({'metrics': groupsofmetrics})
 
         if group:
             return Response(results[group.lower()])
