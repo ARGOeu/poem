@@ -32,6 +32,7 @@ class App extends Component {
         this.logic_operations = ["OR", "AND"] 
         this.endpoint_groups = ["servicegroups", "sites"]
     }
+
     fetchToken() {
         return fetch(this.tokenapi)
             .then(response => response.json())
@@ -55,6 +56,22 @@ class App extends Component {
             .then(json => json['data'])
             .then(array => array[0])
             .catch(err => console.log('Something went wrong: ' + err))
+    }
+
+    sendToWebApi(token, url, method, values=null) {
+        return fetch(url, {
+            method: method,
+            mode: 'cors',
+            cache: 'no-cache',
+            credentials: 'same-origin',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'x-api-key': token
+            },
+            body: values? JSON.stringify(values) : null 
+            
+        })
     }
 
     extractListOfMetricsProfiles(allProfiles) {
@@ -136,6 +153,24 @@ class App extends Component {
         }
     }
 
+    popUpOkAndGoToChangeList(message) {
+        return Popup.create(
+            {
+                title: null,
+                content: message,
+                buttons: {
+                    right: [{
+                        text: 'OK',
+                        action: () => {
+                            window.location = this.django_changelistview
+                            Popup.close()
+                        }
+                    }]
+                }
+            }
+        )
+    }
+
     onSubmitHandle(values, actions) {
         let last_group_element = values.groups[values.groups.length - 1]
 
@@ -153,74 +188,37 @@ class App extends Component {
         values.metric_profile = match_profile[0]
 
         if (this.django_view === 'add') {
-            this.fetchToken().then(token => fetch(AggregationProfileAPI, {
-                method: 'POST',
-                mode: 'cors',
-                cache: 'no-cache',
-                credentials: 'same-origin',
-                headers: {'Accept': 'application/json', 
-                          'Content-Type': 'application/json',
-                          'x-api-key': token},
-                body: JSON.stringify(values),
-            }).then(response => {
-                if (!response.ok) {
-                    Popup.alert(`Error: ${response.status}, ${response.statusText}`)
-                } 
-                else {
-                    response.json().then(r => {
-                                            Popup.create(
-                                                {
-                                                    title: null,
-                                                    content: r.status.message,
-                                                    buttons: {
-                                                        right: [{
-                                                            text: 'OK',
-                                                            action: () => {
-                                                                window.location = this.django_changelistview
-                                                                Popup.close()
-                                                            }
-                                                        }]
-                                                    }
-                                                }
-                                            )
-                    }).catch(err => Popup.alert('Something went wrong: ' + err))
-                }
-            })).catch(err => Popup.alert('Something went wrong: ' + err))
+            this.fetchToken()
+            .then(token => 
+                this.sendToWebApi(token, AggregationProfileAPI, 'POST', values)
+                .then(response => {
+                    if (!response.ok) {
+                        Popup.alert(`Error: ${response.status}, ${response.statusText}`)
+                    } 
+                    else {
+                        response.json()
+                            .then(r => 
+                                this.popUpOkAndGoToChangeList(r.status.message))
+                            .catch(err => Popup.alert('Something went wrong: ' + err))
+                    }
+                }).catch(err => Popup.alert('Something went wrong: ' + err))
+            ).catch(err => Popup.alert('Something went wrong: ' + err))
         }
         else if (this.django_view === 'change') {
-            this.fetchToken().then(token => fetch(AggregationProfileAPI + '/' + values.id, {
-                method: 'PUT',
-                mode: 'cors',
-                cache: 'no-cache',
-                credentials: 'same-origin',
-                headers: {'Accept': 'application/json', 
-                          'Content-Type': 'application/json',
-                          'x-api-key': token},
-                body: JSON.stringify(values),
-            }).then(response => {
-                if (!response.ok) {
-                    Popup.alert(`Error: ${response.status}, ${response.statusText}`)
-                }
-                else {
-                    response.json().then(r => {
-                                            Popup.create(
-                                                {
-                                                    title: null,
-                                                    content: r.status.message,
-                                                    buttons: {
-                                                        right: [{
-                                                            text: 'OK',
-                                                            action: () => {
-                                                                window.location = this.django_changelistview
-                                                                Popup.close()
-                                                            }
-                                                        }]
-                                                    }
-                                                }
-                                            )
-                    }).catch(err => Popup.alert('Something went wrong: ' + err))
-                }
-            }).catch(err => Popup.alert('Something went wrong: ' + err))
+            this.fetchToken()
+            .then(token => 
+                this.sendToWebApi(token, AggregationProfileAPI + '/' + values.id, 'PUT', values)
+                .then(response => {
+                    if (!response.ok) {
+                        Popup.alert(`Error: ${response.status}, ${response.statusText}`)
+                    }
+                    else {
+                        response.json()
+                        .then(r => 
+                            this.popUpOkAndGoToChangeList(r.status.message))
+                        .catch(err => Popup.alert('Something went wrong: ' + err))
+                    }
+                }).catch(err => Popup.alert('Something went wrong: ' + err))
             .catch(err => Popup.alert('Something went wrong: ' + err)))
         }
     }
@@ -235,35 +233,17 @@ class App extends Component {
                         text: "Yes I'm sure",
                         className: 'danger',
                         action: () => {
-                            this.fetchToken().then(token => fetch(AggregationProfileAPI + '/' + idProfile, {
-                                    method: 'DELETE',
-                                    mode: 'cors',
-                                    cache: 'no-cache',
-                                    credentials: 'same-origin',
-                                    headers: {'Accept': 'application/json', 
-                                            'Content-Type': 'application/json',
-                                            'x-api-key': token},
-                                }).then(response => {
+                            this.fetchToken()
+                            .then(token => 
+                                this.sendToWebApi(token, AggregationProfileAPI + '/' + idProfile, 'DELETE')
+                                .then(response => {
                                     if (!response.ok) {
                                         Popup.alert(`Error: ${response.status}, ${response.statusText}`)
                                     } else {
-                                        response.json().then(r =>
-                                            Popup.create(
-                                                {
-                                                    title: null,
-                                                    content: r.status.message,
-                                                    buttons: {
-                                                        right: [{
-                                                            text: 'OK',
-                                                            action: () => {
-                                                                window.location = this.django_changelistview
-                                                                Popup.close()
-                                                            }
-                                                        }]
-                                                    }
-                                                }))
-                                }}).catch(err => Popup.alert('Something went wrong: ' + err))
-                                ).catch(err => Popup.alert('Something went wrong: ' + err))
+                                        response.json()
+                                        .then(r => this.popUpOkAndGoToChangeList(r.status.message))
+                                    }}).catch(err => Popup.alert('Something went wrong: ' + err)))
+                                .catch(err => Popup.alert('Something went wrong: ' + err))
                             Popup.close()
                         }
                     }],
