@@ -3,13 +3,16 @@ import { Formik, Field, FieldArray, Form } from 'formik';
 import FormikEffect from './FormikEffect.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlus, faTimes } from '@fortawesome/free-solid-svg-icons'
-import Popup from 'react-popup';
+import Cookies from 'universal-cookie'
+import Popup from 'react-popup'
 
 const MetricProfileAPI = 'https://web-api-devel.argo.grnet.gr/api/v2/metric_profiles'
 const AggregationProfileAPI = 'https://web-api-devel.argo.grnet.gr/api/v2/aggregation_profiles'
 const TokenAPI = 'https://<tenant-host>/poem/api/v2/internal/tokens/WEB-API'
 const GroupsAPI = 'https://<tenant-host>/poem/api/v2/internal/groups/aggregations'
+const AggregationsAPI = 'https://<tenant-host>/poem/api/v2/internal/aggregations/'
 const AggregationChangeListView = 'https://<tenant-host>/poem/admin/poem/aggregation'
+
 
 class App extends Component {
     constructor(props) {
@@ -19,6 +22,7 @@ class App extends Component {
         this.django_view = props.django.view
         this.namespace = props.django.tenant_schema
         this.tokenapi = TokenAPI.replace('<tenant-host>', props.django.tenant_host)
+        this.aggregationsapi = AggregationsAPI.replace('<tenant-host>', props.django.tenant_host)
         this.groupsapi = GroupsAPI.replace('<tenant-host>', props.django.tenant_host)
         this.django_changelistview = AggregationChangeListView.replace('<tenant-host>', props.django.tenant_host) 
 
@@ -67,6 +71,24 @@ class App extends Component {
             .catch(err => console.log('Something went wrong: ' + err))
     }
 
+    sendToDjango(url, method, values=null) {
+        const cookies = new Cookies()
+
+        return fetch(url, {
+            method: method,
+            mode: 'cors',
+            cache: 'no-cache',
+            credentials: 'same-origin',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRFToken': cookies.get('csrftoken'),
+                'Referer': 'same-origin'
+            },
+            body: values ? JSON.stringify(values) : null 
+        })
+    }
+
     sendToWebApi(token, url, method, values=null) {
         return fetch(url, {
             method: method,
@@ -78,7 +100,7 @@ class App extends Component {
                 'Content-Type': 'application/json',
                 'x-api-key': token
             },
-            body: values? JSON.stringify(values) : null 
+            body: values ? JSON.stringify(values) : null 
             
         })
     }
@@ -208,8 +230,16 @@ class App extends Component {
                     } 
                     else {
                         response.json()
-                            .then(r => 
-                                this.popUpOkAndGoToChangeList(r.status.message))
+                            .then(r => { 
+                                this.sendToDjango(this.aggregationsapi, 'POST', 
+                                    {
+                                        apiid: r.data.id, 
+                                        name: values.name, 
+                                        groupname: values.groups_field
+                                    })
+                                    .then(this.popUpOkAndGoToChangeList(r.status.message))
+                                    .catch(err => Popup.alert('Something went wrong: ' + err))
+                            })
                             .catch(err => Popup.alert('Something went wrong: ' + err))
                     }
                 }).catch(err => Popup.alert('Something went wrong: ' + err))
@@ -298,7 +328,7 @@ class App extends Component {
                         initialValues={{
                             id: aggregation_profile.id,
                             name: aggregation_profile.name,
-                            groups_field: this.django_view === 'add'? '' : groups_field, 
+                            groups_field: this.django_view === 'add' ? '' : groups_field, 
                             metric_operation: aggregation_profile.metric_operation,
                             profile_operation: aggregation_profile.profile_operation,
                             metric_profile: aggregation_profile.metric_profile.name,
