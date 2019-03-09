@@ -102,12 +102,28 @@ class ListGroupsForUser(APIView):
 class ListAggregations(APIView):
     authentication_classes= (SessionAuthentication,)
 
-    def post(self, request, format=None):
+    def post(self, request):
         serializer = serializers.AggregationProfileSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def get(self, request, aggregation_name=None):
+        if aggregation_name:
+            try:
+                aggregation = poem_models.Aggregation.objects.get(name=aggregation_name)
+                serializer = serializers.AggregationProfileSerializer(aggregation)
+                return Response(serializer.data)
+
+            except poem_models.Aggregation.DoesNotExist:
+                raise NotFound(status=404,
+                            detail='Aggregation not found')
+
+        else:
+            aggregations = poem_models.Aggregation.objects.all()
+            serializer = serializers.AggregationProfileSerializer(aggregations, many=True)
+            return Response(serializer.data)
 
 
 class ListProbes(APIView):

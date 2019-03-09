@@ -11,4 +11,5 @@ urlpatterns = [
     path('groups/<str:group>', views_internal.ListGroupsForUser.as_view()),
     path('probes/<str:probe_name>', views_internal.ListProbes.as_view()),
     path('aggregations/', views_internal.ListAggregations.as_view()),
+    path('aggregations/<str:aggregation_name>', views_internal.ListAggregations.as_view()),
 ]
