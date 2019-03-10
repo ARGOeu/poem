@@ -1,10 +1,10 @@
-import React, { Component } from 'react';
-import { Formik, Field, FieldArray, Form } from 'formik';
-import FormikEffect from './FormikEffect.js'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPlus, faTimes } from '@fortawesome/free-solid-svg-icons'
 import Cookies from 'universal-cookie'
+import FormikEffect from './FormikEffect.js'
 import Popup from 'react-popup'
+import React, { Component } from 'react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { Formik, Field, FieldArray, Form } from 'formik'
+import { faPlus, faTimes } from '@fortawesome/free-solid-svg-icons'
 
 const MetricProfileAPI = 'https://web-api-devel.argo.grnet.gr/api/v2/metric_profiles'
 const AggregationProfileAPI = 'https://web-api-devel.argo.grnet.gr/api/v2/aggregation_profiles'
