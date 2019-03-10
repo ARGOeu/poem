@@ -10,7 +10,7 @@ const MetricProfileAPI = 'https://web-api-devel.argo.grnet.gr/api/v2/metric_prof
 const AggregationProfileAPI = 'https://web-api-devel.argo.grnet.gr/api/v2/aggregation_profiles'
 const TokenAPI = 'https://<tenant-host>/poem/api/v2/internal/tokens/WEB-API'
 const GroupsAPI = 'https://<tenant-host>/poem/api/v2/internal/groups/aggregations'
-const AggregationsAPI = 'https://<tenant-host>/api/v2/internal/aggregations'
+const AggregationsAPI = 'https://<tenant-host>/poem/api/v2/internal/aggregations/'
 const AggregationChangeListView = 'https://<tenant-host>/poem/admin/poem/aggregation'
 
 
@@ -53,7 +53,7 @@ class App extends Component {
     }
 
     fetchAggregationGroup(aggregation_name) {
-        return fetch(this.aggregationsapi + '/' + aggregation_name)
+        return fetch(this.aggregationsapi + aggregation_name)
             .then(response => response.json())
             .then(json => json['groupname'])
             .catch(err => console.log('Something went wrong: ' + err))
@@ -343,7 +343,9 @@ class App extends Component {
                         initialValues={{
                             id: aggregation_profile.id,
                             name: aggregation_profile.name,
-                            groups_field: this.django_view === 'add' ? '' : groups_field, 
+                            groups_field: this.django_view === 'add' ? 
+                                            '' : 
+                                            groups_field, 
                             metric_operation: aggregation_profile.metric_operation,
                             profile_operation: aggregation_profile.profile_operation,
                             metric_profile: aggregation_profile.metric_profile.name,
@@ -421,7 +423,11 @@ class App extends Component {
                                 <Field 
                                     name="groups_field" 
                                     component={DropDown} 
-                                    data={this.insertSelectPlaceholder(list_user_groups, '')}
+                                    data={this.insertSelectPlaceholder(
+                                        this.django_view === 'change' ? 
+                                            [groups_field, ...list_user_groups] :
+                                            list_user_groups, ''
+                                    )}
                                     required={true}
                                 /> 
                                 <div className="help">
@@ -449,15 +455,37 @@ class App extends Component {
                                     />)}
                             />
                             </section>
-                            <div className="submit-row">
-                                <button id="submit-button" type="submit">Save</button>
-                                <div className="wrap-delete-button">
-                                    <div className="delete-button"
-                                        onClick={() => this.onDeleteHandle(props.values.id)}>
-                                        Delete
+                            {
+                                (this.django_view === 'change') ?
+                                    (list_user_groups.filter(group => group === groups_field).length) ?
+                                        <div className="submit-row">
+                                            <button id="submit-button" type="submit">Save</button>
+                                            <div className="wrap-delete-button">
+                                                <div className="delete-button"
+                                                    onClick={() => this.onDeleteHandle(props.values.id)}>
+                                                    Delete
+                                                </div>
+                                            </div>
+                                        </div>
+                                        :
+                                        <div className="submit-row">
+                                            <center>
+                                                This is a read-only instance, please
+                                                request the corresponding permissions
+                                                to perform any changes in this form. 
+                                            </center>
+                                        </div>
+                                :
+                                <div className="submit-row">
+                                    <button id="submit-button" type="submit">Save</button>
+                                    <div className="wrap-delete-button">
+                                        <div className="delete-button"
+                                            onClick={() => this.onDeleteHandle(props.values.id)}>
+                                            Delete
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            }
                             </Form>
                         )}
                     />
