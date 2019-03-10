@@ -35,6 +35,7 @@ class App extends Component {
         this.fetchMetricProfiles = this.fetchMetricProfiles.bind(this)
         this.fetchAggregationProfile = this.fetchAggregationProfile.bind(this)
         this.extractListOfMetricsProfiles = this.extractListOfMetricsProfiles.bind(this)
+        this.onDeleteHandle = this.onDeleteHandle.bind(this)
 
         this.logic_operations = ["OR", "AND"] 
         this.endpoint_groups = ["servicegroups", "sites"]
