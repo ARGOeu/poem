@@ -34,7 +34,8 @@
     "formik": "^1.5.1",
     "react": "^16.8.3",
     "react-dom": "^16.8.3",
-    "react-popup": "^0.10.0"
+    "react-popup": "^0.10.0",
+    "universal-cookie": "^3.0.7"
   },
   "bugs": {
     "url": "https://github.com/ARGOeu/poem/issues"

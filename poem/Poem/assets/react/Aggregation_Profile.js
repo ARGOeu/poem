@@ -1,14 +1,18 @@
-import React, { Component } from 'react';
-import { Formik, Field, FieldArray, Form } from 'formik';
+import Cookies from 'universal-cookie'
 import FormikEffect from './FormikEffect.js'
+import Popup from 'react-popup'
+import React, { Component } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { Formik, Field, FieldArray, Form } from 'formik'
 import { faPlus, faTimes } from '@fortawesome/free-solid-svg-icons'
-import Popup from 'react-popup';
 
 const MetricProfileAPI = 'https://web-api-devel.argo.grnet.gr/api/v2/metric_profiles'
 const AggregationProfileAPI = 'https://web-api-devel.argo.grnet.gr/api/v2/aggregation_profiles'
 const TokenAPI = 'https://<tenant-host>/poem/api/v2/internal/tokens/WEB-API'
+const GroupsAPI = 'https://<tenant-host>/poem/api/v2/internal/groups/aggregations'
+const AggregationsAPI = 'https://<tenant-host>/poem/api/v2/internal/aggregations/'
 const AggregationChangeListView = 'https://<tenant-host>/poem/admin/poem/aggregation'
+
 
 class App extends Component {
     constructor(props) {
@@ -16,7 +20,10 @@ class App extends Component {
 
         this.profile_id = props.django.apiid
         this.django_view = props.django.view
+        this.namespace = props.django.tenant_schema
         this.tokenapi = TokenAPI.replace('<tenant-host>', props.django.tenant_host)
+        this.aggregationsapi = AggregationsAPI.replace('<tenant-host>', props.django.tenant_host)
+        this.groupsapi = GroupsAPI.replace('<tenant-host>', props.django.tenant_host)
         this.django_changelistview = AggregationChangeListView.replace('<tenant-host>', props.django.tenant_host) 
 
         this.state = {
@@ -32,9 +39,23 @@ class App extends Component {
         this.logic_operations = ["OR", "AND"] 
         this.endpoint_groups = ["servicegroups", "sites"]
     }
+
     fetchToken() {
         return fetch(this.tokenapi)
             .then(response => response.json())
+            .catch(err => console.log('Something went wrong: ' + err))
+    }
+
+    fetchUserGroups() {
+        return fetch(this.groupsapi)
+            .then(response => response.json())
+            .catch(err => console.log('Something went wrong: ' + err))
+    }
+
+    fetchAggregationGroup(aggregation_name) {
+        return fetch(this.aggregationsapi + aggregation_name)
+            .then(response => response.json())
+            .then(json => json['groupname'])
             .catch(err => console.log('Something went wrong: ' + err))
     }
 
@@ -55,6 +76,40 @@ class App extends Component {
             .then(json => json['data'])
             .then(array => array[0])
             .catch(err => console.log('Something went wrong: ' + err))
+    }
+
+    sendToDjango(url, method, values=null) {
+        const cookies = new Cookies()
+
+        return fetch(url, {
+            method: method,
+            mode: 'cors',
+            cache: 'no-cache',
+            credentials: 'same-origin',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRFToken': cookies.get('csrftoken'),
+                'Referer': 'same-origin'
+            },
+            body: values ? JSON.stringify(values) : null 
+        })
+    }
+
+    sendToWebApi(token, url, method, values=null) {
+        return fetch(url, {
+            method: method,
+            mode: 'cors',
+            cache: 'no-cache',
+            credentials: 'same-origin',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'x-api-key': token
+            },
+            body: values ? JSON.stringify(values) : null 
+            
+        })
     }
 
     extractListOfMetricsProfiles(allProfiles) {
@@ -101,15 +156,24 @@ class App extends Component {
 
         if (this.django_view === 'change') {
             this.fetchToken().then(token => 
-                Promise.all([this.fetchAggregationProfile(token, this.profile_id), this.fetchMetricProfiles(token)])
-                .then(([aggregp, metricp]) => this.setState(
-            {
-                aggregation_profile: aggregp, 
-                list_id_metric_profiles: this.extractListOfMetricsProfiles(metricp),
-                list_services: this.extractListOfServices(aggregp.metric_profile, metricp),
-                list_complete_metric_profiles: metricp,
-                loading: false
-            }))
+                Promise.all([this.fetchAggregationProfile(token, this.profile_id), 
+                    this.fetchMetricProfiles(token),
+                    this.fetchUserGroups()])
+                .then(([aggregp, metricp, usergroups]) => {
+                    this.fetchAggregationGroup(aggregp.name)
+                    .then(group =>
+                        this.setState(
+                        {
+                            aggregation_profile: aggregp,
+                            groups_field: group,
+                            list_user_groups: usergroups,
+                            list_id_metric_profiles: this.extractListOfMetricsProfiles(metricp),
+                            list_services: this.extractListOfServices(aggregp.metric_profile, metricp),
+                            list_complete_metric_profiles: metricp,
+                            loading: false
+                        })
+                    )
+                })
             )
         }
         else if (this.django_view === 'add') {
@@ -124,16 +188,36 @@ class App extends Component {
                 },
                 groups: []
             }
-            this.fetchToken().then(token => this.fetchMetricProfiles(token))
-                .then(metricp => this.setState(
+            this.fetchToken().then(token => Promise.all([this.fetchMetricProfiles(token), this.fetchUserGroups()]))
+                .then(([metricp, usergroups]) => this.setState(
             {
                 aggregation_profile: empty_aggregation_profile,
+                groups_field: '',
+                list_user_groups: usergroups,
                 list_id_metric_profiles: this.extractListOfMetricsProfiles(metricp),
                 list_complete_metric_profiles: metricp,
                 list_services: [],
                 loading: false
             }))
         }
+    }
+
+    popUpOkAndGoToChangeList(message) {
+        return Popup.create(
+            {
+                title: null,
+                content: message,
+                buttons: {
+                    right: [{
+                        text: 'OK',
+                        action: () => {
+                            window.location = this.django_changelistview
+                            Popup.close()
+                        }
+                    }]
+                }
+            }
+        )
     }
 
     onSubmitHandle(values, actions) {
@@ -144,8 +228,7 @@ class App extends Component {
             values.groups.pop()
         }
 
-        //TODO: fetch from DB schema
-        values.namespace = "egi"
+        values.namespace = this.namespace 
 
         let match_profile = this.state.list_id_metric_profiles.filter((e) => 
             values.metric_profile === e.name)
@@ -153,74 +236,45 @@ class App extends Component {
         values.metric_profile = match_profile[0]
 
         if (this.django_view === 'add') {
-            this.fetchToken().then(token => fetch(AggregationProfileAPI, {
-                method: 'POST',
-                mode: 'cors',
-                cache: 'no-cache',
-                credentials: 'same-origin',
-                headers: {'Accept': 'application/json', 
-                          'Content-Type': 'application/json',
-                          'x-api-key': token},
-                body: JSON.stringify(values),
-            }).then(response => {
-                if (!response.ok) {
-                    Popup.alert(`Error: ${response.status}, ${response.statusText}`)
-                } 
-                else {
-                    response.json().then(r => {
-                                            Popup.create(
-                                                {
-                                                    title: null,
-                                                    content: r.status.message,
-                                                    buttons: {
-                                                        right: [{
-                                                            text: 'OK',
-                                                            action: () => {
-                                                                window.location = this.django_changelistview
-                                                                Popup.close()
-                                                            }
-                                                        }]
-                                                    }
-                                                }
-                                            )
-                    }).catch(err => Popup.alert('Something went wrong: ' + err))
-                }
-            })).catch(err => Popup.alert('Something went wrong: ' + err))
+            this.fetchToken()
+            .then(token => 
+                this.sendToWebApi(token, AggregationProfileAPI, 'POST', values)
+                .then(response => {
+                    if (!response.ok) {
+                        Popup.alert(`Error: ${response.status}, ${response.statusText}`)
+                    } 
+                    else {
+                        response.json()
+                            .then(r => { 
+                                this.sendToDjango(this.aggregationsapi, 'POST', 
+                                    {
+                                        apiid: r.data.id, 
+                                        name: values.name, 
+                                        groupname: values.groups_field
+                                    })
+                                    .then(this.popUpOkAndGoToChangeList(r.status.message))
+                                    .catch(err => Popup.alert('Something went wrong: ' + err))
+                            })
+                            .catch(err => Popup.alert('Something went wrong: ' + err))
+                    }
+                }).catch(err => Popup.alert('Something went wrong: ' + err))
+            ).catch(err => Popup.alert('Something went wrong: ' + err))
         }
         else if (this.django_view === 'change') {
-            this.fetchToken().then(token => fetch(AggregationProfileAPI + '/' + values.id, {
-                method: 'PUT',
-                mode: 'cors',
-                cache: 'no-cache',
-                credentials: 'same-origin',
-                headers: {'Accept': 'application/json', 
-                          'Content-Type': 'application/json',
-                          'x-api-key': token},
-                body: JSON.stringify(values),
-            }).then(response => {
-                if (!response.ok) {
-                    Popup.alert(`Error: ${response.status}, ${response.statusText}`)
-                }
-                else {
-                    response.json().then(r => {
-                                            Popup.create(
-                                                {
-                                                    title: null,
-                                                    content: r.status.message,
-                                                    buttons: {
-                                                        right: [{
-                                                            text: 'OK',
-                                                            action: () => {
-                                                                window.location = this.django_changelistview
-                                                                Popup.close()
-                                                            }
-                                                        }]
-                                                    }
-                                                }
-                                            )
-                    }).catch(err => Popup.alert('Something went wrong: ' + err))
-                }
-            }).catch(err => Popup.alert('Something went wrong: ' + err))
+            this.fetchToken()
+            .then(token => 
+                this.sendToWebApi(token, AggregationProfileAPI + '/' + values.id, 'PUT', values)
+                .then(response => {
+                    if (!response.ok) {
+                        Popup.alert(`Error: ${response.status}, ${response.statusText}`)
+                    }
+                    else {
+                        response.json()
+                        .then(r => 
+                            this.popUpOkAndGoToChangeList(r.status.message))
+                        .catch(err => Popup.alert('Something went wrong: ' + err))
+                    }
+                }).catch(err => Popup.alert('Something went wrong: ' + err))
             .catch(err => Popup.alert('Something went wrong: ' + err)))
         }
     }
@@ -235,35 +289,17 @@ class App extends Component {
                         text: "Yes I'm sure",
                         className: 'danger',
                         action: () => {
-                            this.fetchToken().then(token => fetch(AggregationProfileAPI + '/' + idProfile, {
-                                    method: 'DELETE',
-                                    mode: 'cors',
-                                    cache: 'no-cache',
-                                    credentials: 'same-origin',
-                                    headers: {'Accept': 'application/json', 
-                                            'Content-Type': 'application/json',
-                                            'x-api-key': token},
-                                }).then(response => {
+                            this.fetchToken()
+                            .then(token => 
+                                this.sendToWebApi(token, AggregationProfileAPI + '/' + idProfile, 'DELETE')
+                                .then(response => {
                                     if (!response.ok) {
                                         Popup.alert(`Error: ${response.status}, ${response.statusText}`)
                                     } else {
-                                        response.json().then(r =>
-                                            Popup.create(
-                                                {
-                                                    title: null,
-                                                    content: r.status.message,
-                                                    buttons: {
-                                                        right: [{
-                                                            text: 'OK',
-                                                            action: () => {
-                                                                window.location = this.django_changelistview
-                                                                Popup.close()
-                                                            }
-                                                        }]
-                                                    }
-                                                }))
-                                }}).catch(err => Popup.alert('Something went wrong: ' + err))
-                                ).catch(err => Popup.alert('Something went wrong: ' + err))
+                                        response.json()
+                                        .then(r => this.popUpOkAndGoToChangeList(r.status.message))
+                                    }}).catch(err => Popup.alert('Something went wrong: ' + err)))
+                                .catch(err => Popup.alert('Something went wrong: ' + err))
                             Popup.close()
                         }
                     }],
@@ -293,7 +329,8 @@ class App extends Component {
 
     render() {
         const {aggregation_profile, list_id_metric_profiles,
-            list_complete_metric_profiles, list_services, loading} = this.state
+            list_complete_metric_profiles, list_user_groups, groups_field,
+            list_services, loading} = this.state
 
         return (
             <div className="App">
@@ -305,7 +342,10 @@ class App extends Component {
                     <Formik
                         initialValues={{
                             id: aggregation_profile.id,
-                            name: aggregation_profile.name, 
+                            name: aggregation_profile.name,
+                            groups_field: this.django_view === 'add' ? 
+                                            '' : 
+                                            groups_field, 
                             metric_operation: aggregation_profile.metric_operation,
                             profile_operation: aggregation_profile.profile_operation,
                             metric_profile: aggregation_profile.metric_profile.name,
@@ -376,7 +416,23 @@ class App extends Component {
                                     component={DropDown} 
                                     data={this.insertSelectPlaceholder(this.endpoint_groups, '')}
                                     required={true}
-                                    /> 
+                                /> 
+                            </div>
+                            <div className="aggregation-groups">
+                                <label>Group: </label>
+                                <Field 
+                                    name="groups_field" 
+                                    component={DropDown} 
+                                    data={this.insertSelectPlaceholder(
+                                        this.django_view === 'change' ? 
+                                            [groups_field, ...list_user_groups] :
+                                            list_user_groups, ''
+                                    )}
+                                    required={true}
+                                /> 
+                                <div className="help">
+                                   Aggregation profile is a member of a given group. 
+                                </div>
                             </div>
                             <h2 
                                 style={{fontWeight: 400, 
@@ -399,15 +455,19 @@ class App extends Component {
                                     />)}
                             />
                             </section>
-                            <div className="submit-row">
-                                <button id="submit-button" type="submit">Save</button>
-                                <div className="wrap-delete-button">
-                                    <div className="delete-button"
-                                        onClick={() => this.onDeleteHandle(props.values.id)}>
-                                        Delete
-                                    </div>
-                                </div>
-                            </div>
+                            {
+                                (this.django_view === 'change') ?
+                                    (list_user_groups.filter(group => group === groups_field).length) ?
+                                        <SubmitRow 
+                                            ondelete={this.onDeleteHandle}
+                                            id={props.values.id}/>
+                                        :
+                                        <SubmitRow readonly={true}/>
+                                :
+                                <SubmitRow 
+                                    ondelete={this.onDeleteHandle}
+                                    id={props.values.id}/>
+                            }
                             </Form>
                         )}
                     />
@@ -415,6 +475,26 @@ class App extends Component {
             </div>
         );}
     }
+
+const SubmitRow = ({readonly=false, ondelete, id}) =>
+    (readonly) ?
+        <div className="submit-row">
+            <center>
+                This is a read-only instance, please
+                request the corresponding permissions
+                to perform any changes in this form. 
+            </center>
+        </div>
+    :
+    <div className="submit-row">
+        <button id="submit-button" type="submit">Save</button>
+        <div className="wrap-delete-button">
+            <div className="delete-button"
+                onClick={() => ondelete(id)}>
+                Delete
+            </div>
+        </div>
+    </div>
 
 
 const DropDown = ({field, data=[], prefix=""}) => 
