@@ -458,33 +458,15 @@ class App extends Component {
                             {
                                 (this.django_view === 'change') ?
                                     (list_user_groups.filter(group => group === groups_field).length) ?
-                                        <div className="submit-row">
-                                            <button id="submit-button" type="submit">Save</button>
-                                            <div className="wrap-delete-button">
-                                                <div className="delete-button"
-                                                    onClick={() => this.onDeleteHandle(props.values.id)}>
-                                                    Delete
-                                                </div>
-                                            </div>
-                                        </div>
+                                        <SubmitRow 
+                                            ondelete={this.onDeleteHandle}
+                                            id={props.values.id}/>
                                         :
-                                        <div className="submit-row">
-                                            <center>
-                                                This is a read-only instance, please
-                                                request the corresponding permissions
-                                                to perform any changes in this form. 
-                                            </center>
-                                        </div>
+                                        <SubmitRow readonly={true}/>
                                 :
-                                <div className="submit-row">
-                                    <button id="submit-button" type="submit">Save</button>
-                                    <div className="wrap-delete-button">
-                                        <div className="delete-button"
-                                            onClick={() => this.onDeleteHandle(props.values.id)}>
-                                            Delete
-                                        </div>
-                                    </div>
-                                </div>
+                                <SubmitRow 
+                                    ondelete={this.onDeleteHandle}
+                                    id={props.values.id}/>
                             }
                             </Form>
                         )}
@@ -493,6 +475,26 @@ class App extends Component {
             </div>
         );}
     }
+
+const SubmitRow = ({readonly=false, ondelete, id}) =>
+    (readonly) ?
+        <div className="submit-row">
+            <center>
+                This is a read-only instance, please
+                request the corresponding permissions
+                to perform any changes in this form. 
+            </center>
+        </div>
+    :
+    <div className="submit-row">
+        <button id="submit-button" type="submit">Save</button>
+        <div className="wrap-delete-button">
+            <div className="delete-button"
+                onClick={() => ondelete(id)}>
+                Delete
+            </div>
+        </div>
+    </div>
 
 
 const DropDown = ({field, data=[], prefix=""}) => 
