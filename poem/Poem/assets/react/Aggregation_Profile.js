@@ -10,7 +10,7 @@ const MetricProfileAPI = 'https://web-api-devel.argo.grnet.gr/api/v2/metric_prof
 const AggregationProfileAPI = 'https://web-api-devel.argo.grnet.gr/api/v2/aggregation_profiles'
 const TokenAPI = 'https://<tenant-host>/poem/api/v2/internal/tokens/WEB-API'
 const GroupsAPI = 'https://<tenant-host>/poem/api/v2/internal/groups/aggregations'
-const AggregationsAPI = 'https://<tenant-host>/poem/api/v2/internal/aggregations/'
+const AggregationsAPI = 'https://<tenant-host>/api/v2/internal/aggregations'
 const AggregationChangeListView = 'https://<tenant-host>/poem/admin/poem/aggregation'
 
 
@@ -49,6 +49,13 @@ class App extends Component {
     fetchUserGroups() {
         return fetch(this.groupsapi)
             .then(response => response.json())
+            .catch(err => console.log('Something went wrong: ' + err))
+    }
+
+    fetchAggregationGroup(aggregation_name) {
+        return fetch(this.aggregationsapi + '/' + aggregation_name)
+            .then(response => response.json())
+            .then(json => json['groupname'])
             .catch(err => console.log('Something went wrong: ' + err))
     }
 
@@ -149,16 +156,24 @@ class App extends Component {
 
         if (this.django_view === 'change') {
             this.fetchToken().then(token => 
-                Promise.all([this.fetchAggregationProfile(token, this.profile_id), this.fetchMetricProfiles(token)])
-                .then(([aggregp, metricp]) => this.setState(
-            {
-                aggregation_profile: aggregp,
-                groups_field: '',
-                list_id_metric_profiles: this.extractListOfMetricsProfiles(metricp),
-                list_services: this.extractListOfServices(aggregp.metric_profile, metricp),
-                list_complete_metric_profiles: metricp,
-                loading: false
-            }))
+                Promise.all([this.fetchAggregationProfile(token, this.profile_id), 
+                    this.fetchMetricProfiles(token),
+                    this.fetchUserGroups()])
+                .then(([aggregp, metricp, usergroups]) => {
+                    this.fetchAggregationGroup(aggregp.name)
+                    .then(group =>
+                        this.setState(
+                        {
+                            aggregation_profile: aggregp,
+                            groups_field: group,
+                            list_user_groups: usergroups,
+                            list_id_metric_profiles: this.extractListOfMetricsProfiles(metricp),
+                            list_services: this.extractListOfServices(aggregp.metric_profile, metricp),
+                            list_complete_metric_profiles: metricp,
+                            loading: false
+                        })
+                    )
+                })
             )
         }
         else if (this.django_view === 'add') {
