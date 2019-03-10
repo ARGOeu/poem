@@ -202,6 +202,10 @@ class AggregationAdmin(admin.ModelAdmin):
         if new_aggregations:
             Aggregation.objects.bulk_create(new_aggregations)
 
+        aggregations_deleted_onapi = profiles_db.difference(profiles_api)
+        for p in aggregations_deleted_onapi:
+            Aggregation.objects.get(apiid=p).delete()
+
         return super(AggregationAdmin, self).changelist_view(request, extra_context=extra_context)
 
     def add_view(self, request, form_url='', extra_context=None):
