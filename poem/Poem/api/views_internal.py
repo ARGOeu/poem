@@ -116,6 +116,16 @@ class ListAggregations(APIView):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    def put(self, request):
+        aggr = poem_models.Aggregation.objects.get(apiid=request.data['apiid'])
+        aggr.groupname = request.data['groupname']
+        aggr.save()
+
+        groupaggr = poem_models.GroupOfAggregations.objects.get(name=request.data['groupname'])
+        groupaggr.aggregations.add(aggr)
+
+        return Response(status=status.HTTP_201_CREATED)
+
     def get(self, request, aggregation_name=None):
         if aggregation_name:
             try:

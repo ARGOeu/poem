@@ -273,8 +273,16 @@ class App extends Component {
                     }
                     else {
                         response.json()
-                        .then(r => 
-                            this.popUpOkAndGoToChangeList(r.status.message))
+                            .then(r => {
+                                this.sendToDjango(this.aggregationsapi, 'PUT', 
+                                    {
+                                        apiid: values.id, 
+                                        name: values.name, 
+                                        groupname: values.groups_field
+                                    })
+                                    .then(this.popUpOkAndGoToChangeList(r.status.message))
+                                    .catch(err => Popup.alert('Something went wrong: ' + err))
+                            })
                         .catch(err => Popup.alert('Something went wrong: ' + err))
                     }
                 }).catch(err => Popup.alert('Something went wrong: ' + err))
