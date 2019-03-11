@@ -426,7 +426,10 @@ class App extends Component {
                                     component={DropDown} 
                                     data={this.insertSelectPlaceholder(
                                         this.django_view === 'change' ? 
-                                            [groups_field, ...list_user_groups] :
+                                            list_user_groups.indexOf(groups_field) > 0 ?
+                                                list_user_groups :
+                                                [groups_field, ...list_user_groups]
+                                            :
                                             list_user_groups, ''
                                     )}
                                     required={true}
@@ -476,6 +479,7 @@ class App extends Component {
             </div>
         );}
     }
+
 
 const SubmitRow = ({readonly=false, ondelete, id}) =>
     (readonly) ?
