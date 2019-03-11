@@ -168,6 +168,7 @@ class App extends Component {
                             aggregation_profile: aggregp,
                             groups_field: group,
                             list_user_groups: usergroups,
+                            write_perm: usergroups.indexOf(group) >= 0,
                             list_id_metric_profiles: this.extractListOfMetricsProfiles(metricp),
                             list_services: this.extractListOfServices(aggregp.metric_profile, metricp),
                             list_complete_metric_profiles: metricp,
@@ -195,6 +196,7 @@ class App extends Component {
                 aggregation_profile: empty_aggregation_profile,
                 groups_field: '',
                 list_user_groups: usergroups,
+                write_perm: true,
                 list_id_metric_profiles: this.extractListOfMetricsProfiles(metricp),
                 list_complete_metric_profiles: metricp,
                 list_services: [],
@@ -331,7 +333,7 @@ class App extends Component {
     render() {
         const {aggregation_profile, list_id_metric_profiles,
             list_complete_metric_profiles, list_user_groups, groups_field,
-            list_services, loading} = this.state
+            list_services, write_perm, loading} = this.state
 
         return (
             <div className="App">
@@ -422,11 +424,11 @@ class App extends Component {
                             <div className="aggregation-groups">
                                 <label>Group: </label>
                                 <Field 
-                                    name="groups_field" 
+                                    name="groups_field"
                                     component={DropDown} 
                                     data={this.insertSelectPlaceholder(
-                                        this.django_view === 'change' ? 
-                                            list_user_groups.indexOf(groups_field) > 0 ?
+                                        (this.django_view === 'change') ? 
+                                            (write_perm) ?
                                                 list_user_groups :
                                                 [groups_field, ...list_user_groups]
                                             :
@@ -461,7 +463,7 @@ class App extends Component {
                             </section>
                             {
                                 (this.django_view === 'change') ?
-                                    (list_user_groups.filter(group => group === groups_field).length) ?
+                                    (write_perm) ?
                                         <SubmitRow 
                                             ondelete={this.onDeleteHandle}
                                             id={props.values.id}/>
