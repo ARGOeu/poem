@@ -458,6 +458,7 @@ class App extends Component {
                                         list_services={this.insertSelectPlaceholder(list_services, '')}
                                         list_operations={this.insertSelectPlaceholder(this.logic_operations, '')}
                                         last_service_operation={this.insertOperationFromPrevious}
+                                        write_perm={write_perm}
                                     />)}
                             />
                             </section>
@@ -526,7 +527,7 @@ const ButtonRemove = ({label, index=0, operation=f=>f}) =>
     </button>
 
 
-const GroupList = ({name, form, list_services, list_operations, last_service_operation, insert}) =>
+const GroupList = ({name, form, list_services, list_operations, last_service_operation, write_perm, insert}) =>
     <div className="groups"> 
     {
         form.values[name].map((group, i) =>
@@ -542,6 +543,7 @@ const GroupList = ({name, form, list_services, list_operations, last_service_ope
                         list_services={list_services}
                         list_operations={list_operations}
                         last_service_operation={last_service_operation}
+                        write_perm={write_perm}
                         groupindex={i}
                         last={i === form.values[name].length - 1}
                     />
@@ -552,7 +554,7 @@ const GroupList = ({name, form, list_services, list_operations, last_service_ope
     </div>
 
 
-const Group = ({name, operation, services, list_operations, list_services, last_service_operation, form, groupindex, remove, insert, last}) =>
+const Group = ({name, operation, services, list_operations, list_services, last_service_operation, write_perm, form, groupindex, remove, insert, last}) =>
     (!last) ?
         <div className="group" key={groupindex}>
             <fieldset className="groups-fieldset">
@@ -565,7 +567,7 @@ const Group = ({name, operation, services, list_operations, list_services, last_
                     <ButtonRemove
                         label="X"
                         index={groupindex}
-                        operation={remove}/>
+                        operation={(write_perm) ? remove: null}/>
                 </legend>
                 <FieldArray
                     name={`groups.${groupindex}`}
@@ -590,8 +592,13 @@ const Group = ({name, operation, services, list_operations, list_services, last_
     :
         <div className="wrap-group-add">
             <div className="group-add"
-                onClick={() => insert(groupindex, {name: '', operation: '',
-                                     services: [{name: '', operation: ''}]})}>
+                onClick={() => {
+                        (write_perm) ?
+                            insert(groupindex, {name: '', operation: '',
+                                services: [{name: '', operation: ''}]})
+                        :
+                        null
+                }}>
                 <FontAwesomeIcon icon={faPlus} color="#70bf2b"/>
                 &nbsp;&nbsp;&nbsp;&nbsp;Add new Service Flavour Group
             </div>
