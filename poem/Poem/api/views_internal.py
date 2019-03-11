@@ -104,9 +104,16 @@ class ListAggregations(APIView):
 
     def post(self, request):
         serializer = serializers.AggregationProfileSerializer(data=request.data)
+
         if serializer.is_valid():
             serializer.save()
+
+            groupaggr = poem_models.GroupOfAggregations.objects.get(name=request.data['groupname'])
+            aggr = poem_models.Aggregation.objects.get(apiid=request.data['apiid'])
+            groupaggr.aggregations.add(aggr)
+
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def get(self, request, aggregation_name=None):
