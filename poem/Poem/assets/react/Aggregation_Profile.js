@@ -6,13 +6,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Formik, Field, FieldArray, Form } from 'formik'
 import { faPlus, faTimes } from '@fortawesome/free-solid-svg-icons'
 
-const MetricProfileAPI = 'https://web-api-devel.argo.grnet.gr/api/v2/metric_profiles'
-const AggregationProfileAPI = 'https://web-api-devel.argo.grnet.gr/api/v2/aggregation_profiles'
-const TokenAPI = 'https://<tenant-host>/poem/api/v2/internal/tokens/WEB-API'
-const GroupsAPI = 'https://<tenant-host>/poem/api/v2/internal/groups/aggregations'
-const AggregationsAPI = 'https://<tenant-host>/poem/api/v2/internal/aggregations/'
-const AggregationChangeListView = 'https://<tenant-host>/poem/admin/poem/aggregation'
-
 
 class App extends Component {
     constructor(props) {
@@ -21,10 +14,12 @@ class App extends Component {
         this.profile_id = props.django.apiid
         this.django_view = props.django.view
         this.namespace = props.django.tenant_schema
-        this.tokenapi = TokenAPI.replace('<tenant-host>', props.django.tenant_host)
-        this.aggregationsapi = AggregationsAPI.replace('<tenant-host>', props.django.tenant_host)
-        this.groupsapi = GroupsAPI.replace('<tenant-host>', props.django.tenant_host)
-        this.django_changelistview = AggregationChangeListView.replace('<tenant-host>', props.django.tenant_host) 
+        this.webapimetric = props.django.webapimetric
+        this.webapiaggregation = props.django.webapiaggregation
+        this.tokenapi = props.django.tokenapi
+        this.aggregationsapi = props.django.aggregationsapi 
+        this.groupsapi = props.django.groupsapi 
+        this.django_changelistview =  props.django.aggregationschangelist
 
         this.state = {
             loading: false,
@@ -61,7 +56,7 @@ class App extends Component {
     }
 
     fetchMetricProfiles(token) {
-        return fetch(MetricProfileAPI, 
+        return fetch(this.webapimetric,
             {headers: {"Accept": "application/json",
                 "x-api-key": token}})
             .then(response => response.json())
@@ -70,7 +65,7 @@ class App extends Component {
     }
 
     fetchAggregationProfile(token, idProfile) {
-        return fetch(AggregationProfileAPI + '/' + idProfile, 
+        return fetch(this.webapiaggregation + '/' + idProfile, 
             {headers: {"Accept": "application/json",
                  "x-api-key": token}})
             .then(response => response.json())
@@ -241,7 +236,7 @@ class App extends Component {
         if (this.django_view === 'add') {
             this.fetchToken()
             .then(token => 
-                this.sendToWebApi(token, AggregationProfileAPI, 'POST', values)
+                this.sendToWebApi(token, this.webapiaggregation, 'POST', values)
                 .then(response => {
                     if (!response.ok) {
                         Popup.alert(`Error: ${response.status}, ${response.statusText}`)
@@ -266,7 +261,7 @@ class App extends Component {
         else if (this.django_view === 'change') {
             this.fetchToken()
             .then(token => 
-                this.sendToWebApi(token, AggregationProfileAPI + '/' + values.id, 'PUT', values)
+                this.sendToWebApi(token, this.webapiaggregation + '/' + values.id, 'PUT', values)
                 .then(response => {
                     if (!response.ok) {
                         Popup.alert(`Error: ${response.status}, ${response.statusText}`)
@@ -302,7 +297,7 @@ class App extends Component {
                         action: () => {
                             this.fetchToken()
                             .then(token => 
-                                this.sendToWebApi(token, AggregationProfileAPI + '/' + idProfile, 'DELETE')
+                                this.sendToWebApi(token, this.webapiaggregation + '/' + idProfile, 'DELETE')
                                 .then(response => {
                                     if (!response.ok) {
                                         Popup.alert(`Error: ${response.status}, ${response.statusText}`)
