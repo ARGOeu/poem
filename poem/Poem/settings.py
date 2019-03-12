@@ -54,6 +54,8 @@ try:
     HOST_CERT = config.get('SECURITY', 'HostCert')
     HOST_KEY = config.get('SECURITY', 'HostKey')
     SECRETKEY_PATH = config.get('SECURITY', 'SecretKeyPath')
+    WEBAPI_METRIC = config.get('WEBAPI', 'MetricProfile')
+    WEBAPI_AGGREGATION = config.get('WEBAPI', 'AggregationProfile')
 
 
 except NoSectionError as e:
