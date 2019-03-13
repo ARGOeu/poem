@@ -260,6 +260,11 @@ div.endpoint-group {
     padding: 10px;
 }
 
+div.aggregation-groups {
+    border-bottom: 1px solid #eee;
+    padding: 10px;
+}
+
 div > label {
     width: 160px;
     float: left;
