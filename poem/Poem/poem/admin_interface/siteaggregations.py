@@ -6,10 +6,12 @@ from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied
 from django.utils.translation import ugettext as _
+from django.urls import reverse
 
 from Poem.poem.models import Aggregation, GroupOfAggregations
 from Poem.tenants.models import Tenant
 from rest_framework_api_key.models import APIKey
+from Poem.settings import WEBAPI_AGGREGATION, WEBAPI_METRIC
 
 import requests
 
@@ -191,7 +193,7 @@ class AggregationAdmin(admin.ModelAdmin):
 
         headers, payload = dict(), dict()
         headers = {'Accept': 'application/json', 'x-api-key': token.token}
-        response = requests.get('https://web-api-devel.argo.grnet.gr/api/v2/aggregation_profiles',
+        response = requests.get(WEBAPI_AGGREGATION,
                                 headers=headers,
                                 timeout=180)
         response.raise_for_status()
@@ -221,7 +223,21 @@ class AggregationAdmin(admin.ModelAdmin):
         props = {
             'tenant_host': request.get_host(),
             'tenant_schema': schema,
-            'view': 'add'
+            'view': 'add',
+            'webapimetric': WEBAPI_METRIC,
+            'webapiaggregation': WEBAPI_AGGREGATION,
+            'tokenapi': '{0}://{1}{2}WEB-API'.format(request.scheme,
+                                                     request.get_host(),
+                                                     reverse('poemapi:internal:tokens')),
+            'aggregationsapi': '{0}://{1}{2}'.format(request.scheme,
+                                                     request.get_host(),
+                                                     reverse('poemapi:internal:aggregations')),
+            'groupsapi': '{0}://{1}{2}aggregations'.format(request.scheme,
+                                                           request.get_host(),
+                                                           reverse('poemapi:internal:groups')),
+            'aggregationschangelist': '{0}://{1}{2}'.format(request.scheme,
+                                                            request.get_host(),
+                                                            reverse('admin:poem_aggregation_changelist'))
         }
         extra_context = {
             'props': props
@@ -241,7 +257,21 @@ class AggregationAdmin(admin.ModelAdmin):
                 'apiid': aggregation.apiid,
                 'tenant_host': request.get_host(),
                 'tenant_schema': schema,
-                'view': 'change'
+                'view': 'change',
+                'webapimetric': WEBAPI_METRIC,
+                'webapiaggregation': WEBAPI_AGGREGATION,
+                'tokenapi': '{0}://{1}{2}WEB-API'.format(request.scheme,
+                                                         request.get_host(),
+                                                         reverse('poemapi:internal:tokens')),
+                'aggregationsapi': '{0}://{1}{2}'.format(request.scheme,
+                                                         request.get_host(),
+                                                         reverse('poemapi:internal:aggregations')),
+                'groupsapi': '{0}://{1}{2}aggregations'.format(request.scheme,
+                                                               request.get_host(),
+                                                               reverse('poemapi:internal:groups')),
+                'aggregationschangelist': '{0}://{1}{2}'.format(request.scheme,
+                                                                request.get_host(),
+                                                                reverse('admin:poem_aggregation_changelist')),
             }
             extra_context = {
                 'props': props
