@@ -116,7 +116,11 @@ class ProbeAddForm(ModelForm):
     adds media and does basic sanity checking for input.
     """
     new_version = BooleanField(help_text='Create version for changes', required=False, initial=True)
-    update_metric = BooleanField(help_text='Update associated metrics\' version', required=False, initial=True)
+    update_metric = BooleanField(
+        help_text='Update associated metrics\' version',
+        required=False,
+        initial=False
+    )
 
     name = CharField(help_text='Name of this probe.',
                      max_length=100,
@@ -172,6 +176,11 @@ class ProbeChangeForm(ProbeAddForm):
                      max_length=100,
                      widget=TextInput(attrs={'maxlength': 100, 'size': 45, 'readonly': 'readonly'}),
                      label='Name')
+    update_metric = BooleanField(
+        help_text='Update associated metrics\' version',
+        required=False,
+        initial=True
+    )
 
 
 class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
@@ -285,6 +294,8 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
             obj.user = request.user.username
             if form.cleaned_data['new_version'] and change or not change:
                 obj.save()
+                if form.cleaned_data['update_metric']:
+                    post_revision_commit.connect(update_metric)
                 return
             elif not form.cleaned_data['new_version'] and change:
                 version = Version.objects.get_for_object(obj)
@@ -376,55 +387,61 @@ reversion.register(Probe, exclude=["nameversion", "datetime"])
 def update_metric(revision, sender, signal, versions, **kwargs):
     version2 = versions[0]
     fields2 = json.loads(version2.serialized_data)[0]['fields']
-    if version2.content_type_id == ContentType.objects.get_for_model(Probe).id \
-            and fields2['update_metric']:
-            version1 = Version.objects.get_for_object(Probe.objects.get(
-                id=version2.object_id))[1]
-            # getting old probeversion from the second entry in VersionQuerySet
-            fields1 = json.loads(version1.serialized_data)[0]['fields']
-            old_probeversion = u'%s (%s)' % (fields1['name'], fields1['version'])
-            # getting new probeversion from the first entry in VersionQuerySet
-            new_probeversion = u'%s (%s)' % (fields2['name'], fields2['version'])
-            metric_pk = Metric.objects.filter(
-                probeversion=old_probeversion).values_list('id', flat=True)
-            ct = ContentType.objects.get_for_model(Metric)
-            vers = list()
-            for pk in metric_pk:
-                instance = Metric.objects.get(id=pk)
-                instance.probeversion = new_probeversion
-                instance.probekey = version2
-                instance.save()
-                LogEntry.objects.log_action(
-                    user_id=revision.user_id,
-                    content_type_id=ct.id,
-                    object_id=pk,
-                    object_repr=instance.__str__(),
-                    action_flag=CHANGE,
-                    change_message='Changed probeversion.'
-                )
-                metric_ver = Version.objects.filter(object_id=pk,
-                                                    content_type_id=ct.id)
-                rev = Revision(date_created=revision.date_created,
-                               user_id=revision.user_id,
-                               comment='[{"changed": {"fields": ['
-                                       '"probeversion"]}}]')
-                ver = Version(object_id=str(instance.id),
-                              content_type_id=ct.id,
-                              format=metric_ver[0].format,
-                              serialized_data=metric_ver[0].serialized_data,
-                              object_repr=metric_ver[0].object_repr,
-                              db='default')
-                rev.save()
-                Revision.objects.filter(pk=rev.id).update(
-                    date_created=revision.date_created)
-                ver.revision = rev
-                data = json.loads(metric_ver[0].serialized_data)[0]
-                data['fields']['probeversion'] = new_probeversion
-                data['fields']['probekey'] = version2.id
-                ver.serialized_data = json.dumps([data])
-                vers.append(ver)
+    if version2.content_type_id == ContentType.objects.get_for_model(Probe).id:
+        version1 = Version.objects.get_for_object(
+            Probe.objects.get(id=version2.object_id)
+        )[1]
 
-            Version.objects.bulk_create(vers)
+        # getting old probeversion from the second entry in VersionQuerySet
+        fields1 = json.loads(version1.serialized_data)[0]['fields']
+        old_probeversion = u'%s (%s)' % (fields1['name'], fields1['version'])
 
+        # getting new probeversion from the first entry in VersionQuerySet
+        new_probeversion = u'%s (%s)' % (fields2['name'], fields2['version'])
 
-post_revision_commit.connect(update_metric)
+        metric_pk = Metric.objects.filter(
+            probeversion=old_probeversion
+        ).values_list('id', flat=True)
+        ct = ContentType.objects.get_for_model(Metric)
+
+        vers = list()
+        for pk in metric_pk:
+            instance = Metric.objects.get(id=pk)
+            instance.probeversion = new_probeversion
+            instance.probekey = version2
+            instance.save()
+            LogEntry.objects.log_action(
+                user_id=revision.user_id,
+                content_type_id=ct.id,
+                object_id=pk,
+                object_repr=instance.__str__(),
+                action_flag=CHANGE,
+                change_message='Changed probeversion.'
+            )
+            metric_ver = Version.objects.filter(object_id=pk,
+                                                content_type_id=ct.id)
+
+            rev = Revision(date_created=revision.date_created,
+                           user_id=revision.user_id,
+                           comment='[{"changed": {"fields": ['
+                                   '"probeversion"]}}]')
+
+            ver = Version(object_id=str(instance.id),
+                          content_type_id=ct.id,
+                          format=metric_ver[0].format,
+                          serialized_data=metric_ver[0].serialized_data,
+                          object_repr=metric_ver[0].object_repr,
+                          db='default')
+            rev.save()
+
+            Revision.objects.filter(pk=rev.id).update(
+                date_created=revision.date_created
+            )
+            ver.revision = rev
+            data = json.loads(metric_ver[0].serialized_data)[0]
+            data['fields']['probeversion'] = new_probeversion
+            data['fields']['probekey'] = version2.id
+            ver.serialized_data = json.dumps([data])
+            vers.append(ver)
+
+        Version.objects.bulk_create(vers)
