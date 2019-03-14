@@ -64,18 +64,30 @@ def main():
                 continue
 
             voindb = set([vo.name for vo in models.VO.objects.all()])
-            if len(voindb) != len(vos):
-                svos = set([vo for vo in vos])
-                if len(voindb) < len(vos):
-                    for vo in svos.difference(voindb):
-                        models.VO.objects.create(name=vo)
-                    logger.info("%s: Added %d VO"
-                                % (schema.upper(),(len(vos) - len(voindb))))
-                elif len(voindb) > len(vos):
-                    for vo in voindb.difference(svos):
-                        models.VO.objects.filter(name=vo).delete()
-                    logger.info("%s: Deleted %d VO"
-                                % (schema.upper(), (len(voindb) - len(vos))))
+            svos = set([vo for vo in vos])
+
+            if voindb != svos:
+                try:
+                    if len(svos.difference(voindb)) > 0:
+                        for vo in svos.difference(voindb):
+                            models.VO.objects.create(name=vo)
+                        logger.info(
+                            "%s: Added %d VO"
+                            % (schema.upper(), len(svos.difference(voindb)))
+                        )
+
+                    if len(voindb.difference(svos)) > 0:
+                        for vo in voindb.difference(svos):
+                            models.VO.objects.filter(name=vo).delete()
+                        logger.info(
+                            "%s: Deleted %d VO"
+                            % (schema.upper(), len(voindb.difference(svos)))
+                        )
+                except Exception as e:
+                    logger.error(
+                        "%s: database operations failed - %s"
+                        % (schema.upper(), e)
+                    )
             else:
                 logger.info("%s: VO database is up to date" % schema.upper())
 
