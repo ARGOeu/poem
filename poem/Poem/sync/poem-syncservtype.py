@@ -10,6 +10,8 @@ import logging
 import os
 import requests
 
+from requests.auth import HTTPBasicAuth
+
 from Poem import settings
 from Poem.poem import models
 from Poem.tenants.models import Tenant
@@ -63,22 +65,22 @@ def main():
 
             url = data['SERVICETYPE_URL']
 
-            headers = dict()
-            if data['HTTPAUTH']:
-                userpass_ascii = '{0}:{1}'.format(data['HTTPUSER'],
-                                                  data['HTTPPASS'])
-                userpass = base64.b64encode(userpass_ascii.encode())
-                headers = {'Authorization': 'Basic ' + userpass.decode()}
-
             try:
-                if url.startswith('https'):
-                    req = requests.get(
-                        url,
-                        cert=(settings.HOST_CERT, settings.HOST_KEY),
-                        timeout=60
-                    )
+                if data['HTTPAUTH']:
+                    req = requests.get(url, cert=(settings.HOST_CERT,
+                                                 settings.HOST_KEY),
+                                      auth=(data['HTTPUSER'], data['HTTPPASS']),
+                                      timeout=60)
+
                 else:
-                    req = requests.get(url, headers=headers)
+                    if url.startswith('https'):
+                        req = requests.get(
+                            url,
+                            cert=(settings.HOST_CERT, settings.HOST_KEY),
+                            timeout=60
+                        )
+                    else:
+                        req = requests.get(url)
 
                 ret = req.content
 
@@ -107,7 +109,6 @@ def main():
                     for child_element in element.getchildren():
                         Element_List[str(child_element.tag).lower()] = (child_element.text)
                 Feed_List.append(Element_List)
-
 
             sfindb = set(
                 [
