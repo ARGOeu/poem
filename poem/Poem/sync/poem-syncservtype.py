@@ -128,30 +128,21 @@ def main():
                 ]
             )
             if sfindb != sfs:
-                try:
-                    if len(sfs.difference(sfindb)) > 0:
-                        for flavour in sfs.difference(sfindb):
-                            models.ServiceFlavour.objects.create(
-                                name=flavour[0],
-                                description=flavour[1]
-                            )
-                        logger.info(
-                            "%s: Added %d service flavours"
-                            % (schema.upper(), len(sfs.difference(sfindb))))
+                for s in sfs.difference(sfindb):
+                    try:
+                        service_flavour, created = models.ServiceFlavour.objects.get_or_create(name=s[0])
+                        if not created:
+                            service_flavour.description = s[1]
+                            service_flavour.save()
 
-                    if len(sfindb.difference(sfs)) > 0:
-                        for flavour in sfindb.difference(sfs):
-                            models.ServiceFlavour.objects.filter(
-                                name=flavour[0],
-                                description=flavour[1]
-                            ).delete()
-                        logger.info(
-                            "%s: Deleted %d service flavours"
-                            % (schema.upper(), len(sfindb.difference(sfs))))
-                except Exception as e:
-                    logger.error(
-                        "%s: database operations failed - %s"
-                        % (schema.upper(), e))
+                    except Exception as e:
+                        logger.error(
+                            "%s: database operations failed - %s"
+                            % (schema.upper(), e))
+
+                logger.info(
+                    "%s: Added/updated %d service flavours"
+                    % (schema.upper(), len(sfs.difference(sfindb))))
             else:
                 logger.info("%s: Service Flavours database is up to date"
                             % schema.upper())
