@@ -46,52 +46,82 @@ def main():
             except json.JSONDecodeError:
                 logger.error('%s: Decoding JSON has failed.' % schema.upper())
                 continue
-            dummy_uptodate = 0
-            dummy_added = 0
-            dummy_deleted = 0
-            dummy_changed = 0
 
-            for data in feed:
-                db_entry = Service.objects.filter(id=data['id']).values()
-                if db_entry:
-                    if [db for db in db_entry][0] == data:
-                        dummy_uptodate += 1
-                    else:
-                        db_entry = Service(**data)
-                        db_entry.save()
-                        dummy_changed += 1
-                else:
-                    try:
-                        Service.objects.create(**data)
-                        dummy_added += 1
-                    except Exception as e:
-                        logger.error('%s: Could not save data to database - %s'
-                                     % (schema.upper(), repr(e)))
-                        continue
+            feedset = set()
+            for f in feed:
+                feedset.add((f['id'], f['service_id'], f['service_name'],
+                            f['service_area'], f['service_version'],
+                            f['service_type'], f['component_version'],
+                            f['component_name'],
+                            f['visible_to_marketplace'], f['in_catalogue'],
+                            f['external_service'], f['internal_service'],))
 
-            service_entry_in_db = [serv.id for serv in Service.objects.all()]
-            if len(service_entry_in_db) > len(feed):
-                for sid in service_entry_in_db:
-                    if sid not in [data['id'] for data in feed]:
-                        Service.objects.filter(id=sid).delete()
-                        dummy_deleted += 1
+            servindb = Service.objects.all()
+            servindbset = set()
+            for serv in servindb:
+                servindbset.add((serv.id, serv.service_id,
+                                serv.service_name, serv.service_area,
+                                serv.service_version, serv.service_type,
+                                serv.component_version,
+                                serv.component_name,
+                                serv.visible_to_marketplace,
+                                serv.in_catalogue, serv.external_service,
+                                serv.internal_service,))
 
-            if dummy_added != 0:
-                logger.info('%s: Added %d Service entries.' % (
-                    schema.upper(), dummy_added))
+            if servindbset != feedset:
+                try:
+                    if len(feedset.difference(servindbset)) > 0:
+                        for serv in feedset.difference(servindbset):
+                            Service.objects.create(
+                                id=serv[0],
+                                service_id=serv[1],
+                                service_name=serv[2],
+                                service_area=serv[3],
+                                service_version=serv[4],
+                                service_type=serv[5],
+                                component_version=serv[6],
+                                component_name=serv[7],
+                                visible_to_marketplace=serv[8],
+                                in_catalogue=serv[9],
+                                external_service=serv[10],
+                                internal_service=serv[11]
+                            )
+                        logger.info(
+                            "%s: Added %d services"
+                            % (schema.upper(),
+                               len(feedset.difference(servindbset)))
+                        )
 
-            if dummy_deleted != 0:
-                logger.info('%s: Deleted %d Service entries.' % (
-                    schema.upper(), dummy_deleted))
-
-            if dummy_changed != 0:
-                logger.info('%s: Updated %d Service entries.' % (
-                    schema.upper(), dummy_changed))
-
-            if dummy_uptodate > 0 and dummy_changed == 0 and dummy_deleted == 0 and \
-                    dummy_added == 0:
-                logger.info('%s: Service database is up-to-date.' %
-                            schema.upper())
+                    if len(servindbset.difference(feedset)):
+                        for serv in servindbset.difference(feedset):
+                            Service.objects.filter(
+                                id=serv[0],
+                                service_id=serv[1],
+                                service_name=serv[2],
+                                service_area=serv[3],
+                                service_version=serv[4],
+                                service_type=serv[5],
+                                component_version=serv[6],
+                                component_name=serv[7],
+                                visible_to_marketplace=serv[8],
+                                in_catalogue=serv[9],
+                                external_service=serv[10],
+                                internal_service=serv[11]
+                            ).delete()
+                        logger.info(
+                            "%s: Deleted %d services."
+                            % (schema.upper(),
+                               len(servindbset.difference(feedset)))
+                        )
+                except Exception as e:
+                    logger.error(
+                        "%s: database operations failed - %s"
+                        % (schema.upper(), e)
+                    )
+            else:
+                logger.info(
+                    "%s: Service database is up to date" % schema.upper()
+                )
 
 
 main()

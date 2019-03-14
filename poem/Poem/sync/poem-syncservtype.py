@@ -109,32 +109,49 @@ def main():
                 Feed_List.append(Element_List)
 
 
-            sfindb = set([(sf.name, sf.description) for sf in models.ServiceFlavour.objects.all()])
-            if len(sfindb) != len(Feed_List):
-                sfs = set([(feed['service_type_name'], feed['service_type_desc']) \
-                        for feed in Feed_List])
+            sfindb = set(
+                [
+                    (
+                        sf.name,
+                        sf.description
+                    )
+                    for sf in models.ServiceFlavour.objects.all()
+                ]
+            )
+            sfs = set(
+                [
+                    (
+                        feed['service_type_name'],
+                        feed['service_type_desc']
+                    )
+                    for feed in Feed_List
+                ]
+            )
+            if sfindb != sfs:
                 try:
-                    if len(sfindb) < len(Feed_List):
+                    if len(sfs.difference(sfindb)) > 0:
                         for flavour in sfs.difference(sfindb):
                             models.ServiceFlavour.objects.create(
                                 name=flavour[0],
                                 description=flavour[1]
                             )
-                        logger.info("%s: Added %d service flavours"
-                                    % (schema.upper(),
-                                       (len(Feed_List) - len(sfindb))))
-                    elif len(sfindb) > len(Feed_List):
+                        logger.info(
+                            "%s: Added %d service flavours"
+                            % (schema.upper(), len(sfs.difference(sfindb))))
+
+                    if len(sfindb.difference(sfs)) > 0:
                         for flavour in sfindb.difference(sfs):
                             models.ServiceFlavour.objects.filter(
                                 name=flavour[0],
                                 description=flavour[1]
                             ).delete()
-                        logger.info("%s: Deleted %d service flavours"
-                                    % (schema.upper(),
-                                       (len(sfindb) - len(Feed_List))))
+                        logger.info(
+                            "%s: Deleted %d service flavours"
+                            % (schema.upper(), len(sfindb.difference(sfs))))
                 except Exception as e:
-                    logger.error("%s: database operations failed - %s"
-                                 % (schema.upper(), e))
+                    logger.error(
+                        "%s: database operations failed - %s"
+                        % (schema.upper(), e))
             else:
                 logger.info("%s: Service Flavours database is up to date"
                             % schema.upper())
