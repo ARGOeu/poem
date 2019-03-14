@@ -10,6 +10,8 @@ import logging
 import os
 import requests
 
+from requests.auth import HTTPBasicAuth
+
 from Poem import settings
 from Poem.poem import models
 from Poem.tenants.models import Tenant
@@ -63,22 +65,22 @@ def main():
 
             url = data['SERVICETYPE_URL']
 
-            headers = dict()
-            if data['HTTPAUTH']:
-                userpass_ascii = '{0}:{1}'.format(data['HTTPUSER'],
-                                                  data['HTTPPASS'])
-                userpass = base64.b64encode(userpass_ascii.encode())
-                headers = {'Authorization': 'Basic ' + userpass.decode()}
-
             try:
-                if url.startswith('https'):
-                    req = requests.get(
-                        url,
-                        cert=(settings.HOST_CERT, settings.HOST_KEY),
-                        timeout=60
-                    )
+                if data['HTTPAUTH']:
+                    req = requests.get(url, cert=(settings.HOST_CERT,
+                                                 settings.HOST_KEY),
+                                      auth=(data['HTTPUSER'], data['HTTPPASS']),
+                                      timeout=60)
+
                 else:
-                    req = requests.get(url, headers=headers)
+                    if url.startswith('https'):
+                        req = requests.get(
+                            url,
+                            cert=(settings.HOST_CERT, settings.HOST_KEY),
+                            timeout=60
+                        )
+                    else:
+                        req = requests.get(url)
 
                 ret = req.content
 
@@ -108,7 +110,6 @@ def main():
                         Element_List[str(child_element.tag).lower()] = (child_element.text)
                 Feed_List.append(Element_List)
 
-
             sfindb = set(
                 [
                     (
@@ -128,30 +129,21 @@ def main():
                 ]
             )
             if sfindb != sfs:
-                try:
-                    if len(sfs.difference(sfindb)) > 0:
-                        for flavour in sfs.difference(sfindb):
-                            models.ServiceFlavour.objects.create(
-                                name=flavour[0],
-                                description=flavour[1]
-                            )
-                        logger.info(
-                            "%s: Added %d service flavours"
-                            % (schema.upper(), len(sfs.difference(sfindb))))
+                for s in sfs.difference(sfindb):
+                    try:
+                        service_flavour, created = models.ServiceFlavour.objects.get_or_create(name=s[0])
+                        if not created:
+                            service_flavour.description = s[1]
+                            service_flavour.save()
 
-                    if len(sfindb.difference(sfs)) > 0:
-                        for flavour in sfindb.difference(sfs):
-                            models.ServiceFlavour.objects.filter(
-                                name=flavour[0],
-                                description=flavour[1]
-                            ).delete()
-                        logger.info(
-                            "%s: Deleted %d service flavours"
-                            % (schema.upper(), len(sfindb.difference(sfs))))
-                except Exception as e:
-                    logger.error(
-                        "%s: database operations failed - %s"
-                        % (schema.upper(), e))
+                    except Exception as e:
+                        logger.error(
+                            "%s: database operations failed - %s"
+                            % (schema.upper(), e))
+
+                logger.info(
+                    "%s: Added/updated %d service flavours"
+                    % (schema.upper(), len(sfs.difference(sfindb))))
             else:
                 logger.info("%s: Service Flavours database is up to date"
                             % schema.upper())
