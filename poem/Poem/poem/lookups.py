@@ -46,7 +46,7 @@ class MetricsFilteredLookup(LookupChannel):
         if request.user.is_superuser:
             meting = self.model.objects.all().values_list('name', flat=True)
         else:
-            ugs = request.user.groupsofmetrics.values_list('name', flat=True)
+            ugs = request.user.userprofile.groupsofmetrics.values_list('name', flat=True)
             for u in ugs:
                 meting += self.relmodel.objects.get(name=u).metrics.all().values_list('name', flat=True)
         return sorted(filter(lambda x: q.lower() in x.lower(), meting))

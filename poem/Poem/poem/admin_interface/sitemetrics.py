@@ -142,7 +142,7 @@ class MetricChangeForm(MetricAddForm):
         sh = SharedInfo()
         self.user = sh.get_user()
         if self.user.is_authenticated:
-            self.usergroups = self.user.groupsofmetrics.all()
+            self.usergroups = self.user.userprofile.groupsofmetrics.all()
         super(MetricChangeForm, self).__init__(*args, **kwargs)
 
     class Meta:
@@ -642,7 +642,7 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
         if (db_field.name == 'group'
             and request.user.is_authenticated
             and not request.user.is_superuser):
-            lgi = request.user.groupsofmetrics.all().values_list('id', flat=True)
+            lgi = request.user.userprofile.groupsofmetrics.all().values_list('id', flat=True)
             kwargs["queryset"] = GroupOfMetrics.objects.filter(pk__in=lgi)
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
@@ -676,14 +676,14 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
         if obj:
             self.form = MetricChangeForm
             if request.user.is_authenticated:
-                ug = request.user.groupsofmetrics.all().values_list('name', flat=True)
+                ug = request.user.userprofile.groupsofmetrics.all().values_list('name', flat=True)
                 if obj.group.name in ug:
                     self._groupown_turn(request.user, 'add')
                 else:
                     self._groupown_turn(request.user, 'del')
         else:
             self.form = MetricAddForm
-            if request.user.is_authenticated and request.user.groupsofmetrics.count():
+            if request.user.is_authenticated and request.user.userprofile.groupsofmetrics.count():
                 self._groupown_turn(request.user, 'add')
             else:
                 self._groupown_turn(request.user, 'del')
@@ -731,7 +731,7 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
     def has_add_permission(self, request):
         if request.user.is_superuser and GroupOfMetrics.objects.count():
             return True
-        if request.user.is_authenticated and request.user.groupsofmetrics.count():
+        if request.user.is_authenticated and request.user.userprofile.groupsofmetrics.count():
             return True
         else:
             return False
