@@ -163,6 +163,7 @@ class MyAdminSite(PublicViews, AdminSite):
         if request.user.is_authenticated:
             if request.user.is_superuser:
                 poem_app_name, apikey_app = 'poem', 'rest_framework_api_key'
+                users_app_name = 'users'
 
                 if request.path.endswith('admin/%s/' % apikey_app):
                     return HttpResponseRedirect('/%s/admin/%s/' % (poem_app_name, poem_app_name))
@@ -193,9 +194,14 @@ class MyAdminSite(PublicViews, AdminSite):
                                 authnz['models'].append(m)
                         a['models'] = list(filter(lambda x: x['object_name']
                                                   not in extract, a['models']))
+                    if a['app_label'] == users_app_name:
+                        for m in a['models']:
+                            if m['object_name'] in extract:
+                                authnz['models'].append(m)
                     if a['app_label'] == 'admin':
                         a['name'] = 'Logs'
                 app_list.append(authnz)
+                app_list = [d for d in app_list if d.get('app_label') != users_app_name]
 
                 order = [poem_app_name, 'admin', 'authnz', apikey_app]
                 app_list = sorted(app_list, key=lambda a: order.index(a['app_label']))
