@@ -1,4 +1,5 @@
-from Poem.poem.models import UserProfile, CustUser
+from Poem.poem.models import UserProfile
+from Poem.users.models import CustUser
 from django.contrib import admin
 from django.contrib import auth
 from django.contrib.auth.admin import UserAdmin
@@ -24,16 +25,21 @@ class UserProfileAdmin(UserAdmin):
     form = MyUserChangeForm
 
     class Media:
-        css = { "all" : ("/poem_media/css/siteuser.css",) }
+        css = {"all": ("/poem_media/css/siteuser.css",) }
 
     fieldsets = [(None, {'fields': ['username', 'password']}),
-                 ('Personal info', {'fields': ['first_name', 'last_name', 'email']}),
-                 ('Permissions', {'fields': ['is_superuser', 'is_staff',
-                                             'is_active', 'groupsofprofiles',
+                 ('Personal info', {'fields': ['first_name',
+                                               'last_name',
+                                               'email']}),
+                 ('Permissions', {'fields': ['is_superuser',
+                                             'is_staff',
+                                             'is_active',
+                                             'groupsofprofiles',
                                              'groupsofmetrics',
                                              'groupsofprobes',
                                              'groupsofaggregations']})]
     inlines = [UserProfileInline]
     list_filter = ('is_superuser', 'is_staff')
-    list_display = ('username', 'first_name', 'last_name', 'email', 'is_staff', 'is_superuser')
+    list_display = ('username', 'first_name', 'last_name',
+                    'email', 'is_staff', 'is_superuser')
     filter_horizontal = ('user_permissions',)

@@ -20,8 +20,9 @@ from Poem.poem.admin_interface.siteprofile import *
 from Poem.poem.admin_interface.userprofile import *
 from Poem.poem.admin_interface.siteactions import *
 from Poem.poem.admin_interface.siteservices import *
-from Poem.poem.models import GroupOfMetrics, GroupOfProfiles, GroupOfAggregations, GroupOfProfiles
-from Poem.poem.models import MetricInstance, Metric, Probe, Profile, UserProfile, VO, ServiceFlavour, CustUser, Service, Aggregation
+from Poem.poem.models import GroupOfMetrics, GroupOfProfiles, GroupOfAggregations, GroupOfProbes
+from Poem.poem.models import MetricInstance, Metric, Probe, Profile, UserProfile, VO, ServiceFlavour, Service, Aggregation
+from Poem.users.models import CustUser
 
 from Poem.api.admin import MyAPIKeyAdmin
 from rest_framework_api_key.models import APIKey

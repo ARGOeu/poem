@@ -11,11 +11,8 @@ from django.forms.widgets import TextInput, Select
 from django.http import HttpResponse
 from django.utils.html import format_html
 from django.utils.translation import ugettext as _
-from Poem.poem import widgets
-from Poem.poem.lookups import check_cache
-from Poem.poem.admin_interface.formmodel import MyModelMultipleChoiceField, MyModelChoiceField
 from Poem.poem.models import Metric, Probe, UserProfile, VO, ServiceFlavour,GroupOfProbes,\
-                             CustUser, Tags, Metrics, GroupOfMetrics, MetricAttribute, MetricConfig, MetricParameter,\
+                             Tags, Metrics, GroupOfMetrics, MetricAttribute, MetricConfig, MetricParameter,\
                              MetricFlags, MetricDependancy, MetricProbeExecutable, MetricFiles, MetricParent, MetricFileParameter,\
                              MetricType
 
