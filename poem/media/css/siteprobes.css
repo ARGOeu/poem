@@ -37,6 +37,13 @@ fieldset.infoone > div > div.field-update_metric > div.help {
     margin-left: 0px;
 }
 
+fieldset.infoone > div > div.field-update_metric > p.help {
+    width: 130px;
+    margin-top: 2px;
+    padding-left: 0px;
+    margin-left: 0px;
+}
+
 fieldset.infoone div.field-box.field-datetime {
     width: 220px;
 }

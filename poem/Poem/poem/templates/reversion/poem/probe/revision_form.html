@@ -41,6 +41,10 @@
 {% for fieldset in adminform %}
 <fieldset class="module aligned {{ fieldset.classes }}">
     {% for line in fieldset %} 
+        {% if fieldset.classes == 'infotwo' and forloop.first %}
+            <h2 style="font-weight: 400; padding:8px; color:white; font-size:12px; letter-spacing:0.5px; text-transform:uppercase; background:#79AEC8;">Probe metadata</h2>
+            </br>
+        {% endif %}
         <div class="form-row{% if line.fields|length_is:'1' and line.errors %} errors{% endif %}{% for field in line %}{% if field.field.name %} field-{{   field.field.name }}{% endif %}{% endfor %}">
             {% if line.fields|length_is:'1' %}{{ line.errors }}{% endif %} 
             {% for field in line %} 
