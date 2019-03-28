@@ -66,6 +66,12 @@ fieldset.tagging > div > div > p.help {
 
 .inline-group .tabular tr.has_original td {
     padding: 2px;
+    width: 1px;
+}
+
+.inline-group .tabular tr td.original {
+    padding: 2px;
+    width: 1px;
 }
 
 .inline-group thead th {
