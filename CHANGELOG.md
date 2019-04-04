@@ -1,5 +1,29 @@
 # Changelog
 
+## [2.3.0] - 2019-04-04
+### Added
+- ARGO-1573 Back reference fields on metrics and probes pages
+- ARGO-1573 Back reference fields on metrics and probes pages
+- ARGO-1693 Hover dropdown info about selected probe on metric page
+- ARGO-1695 Support for deletion of Aggregation profile
+- ARGO-1696 Style and arrange Aggregations page
+- ARGO-1698 Aggregation profile permissions based on Aggregation group
+- ARGO-1700 Introduce config option for specifying WEB-API endpoint
+- ARGO-548 Introduce Aggregation profiles CRUD on WEB API
+- ARGO-771 POEM multi tenancy support
+
+### Fixed
+- ARGO-1719 Fix breadcrumbs for API key templates
+- ARGO-1720 Fix Probe change form "Update metric" button
+- ARGO-1724 Fix breadcrumb for Delete group pages
+- ARGO-1688 Migrations are not registered as applied
+
+### Changed
+- ARGO-1653 Refine log entries view
+- ARGO-1681 Refactor service type sync to use Django ORM
+- ARGO-1694 Refine comments in log entry details page
+
+
 ## [2.2.0] - 2019-02-05
 ### Added 
 - ARGO-1580 Minimal container for tests
