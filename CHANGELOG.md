@@ -3,7 +3,6 @@
 ## [2.3.0] - 2019-04-04
 ### Added
 - ARGO-1573 Back reference fields on metrics and probes pages
-- ARGO-1573 Back reference fields on metrics and probes pages
 - ARGO-1693 Hover dropdown info about selected probe on metric page
 - ARGO-1695 Support for deletion of Aggregation profile
 - ARGO-1696 Style and arrange Aggregations page
