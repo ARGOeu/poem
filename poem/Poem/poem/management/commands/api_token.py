@@ -39,4 +39,7 @@ class Command(BaseCommand):
             obj.save()
 
         except APIKey.DoesNotExist as e:
-            APIKey.objects.create(**entry)
+            # skip APIKeyManager create() and have a token fixed to passed
+            # value instead of randomly generated
+            key = APIKey(**entry)
+            key.save()

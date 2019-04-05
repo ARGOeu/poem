@@ -36,6 +36,7 @@ class SharedInfo:
         else:
             return None
 
+
 class MetricInstanceFormRW(ModelForm):
     """
     Connects metric instance attributes to autocomplete widget (:py:mod:`poem.widgets`).
@@ -61,11 +62,13 @@ class MetricInstanceFormRW(ModelForm):
                 ServiceFlavour.objects.create(name=form_flavour, description='Manually added service type not defined in GOCDB')
         return form_flavour
 
+
 class MetricInstanceFormRO(MetricInstanceFormRW):
     metric = CharField(label='Metric', \
                              widget=TextInput(attrs={'readonly' : 'readonly'}))
     service_flavour = CharField(label='Service Flavour', \
                                    widget=TextInput(attrs={'readonly' : 'readonly'}))
+
 
 class MetricInstanceInline(admin.TabularInline):
     model = MetricInstance
@@ -90,6 +93,7 @@ class MetricInstanceInline(admin.TabularInline):
     def has_change_permission(self, request, obj=None):
         return True
 
+
 class GroupOfProfilesInlineForms(ModelForm):
     def __init__(self, *args, **kwargs):
         sh = SharedInfo()
@@ -108,19 +112,21 @@ class GroupOfProfilesInlineForms(ModelForm):
             raise ValidationError("You are not member of group %s." % (str(groupsel)))
         return groupsel
 
+
 class GroupOfProfilesInlineChangeForm(GroupOfProfilesInlineForms):
     qs = GroupOfProfiles.objects.all()
     groupofprofiles = ModelChoiceField(queryset=qs, widget=Select(),
                                        help_text='Profile is a member of given group')
     groupofprofiles.empty_label = '----------------'
-    groupofprofiles.label = 'Group of profiles'
+    groupofprofiles.label = 'Group'
+
 
 class GroupOfProfilesInlineAddForm(GroupOfProfilesInlineForms):
     def __init__(self, *args, **kwargs):
         super(GroupOfProfilesInlineAddForm, self).__init__(*args, **kwargs)
         self.fields['groupofprofiles'].help_text = 'Select one of the groups you are member of'
         self.fields['groupofprofiles'].empty_label = '----------------'
-        self.fields['groupofprofiles'].label = 'Group of profiles'
+        self.fields['groupofprofiles'].label = 'Group'
 
 
 class GroupOfProfilesInline(admin.TabularInline):
@@ -179,6 +185,7 @@ class ProfileForm(ModelForm):
             raise ValidationError("Unable to find virtual organization %s." % (str(form_vo)))
         return form_vo
 
+
 class ProfileCloneForm(ProfileForm):
     def clean_name(self):
         name = self.cleaned_data['name']
@@ -191,6 +198,7 @@ class ProfileCloneForm(ProfileForm):
             pass
 
         return name
+
 
 class ProfileAdmin(modelclone.ClonableModelAdmin):
     """

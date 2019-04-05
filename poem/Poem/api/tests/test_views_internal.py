@@ -1,17 +1,19 @@
-from rest_framework.test import APITestCase, APIRequestFactory, \
-    force_authenticate
+from rest_framework.test import force_authenticate
 from rest_framework import status
 
 from rest_framework_api_key.models import APIKey
 
+from tenant_schemas.test.cases import TenantTestCase
+from tenant_schemas.test.client import TenantRequestFactory
+
 from Poem.poem.models import *
-from Poem.api.views_internal import *
+from Poem.api import views_internal as views
 
 
-class ListMetricsInGroupAPIViewTests(APITestCase):
+class ListMetricsInGroupAPIViewTests(TenantTestCase):
     def setUp(self):
-        self.factory = APIRequestFactory()
-        self.view = ListMetricsInGroup.as_view()
+        self.factory = TenantRequestFactory(self.tenant)
+        self.view = views.ListMetricsInGroup.as_view()
         self.url = '/api/v2/internal/metrics/EOSC'
         self.user = CustUser.objects.create(username='testuser')
 
@@ -55,10 +57,10 @@ class ListMetricsInGroupAPIViewTests(APITestCase):
         self.assertEqual(response.data, {'result': []})
 
 
-class ListTokensAPIViewTests(APITestCase):
+class ListTokensAPIViewTests(TenantTestCase):
     def setUp(self):
-        self.factory = APIRequestFactory()
-        self.view = ListTokens.as_view()
+        self.factory = TenantRequestFactory(self.tenant)
+        self.view = views.ListTokens.as_view()
         self.url = '/api/v2/internal/tokens/'
         self.user = CustUser.objects.create(username='testuser')
 
@@ -88,10 +90,10 @@ class ListTokensAPIViewTests(APITestCase):
         )
 
 
-class ListTokenForTenantAPIViewTests(APITestCase):
+class ListTokenForTenantAPIViewTests(TenantTestCase):
     def setUp(self):
-        self.factory = APIRequestFactory()
-        self.view = ListTokenForTenant.as_view()
+        self.factory = TenantRequestFactory(self.tenant)
+        self.view = views.ListTokenForTenant.as_view()
         self.url_base = '/api/v2/internal/tokens/'
         self.user = CustUser.objects.create(username='testuser')
 
@@ -123,10 +125,10 @@ class ListTokenForTenantAPIViewTests(APITestCase):
         self.assertEqual(response.data, {'detail': 'Tenant not found'})
 
 
-class ListUsersAPIViewTests(APITestCase):
+class ListUsersAPIViewTests(TenantTestCase):
     def setUp(self):
-        self.factory = APIRequestFactory()
-        self.view = ListUsers.as_view()
+        self.factory = TenantRequestFactory(self.tenant)
+        self.view = views.ListUsers.as_view()
         self.url = '/api/v2/internal/users/'
         self.user = CustUser.objects.create_user(
             username='testuser',
@@ -153,3 +155,50 @@ class ListUsersAPIViewTests(APITestCase):
         request = self.factory.get(self.url)
         response = self.view(request)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class ListProbesAPIViewTests(TenantTestCase):
+    def setUp(self):
+        self.factory = TenantRequestFactory(self.tenant)
+        self.view = views.ListProbes.as_view()
+        self.url_base = '/api/v2/internal/probes/'
+        self.user = CustUser.objects.create(username='testuser')
+
+        Probe.objects.create(
+            name='ams-probe',
+            version='0.1.7',
+            description='Probe is inspecting AMS service by trying to publish '
+                        'and consume randomly generated messages.',
+            comment='Initial version.',
+            repository='https://github.com/ARGOeu/nagios-plugins-argo',
+            docurl='https://github.com/ARGOeu/nagios-plugins-argo/blob/master/'
+                   'README.md',
+            group='ARGOTEST'
+        )
+
+    def test_get_probe(self):
+        request = self.factory.get(self.url_base + 'ams-probe')
+        force_authenticate(request, user=self.user)
+        response = self.view(request, 'ams-probe')
+        self.assertEqual(
+            response.data,
+            {
+                'id': 1,
+                'name': 'ams-probe',
+                'description': 'Probe is inspecting AMS service by trying to '
+                               'publish and consume randomly generated '
+                               'messages.',
+                'comment': 'Initial version.'
+            }
+        )
+
+    def test_get_probe_permission_denied_in_case_of_no_authorization(self):
+        request = self.factory.get(self.url_base + 'ams-probe')
+        response = self.view(request, 'ams-probe')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_get_probe_empty_dict_in_case_of_nonexisting_probe(self):
+        request = self.factory.get(self.url_base + 'nonexisting_probe')
+        force_authenticate(request, user=self.user)
+        response = self.view(request, 'nonexisting_probe')
+        self.assertEqual(response.data, {})

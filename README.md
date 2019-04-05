@@ -2,7 +2,7 @@
 
 ## Description
 
-POEM service is a web application used in ARGO monitoring framework that holds list of services, metrics, metric configurations and Nagios probes used within EGI infrastructure. Services and associated metrics are grouped into POEM profiles that instruct monitoring instances what kind of tests to execute for given service. Additionally, it is a register of probes and Nagios metric configurations exposed to Nagios monitoring instances via REST API and with such integration, it helps in speeding up of testing and deployment of probes.
+POEM service is a multi-tenant web application used in ARGO monitoring framework that holds list of services, metrics, metric configurations and Nagios probes used within EGI infrastructure. Services and associated metrics are grouped into POEM profiles that instruct monitoring instances what kind of tests to execute for given service. Additionally, it is a register of probes and Nagios metric configurations exposed to Nagios monitoring instances via REST API and with such integration, it helps in speeding up of testing and deployment of probes.
 
 It is based on Django web framework, specifically extension of its admin interface and several Django packages. EGI users are allowed to sign-in through EGI CheckIn federated authentication mechanism. Application is served with Apache web server and all its data is stored in PostgreSQL database.
 
@@ -11,6 +11,7 @@ POEM service is based on Django 2.x framework and following Django packages from
 * `django-modelclone` - simplify deriving of Profiles and Metric configuration from existing data 
 * `django-reversion-compare` - provides the diff view for Probes and Metric configuration progress 
 * `django-reversion` - provides the basic versioning for Probes and Metric configurations 
+* `django-tenant-schemas` - provides multi tenancy
 * `djangorestframework-api-key` - provides non-user token generation and protection
 * `djangorestframework` - provides Token and Session authenticated REST API 
 * `djangosaml2` - enable SAML2 login feature
@@ -43,7 +44,6 @@ VENV = /home/pyvenv/poem/
 | Configuration - General		   | `VENV/etc/poem/poem.conf`                           |
 | Configuration - Logging		   | `VENV/etc/poem/poem_logging.conf`                   |
 | Configuration - Apache		   | `/opt/rh/httpd24/root/etc/httpd/conf.d/`            |
-| Configuration - SAML2			   | `VENV/etc/poem/saml2.conf`                          |
 | Cron jobs									   | `/etc/cron.d/poem-clearsessions, poem-syncvosf`     |
 | Database handler					   | `VENV/bin/poem-db`                                  |
 | Sync (VO, Service types)	   | `VENV/bin/poem-syncservtype, poem-syncvo`           |
@@ -150,7 +150,7 @@ postgres=# \password postgres
 
 ## Configuration
 
-Configuration is centered around one file `VENV/etc/poem/poem.conf` that is splitted into several sections, `[DEFAULT]`, `[GENERAL]`, `[SUPERUSER]`, `[SYNC]`, `[SECURITY]`.
+Configuration is centered around one file `VENV/etc/poem/poem.conf` that is split into several sections: `[DEFAULT]`, `[GENERAL]`, `[DATABASE]` and `[SECURITY]`, which are common to all tenants, and tenant-specific sections which have tenant name in the title: `[GENERAL_<tenant_name>]`, `[SUPERUSER_<tenant_name>]`, and `[SYNC_<tenant_name>]` (`<tenant_name>` marks the name of the tenant - those section should exist for every tenant).
 
 ### DEFAULT
 
@@ -162,37 +162,11 @@ Configuration is centered around one file `VENV/etc/poem/poem.conf` that is spli
 ### GENERAL
 
 	[GENERAL]
-	Namespace = hr.cro-ngi.TEST
 	Debug = False
 	TimeZone = Europe/Zagreb
-	SamlLoginString = Log in using EGI CHECK-IN
 
-* `Namespace` defines the identifiter that will prepended to every Profile
 * `Debug` serves for the debugging purposes and tells Django to be verbosive and list the stack calls in case of errors
 * `Timezone` timezone
-* `SamlLoginString` define the text presented on the SAML2 button of login page
-
-### SUPERUSER
-
-Initial superuser credentials that can be used to sign in to POEM with username and password.
-
-	[SUPERUSER]
-	Name = test 
-	Password = test
-	Email = test@foo.baar
-
-> It **important** to note that these options should be specified with correct values **before** trying to create database. 
-
-### SYNC
-
-These control options are used by sync scripts that fetch all available services types from GOCDB-like service and Virtual organizations from Operations portal. Additionally, if GOCDB-like service supports only Basic HTTP Authentication, it should be enabled by setting `UsePlainHttpAuth` and specifying credentials in `HttpUser` and `HttpPass`. 
-
-	[SYNC]
-	UsePlainHttpAuth = False 
-	HttpUser = xxxx
-	HttpPass = xxxx
-	ServiceType = https://goc.egi.eu/gocdbpi/private/?method=get_service_types 
-	VO = http://operations-portal.egi.eu/xml/voIDCard/public/all/true
 
 ### DATABASE
 
@@ -228,58 +202,191 @@ These control options are used by sync scripts that fetch all available services
 % poem-genseckey -f $VIRTUAL_ENV/etc/poem/secret_key
 ```
 
-Part of the REST API is protected by token so for the clients that consumes those API methods, token needs to be generated and distributed. Tokens can be generated by the superuser from the Admin UI page or with the provided `poem-token` tool. Example is creation a token for the client/tenant EGI:
+Part of the REST API is protected by token so for tenants that consume those API methods, token needs to be generated and distributed. Tokens can be generated by the superuser from the Admin UI page or with the provided `poem-token` tool. Example is creation a token for the client/tenant EGI:
 ```sh
 % workon poem
-% poem-token -t EGI
+% poem-token -t EGI -s egi
 ```
+
+### GENERAL_<tenant_name>
+
+    [GENERAL_EGI]
+    Namespace = hr.cro-ngi.TEST
+	SamlLoginString = Log in using EGI CHECK-IN
+	SamlServiceName = ARGO POEM EGI-CheckIN
+	
+* `Namespace` defines the identifier that will be prepended to every Profile
+* `SamlLoginString` defines the text presented on the SAML2 button of login page
+* `SamlServiceName` defines service name in SAML2 configuration
+
+### SUPERUSER_<tenant_name>
+
+Initial superuser credentials that can be used to sign in to POEM with username and password.
+
+	[SUPERUSER_EGI]
+	Name = test 
+	Password = test
+	Email = test@foo.baar
+
+> It is **important** to note that these options should be specified with correct values **before** trying to create a superuser in database for the given tenant. 
+
+### SYNC_<tenant_name>
+
+These control options are used by sync scripts that fetch all available services types from GOCDB-like service and Virtual organizations from Operations portal. Additionally, if GOCDB-like service supports only Basic HTTP Authentication, it should be enabled by setting `UsePlainHttpAuth` and specifying credentials in `HttpUser` and `HttpPass`. 
+
+	[SYNC_EGI]
+	UsePlainHttpAuth = False 
+	HttpUser = xxxx
+	HttpPass = xxxx
+	ServiceType = https://goc.egi.eu/gocdbpi/private/?method=get_service_types 
+	VO = http://operations-portal.egi.eu/xml/voIDCard/public/all/true
+	Services = https://eosc-hub-devel.agora.grnet.gr/api/v2/service-types/
 
 ### Creating database and starting the service
 
 Prerequisites for creating the empty database are:
 1) PostgreSQL DB server running on `Host`, listening on `Port` and accepting `User` and `Password`
-2) `[SUPERUSER]` section is set with desired credentials
+2) `[SUPERUSER_<tenant_name>]` section is set with desired credentials
 3) `SECRET_KEY` is generated and placed in `$VIRTUAL_ENV/etc/poem/secret_key`
 4) `$VIRTUAL_ENV` has permissions set to `apache:apache`
 5) `poem.conf` Apache configuration is presented in `/opt/rh/httpd24/root/etc/httpd/conf.d/`
 
-Once all is set, database can be created with provided tool `poem-db`:
+Once all is set, database can be created with provided tool `poem-db`. First, a tenant should be created for the `public` schema in the database, and migrations for public schema are run by calling `poem-db -c`:
 
 ```sh
 % workon poem
-% poem-db -c
-Operations to perform:
-  Apply all migrations: admin, auth, contenttypes, poem, rest_framework_api_key, reversion, sessions
-Running migrations:
-  Applying contenttypes.0001_initial... OK
-  Applying contenttypes.0002_remove_content_type_name... OK
-  Applying auth.0001_initial... OK
-  Applying auth.0002_alter_permission_name_max_length... OK
-  Applying auth.0003_alter_user_email_max_length... OK
-  Applying auth.0004_alter_user_username_opts... OK
-  Applying auth.0005_alter_user_last_login_null... OK
-  Applying auth.0006_require_contenttypes_0002... OK
-  Applying auth.0007_alter_validators_add_error_messages... OK
-  Applying auth.0008_alter_user_username_max_length... OK
-  Applying auth.0009_alter_user_last_name_max_length... OK
-  Applying poem.0001_initial... OK
-  Applying admin.0001_initial... OK
-  Applying admin.0002_logentry_remove_auto_add... OK
-  Applying reversion.0001_squashed_0004_auto_20160611_1202... OK
-  Applying poem.0002_extrev_add... OK
-  Applying poem.0004_reversion_dbfill... OK
-  Applying poem.0005_add_metrictype... OK
-  Applying poem.0006_set_passive... OK
-  Applying poem.0007_allownull_metricgroup... OK
-  Applying poem.0008_probe_ondeletenull... OK
-  Applying poem.0009_poem_nameunique... OK
-  Applying rest_framework_api_key.0001_initial... OK
-  Applying rest_framework_api_key.0002_auto_20180922_1759... OK
-  Applying rest_framework_api_key.0003_auto_20180924_1006... OK
-  Applying rest_framework_api_key.0004_auto_20180924_1303... OK
-  Applying sessions.0001_initial... OK
+% poem-db -c 
+[standard:public] === Running migrate for schema public
+[standard:public] Operations to perform:
+[standard:public]   Apply all migrations: admin, auth, contenttypes, poem, rest_framework_api_key, reversion, sessions, tenants
+[standard:public] Running migrations:
+[standard:public]   Applying contenttypes.0001_initial...
+[standard:public]  OK
+[standard:public]   Applying contenttypes.0002_remove_content_type_name...
+[standard:public]  OK
+[standard:public]   Applying auth.0001_initial...
+[standard:public]  OK
+[standard:public]   Applying auth.0002_alter_permission_name_max_length...
+[standard:public]  OK
+[standard:public]   Applying auth.0003_alter_user_email_max_length...
+[standard:public]  OK
+[standard:public]   Applying auth.0004_alter_user_username_opts...
+[standard:public]  OK
+[standard:public]   Applying auth.0005_alter_user_last_login_null...
+[standard:public]  OK
+[standard:public]   Applying auth.0006_require_contenttypes_0002...
+[standard:public]  OK
+[standard:public]   Applying auth.0007_alter_validators_add_error_messages...
+[standard:public]  OK
+[standard:public]   Applying auth.0008_alter_user_username_max_length...
+[standard:public]  OK
+[standard:public]   Applying auth.0009_alter_user_last_name_max_length...
+[standard:public]  OK
+[standard:public]   Applying poem.0001_initial...
+[standard:public]  OK
+[standard:public]   Applying admin.0001_initial...
+[standard:public]  OK
+[standard:public]   Applying admin.0002_logentry_remove_auto_add...
+[standard:public]  OK
+[standard:public]   Applying reversion.0001_squashed_0004_auto_20160611_1202...
+[standard:public]  OK
+[standard:public]   Applying poem.0002_extrev_add...
+[standard:public]  OK
+[standard:public]   Applying poem.0004_reversion_dbfill...
+[standard:public]  OK
+[standard:public]   Applying poem.0005_add_metrictype...
+[standard:public]  OK
+[standard:public]   Applying poem.0006_set_passive...
+[standard:public]  OK
+[standard:public]   Applying poem.0007_allownull_metricgroup...
+[standard:public]  OK
+[standard:public]   Applying poem.0008_probe_ondeletenull...
+[standard:public]  OK
+[standard:public]   Applying poem.0009_poem_nameunique...
+[standard:public]  OK
+[standard:public]   Applying poem.0010_service...
+[standard:public]  OK
+[standard:public]   Applying rest_framework_api_key.0001_initial...
+[standard:public]  OK
+[standard:public]   Applying rest_framework_api_key.0002_auto_20180922_1759...
+[standard:public]  OK
+[standard:public]   Applying rest_framework_api_key.0003_auto_20180924_1006...
+[standard:public]  OK
+[standard:public]   Applying rest_framework_api_key.0004_auto_20180924_1303...
+[standard:public]  OK
+[standard:public]   Applying sessions.0001_initial...
+[standard:public]  OK
+[standard:public]   Applying tenants.0001_initial...
+[standard:public]  OK
+```
+
+Next step is creation of tenants by calling `poem-tenant` tool. The script takes two mandatory arguments, tenant name and hostname (called domain_url in database). Script will create schema in the database for the given tenant, and the migrations will be run. Also, data is imported for the `poem_tags` table in the new schema. Superuser is created by calling tool `poem-db -u -n <schema_name>`:
+```sh
+% poem-tenant -t EGI -d egi-ui.argo.grnet.gr
+[standard:egi] === Running migrate for schema egi
+[standard:egi] Operations to perform:
+[standard:egi]   Apply all migrations: admin, auth, contenttypes, poem, rest_framework_api_key, reversion, sessions, tenants
+[standard:egi] Running migrations:
+[standard:egi]   Applying contenttypes.0001_initial...
+[standard:egi]  OK
+[standard:egi]   Applying contenttypes.0002_remove_content_type_name...
+[standard:egi]  OK
+[standard:egi]   Applying auth.0001_initial...
+[standard:egi]  OK
+[standard:egi]   Applying auth.0002_alter_permission_name_max_length...
+[standard:egi]  OK
+[standard:egi]   Applying auth.0003_alter_user_email_max_length...
+[standard:egi]  OK
+[standard:egi]   Applying auth.0004_alter_user_username_opts...
+[standard:egi]  OK
+[standard:egi]   Applying auth.0005_alter_user_last_login_null...
+[standard:egi]  OK
+[standard:egi]   Applying auth.0006_require_contenttypes_0002...
+[standard:egi]  OK
+[standard:egi]   Applying auth.0007_alter_validators_add_error_messages...
+[standard:egi]  OK
+[standard:egi]   Applying auth.0008_alter_user_username_max_length...
+[standard:egi]  OK
+[standard:egi]   Applying auth.0009_alter_user_last_name_max_length...
+[standard:egi]  OK
+[standard:egi]   Applying poem.0001_initial...
+[standard:egi]  OK
+[standard:egi]   Applying admin.0001_initial...
+[standard:egi]  OK
+[standard:egi]   Applying admin.0002_logentry_remove_auto_add...
+[standard:egi]  OK
+[standard:egi]   Applying reversion.0001_squashed_0004_auto_20160611_1202...
+[standard:egi]  OK
+[standard:egi]   Applying poem.0002_extrev_add...
+[standard:egi]  OK
+[standard:egi]   Applying poem.0004_reversion_dbfill...
+[standard:egi]  OK
+[standard:egi]   Applying poem.0005_add_metrictype...
+[standard:egi]  OK
+[standard:egi]   Applying poem.0006_set_passive...
+[standard:egi]  OK
+[standard:egi]   Applying poem.0007_allownull_metricgroup...
+[standard:egi]  OK
+[standard:egi]   Applying poem.0008_probe_ondeletenull...
+[standard:egi]  OK
+[standard:egi]   Applying poem.0009_poem_nameunique...
+[standard:egi]  OK
+[standard:egi]   Applying poem.0010_service...
+[standard:egi]  OK
+[standard:egi]   Applying rest_framework_api_key.0001_initial...
+[standard:egi]  OK
+[standard:egi]   Applying rest_framework_api_key.0002_auto_20180922_1759...
+[standard:egi]  OK
+[standard:egi]   Applying rest_framework_api_key.0003_auto_20180924_1006...
+[standard:egi]  OK
+[standard:egi]   Applying rest_framework_api_key.0004_auto_20180924_1303...
+[standard:egi]  OK
+[standard:egi]   Applying sessions.0001_initial...
+[standard:egi]  OK
+[standard:egi]   Applying tenants.0001_initial...
+[standard:egi]  OK
 Installed 5 object(s) from 1 fixture(s)
-% poem-db -u
+% poem-db -u -n egi
 Superuser created successfully.
 ```
 
@@ -288,4 +395,11 @@ Afterward, Apache server needs to be started:
 % systemctl start httpd24-httpd.service
 ```
 
-POEM web application should be now served at https://fqdn/poem
+POEM web application should be now served at `https://<tenant_domain_url>/poem`
+
+### Loading data from .json file
+There is also possibility to load data for tenant from .json file:
+```sh
+poem-db -d -n egi -f /path/to/file.json
+```
+> In case that the data is to be loaded from .json file, super user **should not** be created beforehand.

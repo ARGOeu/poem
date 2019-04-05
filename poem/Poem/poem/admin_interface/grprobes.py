@@ -23,6 +23,10 @@ class GroupOfProbesAdmin(GroupAdmin):
     fieldsets = [(None, {'fields': ['name']}),
                  ('Settings', {'fields': ['probes']})]
 
+    def delete_model(self, request, obj):
+        Probe.objects.filter(groupofprobes__id=obj.id).update(group='')
+        super().delete_model(request, obj)
+
     def save_model(self, request, obj, form, change):
         """
            Save group changes and also update Probe.group field name in case

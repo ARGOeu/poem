@@ -38,6 +38,8 @@
     {% endif %}
     &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
     <a href="{% url 'admin:poem_metric_changelist' %}">Metrics</a>
+    &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
+    <a href="{% url 'admin:poem_aggregation_changelist' %}">Aggregations</a>
   </div>
   {% endblock %}
 {% endif %}
@@ -72,6 +74,10 @@
 {% block field_sets %}
 {% for fieldset in adminform %}
   {% include "admin/includes/fieldset.html" %}
+  {% if forloop.first %}
+	  <h2 style="font-weight: 400; padding:8px; color:white; font-size:12px; letter-spacing:0.5px; text-transform:uppercase; background:#79AEC8;">Probe metadata</h2>
+    </br>
+  {% endif %}
 {% endfor %}
 {% endblock %}
 

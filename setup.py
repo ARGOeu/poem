@@ -18,7 +18,7 @@ def get_files(install_prefix, directory):
 poem_media_files = get_files("usr/share", "poem/media") + get_files("usr/share/", "poem/static")
 
 setup(name=NAME,
-    version='2.2.0',
+    version='2.3.0',
     description='Profile, Probes and Metric Configuration Management (POEM) for ARGO Monitoring framework.',
     author='SRCE',
     author_email='dvrcic@srce.hr, kzailac@srce.hr',
@@ -34,9 +34,9 @@ setup(name=NAME,
     scripts = ['bin/poem-syncvo', 'bin/poem-syncservtype',
                'bin/poem-db', 'bin/poem-importprofiles',
                'bin/poem-exportprofiles', 'bin/poem-genseckey',
-               'bin/poem-token', 'bin/poem-syncservices'],
+               'bin/poem-token', 'bin/poem-syncservices', 'bin/poem-tenant'],
     data_files = [
-        ('etc/poem', ['etc/poem.conf', 'etc/poem_logging.conf', 'etc/saml2.conf']),
+        ('etc/poem', ['etc/poem.conf', 'etc/poem_logging.conf']),
         ('etc/cron.d/', ['cron/poem-syncvosf', 'cron/poem-clearsessions']),
         ('etc/httpd/conf.d', ['poem/apache/poem.conf']),
         ('usr/share/poem/apache', ['poem/apache/poem.wsgi']),
