@@ -99,6 +99,7 @@ SHARED_APPS = (
     'django.contrib.messages',
     'django.contrib.sessions',
     'Poem.users',
+    'Poem.poem_super_admin',
 )
 
 TENANT_APPS = (
