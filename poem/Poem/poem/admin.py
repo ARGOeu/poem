@@ -171,6 +171,11 @@ class MyAdminSite(PublicViews, AdminSite):
                 if request.path.endswith('admin/admin/'):
                     return HttpResponseRedirect('/%s/admin/%s/' % (poem_app_name, poem_app_name))
 
+                if request.path.endswith('admin/%s/' % users_app_name):
+                    return HttpResponseRedirect(
+                        '/%s/admin/%s/' % (poem_app_name, poem_app_name)
+                    )
+
                 # Reorganize administration page by grouping type of data that
                 # want to be administered:
                 #   Poem = Metrics, Probes, Profiles
