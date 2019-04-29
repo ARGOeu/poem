@@ -1,0 +1,16 @@
+.row_red {
+    background: none repeat scroll 0 0 #ffa0a0;
+}
+
+th, td {
+  font-size: 14px;
+}
+#content {
+    margin: 0 auto;
+    position: relative;
+    width: 1000px;
+}
+#content-main {
+  float: left;
+  width: 1000px;
+}

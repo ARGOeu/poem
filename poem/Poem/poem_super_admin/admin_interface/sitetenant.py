@@ -15,6 +15,9 @@ class TenantForm(forms.ModelForm):
 
 
 class TenantAdmin(admin.ModelAdmin):
+    class Media:
+        css = {'all': ('/poem_media/css/sitetenant.css',)}
+
     form = TenantForm
     list_display = ('name', 'domain_url', 'created_on')
 
