@@ -3,6 +3,9 @@ from django.contrib.auth.forms import UserChangeForm
 
 
 class SuperUserProfileAdmin(UserAdmin):
+    class Media:
+        css = {'all': ('/poem_media/css/siteuser.css',)}
+
     view_on_site = False
     form = UserChangeForm
 
