@@ -19,8 +19,6 @@
     {% else %}
       {{ original|truncatewords:"18" }}
     {% endif %}
-    &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
-    <a href="{% url 'admin:sharedpoem_probe_changelist' %}">Probes</a>
   </div>
   {% endblock %}
 {% endif %}

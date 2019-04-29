@@ -4,10 +4,10 @@
 {% if not is_popup %}
   {% block breadcrumbs %}
     <div class="breadcrumbs">
-      <a href="{% url 'admin:app_list' app_label=opts.app_label %}">Admin</a>
-      &rsaquo; {% if has_change_permission %}<a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>{% else %}{{ opts.verbose_name_plural|capfirst }}{% endif %}
-      &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
-      <a href="{% url 'admin:sharedpoem_probe_changelist' %}">Probes</a>
+      {% if request.user.is_superuser %}
+        <a href="{% url 'admin:app_list' app_label=opts.app_label %}">Admin</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
+      {% endif %}
+      {{ cl.opts.verbose_name_plural|capfirst }}&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
     </div>
   {% endblock %}
 {% endif %}
