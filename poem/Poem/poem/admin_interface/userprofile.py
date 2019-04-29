@@ -75,3 +75,4 @@ class UserProfileAdmin(UserAdmin):
     list_filter = ('is_superuser', 'is_staff')
     list_display = ('username', 'first_name', 'last_name',
                     'email', 'is_staff', 'is_superuser')
+    filter_horizontal = ()
