@@ -1,6 +1,12 @@
 from django.forms import ModelForm, CharField, Textarea
 from django.forms.widgets import TextInput
 from django.contrib import admin
+from django.urls import reverse
+from django.utils.html import format_html
+from reversion.models import Revision, Version
+from reversion_compare.admin import CompareVersionAdmin
+
+from Poem.poem_super_admin.models import ExtRevision
 
 
 class ProbeForm(ModelForm):
@@ -43,11 +49,21 @@ class ProbeForm(ModelForm):
                             }))
 
 
-class ProbeAdmin(admin.ModelAdmin):
+class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
     class Media:
         css = {"all": ("/poem_media/css/siteprobes.css",)}
 
-    list_display = ('name', 'version', 'description')
+    def num_versions(self, obj):
+        num = ExtRevision.objects.filter(probeid=obj.id).count()
+        return format_html(
+            '<a href="{0}">{1}</a>',
+            reverse('admin:poem_super_admin_probe_history',
+                    args=(obj.id,)),
+            num
+        )
+    num_versions.short_description = '# versions'
+
+    list_display = ('name', 'num_versions', 'description')
     search_fields = ('name',)
     actions = None
     list_per_page = 20
@@ -72,3 +88,10 @@ class ProbeAdmin(admin.ModelAdmin):
 
     def has_change_permission(self, request, obj=None):
         return True
+
+    def history_view(self, request, object_id, extra_context=None):
+        extra_context = extra_context or {}
+        if request.user.is_authenticated:
+            extra_context.update(dict(include_history_link=True))
+        return super().history_view(request, object_id,
+                                    extra_context=extra_context)
