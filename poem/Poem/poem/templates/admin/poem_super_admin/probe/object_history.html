@@ -25,17 +25,26 @@
     {% if request.user.is_superuser %}
         <a href="{% url 'admin:app_list' app_label=opts.app_label %}">Admin</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
     {% endif %}
-    <a href="{% url 'admin:poem_profile_changelist' %}">Profiles</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
-      <a href="{% url 'admin:poem_service_changelist' %}">Services</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
-    <a href="{% url 'admin:poem_super_admin_probe_changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
-    &rsaquo;
-    <a href="{% url opts|admin_urlname:'change' object.pk|admin_urlquote %}">{{ object|truncatewords:"18" }}</a>
-    &rsaquo;
-    History
-    &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
-    <a href="{% url 'admin:poem_metric_changelist' %}">Metrics</a>
-    &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
-    <a href="{% url 'admin:poem_aggregation_changelist' %}">Aggregations</a>
+    {% if request.tenant.schema_name == "public" %}
+      <a href="{% url 'admin:tenants_tenant_changelist' %}">Tenants</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
+      <a href="{% url 'admin:poem_super_admin_probe_changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+      &rsaquo;
+      <a href="{% url opts|admin_urlname:'change' object.pk|admin_urlquote %}">{{ object|truncatewords:"18" }}</a>
+      &rsaquo;
+      History
+    {% else %}
+      <a href="{% url 'admin:poem_profile_changelist' %}">Profiles</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
+        <a href="{% url 'admin:poem_service_changelist' %}">Services</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
+      <a href="{% url 'admin:poem_super_admin_probe_changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+      &rsaquo;
+      <a href="{% url opts|admin_urlname:'change' object.pk|admin_urlquote %}">{{ object|truncatewords:"18" }}</a>
+      &rsaquo;
+      History
+      &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
+      <a href="{% url 'admin:poem_metric_changelist' %}">Metrics</a>
+      &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
+      <a href="{% url 'admin:poem_aggregation_changelist' %}">Aggregations</a>
+    {% endif %}
   </div>
   {% endblock %}
 {% endif %}
