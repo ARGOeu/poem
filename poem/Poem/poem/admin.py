@@ -96,7 +96,7 @@ class PublicViews(object):
             if r and rp:
                 revid = rp.group(2)
                 objid = rp.group(1)
-                url = reverse('admin:poem_probe_revision', args=(objid, revid,))
+                url = reverse('admin:poem_super_admin_probe_revision', args=(objid, revid,))
                 url = url.replace('probe', 'public_probe')
 
                 return HttpResponseRedirect(url)
