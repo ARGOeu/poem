@@ -11,7 +11,6 @@ from Poem.poem.admin_interface.grprofiles import GroupOfProfilesAdmin
 from Poem.poem.admin_interface.graggregations import GroupOfAggregationsAdmin
 from Poem.poem.admin_interface.siteaggregations import *
 from Poem.poem.admin_interface.sitemetrics import *
-from Poem.poem.admin_interface.siteprobes import *
 from Poem.poem.admin_interface.siteprofile import *
 from Poem.poem.admin_interface.userprofile import *
 from Poem.poem.admin_interface.siteactions import *
