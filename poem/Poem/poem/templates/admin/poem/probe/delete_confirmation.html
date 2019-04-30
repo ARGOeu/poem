@@ -8,7 +8,7 @@
     {% endif %}
     <a href="{% url 'admin:poem_profile_changelist' %}">Profiles</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
     <a href="{% url 'admin:poem_service_changelist' %}">Services</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
-    <a href="{% url 'admin:poem_probe_changelist' %}">Probes</a>
+    <a href="{% url 'admin:poem_super_admin_probe_changelist' %}">Probes</a>
     &rsaquo; <a href="{% url opts|admin_urlname:'change' object.pk|admin_urlquote %}">{{ object|truncatewords:"18" }}</a>
     &rsaquo; {% trans 'Delete' %}&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
     <a href="{% url 'admin:poem_metric_changelist' %}">Metrics</a>
