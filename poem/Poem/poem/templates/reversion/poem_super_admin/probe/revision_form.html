@@ -28,7 +28,8 @@
         <a href="{% url opts|admin_urlname:'history' object_id %}">{% trans "History" %}</a> &rsaquo;
         {% blocktrans with opts.verbose_name as verbose_name %}{{ cursel }}{% endblocktrans %}
         &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
-        <a href="{% url 'admin:poem_metric_changelist' %}">Metrics</a>
+        <a href="{% url 'admin:poem_metric_changelist' %}">Metrics</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
+        <a href="{% url 'admin:poem_aggregation_changelist' %}">Aggregations</a>
     </div>
 {% endblock %}
 

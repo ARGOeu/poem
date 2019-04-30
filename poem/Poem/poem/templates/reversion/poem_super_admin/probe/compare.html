@@ -42,7 +42,8 @@
         <a href="{{history_url}}">{% trans "History" %}</a> &rsaquo;
         {{title}}
         &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
-        <a href="{% url 'admin:poem_metric_changelist' %}">Metrics</a>
+        <a href="{% url 'admin:poem_metric_changelist' %}">Metrics</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
+        <a href="{% url 'admin:poem_aggregation_changelist' %}">Aggregations</a>
     </div>
 {% endblock %}
 
