@@ -1,16 +1,12 @@
 from django.http import HttpResponseRedirect
 from django.urls import reverse
-from django.contrib import admin
-from django.contrib.auth.models import Group
 from django.contrib.admin.models import LogEntry
 from django.contrib.admin.sites import AdminSite
 from django.views.decorators.cache import never_cache
-from django.template.response import TemplateResponse
 from django.db import connection
 from django.conf import settings
 
 from Poem.poem.admin_interface.grmetrics import GroupOfMetricsAdmin
-from Poem.poem.admin_interface.grprobes import GroupOfProbesAdmin
 from Poem.poem.admin_interface.grprofiles import GroupOfProfilesAdmin
 from Poem.poem.admin_interface.graggregations import GroupOfAggregationsAdmin
 from Poem.poem.admin_interface.siteaggregations import *
@@ -20,8 +16,9 @@ from Poem.poem.admin_interface.siteprofile import *
 from Poem.poem.admin_interface.userprofile import *
 from Poem.poem.admin_interface.siteactions import *
 from Poem.poem.admin_interface.siteservices import *
-from Poem.poem.models import GroupOfMetrics, GroupOfProfiles, GroupOfAggregations, GroupOfProbes
-from Poem.poem.models import MetricInstance, Metric, Probe, Profile, UserProfile, VO, ServiceFlavour, Service, Aggregation
+from Poem.poem.models import GroupOfMetrics, GroupOfProfiles, GroupOfAggregations
+from Poem.poem.models import MetricInstance, Metric, Profile, UserProfile, VO, ServiceFlavour, Service, Aggregation
+from Poem.poem_super_admin.models import Probe
 from Poem.users.models import CustUser
 
 from Poem.api.admin import MyAPIKeyAdmin
@@ -189,7 +186,7 @@ class MyAdminSite(PublicViews, AdminSite):
                     has_module_perms=True,
                     models=list()
                 )
-                extract = set(['GroupOfAggregations', 'GroupOfProbes', 'GroupOfMetrics',
+                extract = set(['GroupOfAggregations', 'GroupOfMetrics',
                                'GroupOfProfiles', 'CustUser'])
 
                 for a in app_list:
@@ -240,11 +237,9 @@ class MyAdminSite(PublicViews, AdminSite):
 myadmin = MyAdminSite()
 
 myadmin.register(Profile, ProfileAdmin)
-myadmin.register(Probe, ProbeAdmin)
 myadmin.register(Metric, MetricAdmin)
 myadmin.register(GroupOfProfiles, GroupOfProfilesAdmin)
 myadmin.register(GroupOfMetrics, GroupOfMetricsAdmin)
-myadmin.register(GroupOfProbes, GroupOfProbesAdmin)
 myadmin.register(GroupOfAggregations, GroupOfAggregationsAdmin)
 myadmin.register(CustUser, UserProfileAdmin)
 myadmin.register(APIKey, MyAPIKeyAdmin)

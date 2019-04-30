@@ -1,15 +1,9 @@
-from Poem.poem.models import Profile, Metrics, Probe, Aggregation
+from Poem.poem.models import Profile, Metrics, Aggregation
+from Poem.poem_super_admin.models import Probe
 from django.contrib.admin.widgets import FilteredSelectMultiple
-from django.contrib.auth.forms import UserChangeForm, UserCreationForm
+from django.contrib.auth.forms import UserChangeForm
 from django.contrib.auth import get_user_model
 from django.forms import ModelMultipleChoiceField, ModelChoiceField
-from django.forms import ValidationError
-from django.forms.utils import flatatt
-from django.forms.widgets import SelectMultiple
-from django.utils.encoding import force_str, force_text
-from django.utils.html import escape
-from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext as _
 
 
 class MyModelChoiceField(ModelChoiceField):

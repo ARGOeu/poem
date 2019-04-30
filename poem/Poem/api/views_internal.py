@@ -6,6 +6,7 @@ from rest_framework import status
 from rest_framework_api_key import models as api_models
 
 from Poem.poem import models as poem_models
+from Poem.poem_super_admin.models import Probe
 
 from .views import NotFound
 from . import serializers
@@ -74,9 +75,6 @@ class ListGroupsForUser(APIView):
             groupsofprofiles = poem_models.GroupOfProfiles.objects.all().values_list('name', flat=True)
             results.update({'profiles': groupsofprofiles})
 
-            groupsofprobes = poem_models.GroupOfProbes.objects.all().values_list('name', flat=True)
-            results.update({'probes': groupsofprobes})
-
             groupsofmetrics = poem_models.GroupOfMetrics.objects.all().values_list('name', flat=True)
             results.update({'metrics': groupsofmetrics})
 
@@ -86,9 +84,6 @@ class ListGroupsForUser(APIView):
 
             groupsofprofiles = user.groupsofprofiles.all().values_list('name', flat=True)
             results.update({'profiles': groupsofprofiles})
-
-            groupsofprobes = user.groupsofprobes.all().values_list('name', flat=True)
-            results.update({'probes': groupsofprobes})
 
             groupsofmetrics = user.groupsofmetrics.all().values_list('name', flat=True)
             results.update({'metrics': groupsofmetrics})
@@ -148,8 +143,8 @@ class ListProbes(APIView):
 
     def get(self, request, probe_name):
         try:
-            probes = poem_models.Probe.objects.get(name=probe_name)
-        except poem_models.Probe.DoesNotExist:
+            probes = Probe.objects.get(name=probe_name)
+        except Probe.DoesNotExist:
             result = dict()
         else:
             result = dict(id=probes.id,

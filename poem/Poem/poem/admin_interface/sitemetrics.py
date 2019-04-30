@@ -11,7 +11,7 @@ from django.forms.widgets import TextInput, Select
 from django.http import HttpResponse
 from django.utils.html import format_html
 from django.utils.translation import ugettext as _
-from Poem.poem.models import Metric, Probe, UserProfile, VO, ServiceFlavour,GroupOfProbes,\
+from Poem.poem.models import Metric, UserProfile, VO, ServiceFlavour, \
                              Tags, Metrics, GroupOfMetrics, MetricAttribute, MetricConfig, MetricParameter,\
                              MetricFlags, MetricDependancy, MetricProbeExecutable, MetricFiles, MetricParent, MetricFileParameter,\
                              MetricType
