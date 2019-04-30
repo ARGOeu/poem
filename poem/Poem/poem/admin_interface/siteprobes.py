@@ -89,6 +89,29 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
     def has_change_permission(self, request, obj=None):
         return True
 
+    def revision_view(self, request, object_id, version_id, extra_context=None):
+        """
+        Override original view to remove original title
+        """
+        currev = Version.objects.get(pk=version_id)
+        datecreated = Revision.objects.get(pk=version_id).date_created
+
+        new_context = {'title': currev.object_repr}
+        if extra_context:
+            extra_context.update({'cursel': currev.object_repr,
+                                  'datecreated': datecreated})
+        else:
+            extra_context = {'cursel': currev.object_repr,
+                             'datecreated': datecreated}
+        extra_context.update(new_context)
+
+        return self._reversion_revisionform_view(
+            request,
+            currev,
+            self._reversion_get_template_list("revision_form.html"),
+            extra_context,
+)
+
     def history_view(self, request, object_id, extra_context=None):
         extra_context = extra_context or {}
         if request.user.is_authenticated:
