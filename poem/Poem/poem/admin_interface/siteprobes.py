@@ -110,7 +110,16 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
             currev,
             self._reversion_get_template_list("revision_form.html"),
             extra_context,
-)
+        )
+
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        """
+        Overriding change_view to remove save button.
+        """
+        extra_context = extra_context or {}
+        extra_context['show_save'] = False
+        return super().change_view(request, object_id, form_url,
+                                   extra_context=extra_context)
 
     def history_view(self, request, object_id, extra_context=None):
         extra_context = extra_context or {}
