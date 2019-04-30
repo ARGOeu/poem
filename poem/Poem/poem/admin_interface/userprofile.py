@@ -23,7 +23,7 @@ class UserProfileForm(ModelForm):
 
 class UserProfileForm2(ModelForm):
     class Meta:
-        fields = ['groupsofmetrics', 'groupsofprofiles', 'groupsofprobes', 'groupsofaggregations']
+        fields = ['groupsofmetrics', 'groupsofprofiles',  'groupsofaggregations']
 
 
 class UserProfileInline(admin.StackedInline):
@@ -52,7 +52,6 @@ class UserProfilePermissionsInline(admin.StackedInline):
         form = formset.form
         form.base_fields['groupsofmetrics'].widget.can_add_related = False
         form.base_fields['groupsofprofiles'].widget.can_add_related = False
-        form.base_fields['groupsofprobes'].widget.can_add_related = False
         form.base_fields['groupsofaggregations'].widget.can_add_related = False
         return formset
 
