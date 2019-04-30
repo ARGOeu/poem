@@ -17,12 +17,27 @@ class SuperAdminSite(AdminSite):
     def index(self, request, extra_context=None):
         if request.user.is_authenticated:
             if request.user.is_superuser:
-                return HttpResponseRedirect(request.path + 'tenants')
+                return HttpResponseRedirect(request.path + 'poem_super_admin')
 
     def app_index(self, request, app_label, extra_context=None):
         if request.user.is_authenticated:
             if request.user.is_superuser:
+
+                if request.path.endswith('superadmin/tenants/'):
+                    return HttpResponseRedirect(
+                        '/poem/superadmin/poem_super_admin/'
+                    )
+
+                if request.path.endswith('superadmin/users/'):
+                    return HttpResponseRedirect(
+                        '/poem/superadmin/poem_super_admin/'
+                    )
+
                 app_list = self.get_app_list(request)
+
+                for a in app_list:
+                    if a['app_label'] == 'poem_super_admin':
+                        a['name'] = 'Shared data'
 
                 order = ['poem_super_admin', 'tenants', 'users']
                 app_list = sorted(
