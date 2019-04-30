@@ -163,7 +163,7 @@
     $.getJSON(json_probe_info).done(function(json) {
         var items = [];
         items.push("<ul class=probeinfo> ");
-        items.push("<li><a href='/poem/admin/poem/probe/"+json.id+"/change/'>"+json.name+"</a></li>");
+        items.push("<li><a href='/poem/admin/poem_super_admin/probe/"+json.id+"/change/'>"+json.name+"</a></li>");
         items.push(" <li> "+json.description+" </li>");
         items.push(" <li> "+json.comment+" </li>");
         items.push(" </ul>");
