@@ -11,6 +11,7 @@ from Poem.poem.admin_interface.grprofiles import GroupOfProfilesAdmin
 from Poem.poem.admin_interface.graggregations import GroupOfAggregationsAdmin
 from Poem.poem.admin_interface.siteaggregations import *
 from Poem.poem.admin_interface.sitemetrics import *
+from Poem.poem.admin_interface.siteprobes import ProbeAdmin
 from Poem.poem.admin_interface.siteprofile import *
 from Poem.poem.admin_interface.userprofile import *
 from Poem.poem.admin_interface.siteactions import *
@@ -201,10 +202,13 @@ class MyAdminSite(PublicViews, AdminSite):
                                 authnz['models'].append(m)
                     if a['app_label'] == 'admin':
                         a['name'] = 'Logs'
+                    if a['app_label'] == 'poem_super_admin':
+                        a['name'] = 'Shared data'
                 app_list.append(authnz)
                 app_list = [d for d in app_list if d.get('app_label') != users_app_name]
 
-                order = [poem_app_name, 'admin', 'authnz', apikey_app]
+                order = [poem_app_name, 'poem_super_admin', 'admin',
+                         'authnz', apikey_app]
                 app_list = sorted(app_list, key=lambda a: order.index(a['app_label']))
 
                 extra_context = dict(
@@ -236,6 +240,7 @@ class MyAdminSite(PublicViews, AdminSite):
 myadmin = MyAdminSite()
 
 myadmin.register(Profile, ProfileAdmin)
+myadmin.register(Probe, ProbeAdmin)
 myadmin.register(Metric, MetricAdmin)
 myadmin.register(GroupOfProfiles, GroupOfProfilesAdmin)
 myadmin.register(GroupOfMetrics, GroupOfMetricsAdmin)
