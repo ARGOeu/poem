@@ -98,6 +98,8 @@ SHARED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.messages',
     'django.contrib.sessions',
+    'reversion',
+    'reversion_compare',
     'Poem.users',
     'Poem.poem_super_admin',
 )
@@ -112,7 +114,6 @@ TENANT_APPS = (
     'ajax_select',
     'djangosaml2',
     'modelclone',
-    'reversion',
     'reversion_compare',
     'rest_framework',
     'rest_framework_api_key',
