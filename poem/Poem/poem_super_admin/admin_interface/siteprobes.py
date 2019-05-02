@@ -146,6 +146,10 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
         in case that new_version button IS NOT ticked, there is no new
         revision created, only the data in Probe table in db is updated.
         """
+        schemas = list(Tenant.objects.all().values_list('schema_name',
+                                                        flat=True))
+        schemas.remove(get_public_schema_name())
+
         if request.user.is_superuser:
             obj.user = request.user.username
             if form.cleaned_data['new_version'] and change or not change:
@@ -169,6 +173,12 @@ class ProbeAdmin(CompareVersionAdmin, admin.ModelAdmin):
                     serialized_data=json.dumps(data)
                 )
                 Probe.objects.filter(pk=pk).update(**new_serialized_field)
+
+                for schema in schemas:
+                    with schema_context(schema):
+                        Version.objects.filter(
+                            pk=Version.objects.get_for_object(obj)[0].id
+                        ).update(serialized_data=json.dumps(data))
         else:
             raise PermissionDenied()
 
