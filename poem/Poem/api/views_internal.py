@@ -7,6 +7,7 @@ from rest_framework_api_key import models as api_models
 
 from Poem.poem import models as poem_models
 from Poem.poem_super_admin.models import Probe
+from Poem.users.models import CustUser
 
 from .views import NotFound
 from . import serializers
@@ -56,8 +57,7 @@ class ListUsers(APIView):
     authentication_classes = (SessionAuthentication,)
 
     def get(self, request):
-        users = poem_models.CustUser.objects.all().values_list('username',
-                                                               flat=True)
+        users = CustUser.objects.all().values_list('username', flat=True)
         results = sorted(users)
         return Response({'result': results})
 
