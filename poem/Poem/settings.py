@@ -114,6 +114,7 @@ TENANT_APPS = (
     'ajax_select',
     'djangosaml2',
     'modelclone',
+    'reversion',
     'reversion_compare',
     'rest_framework',
     'rest_framework_api_key',
