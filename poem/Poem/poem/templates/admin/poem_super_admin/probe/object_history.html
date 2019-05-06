@@ -1,6 +1,7 @@
 {% extends "admin/object_history.html" %}
 {% load i18n admin_urls staticfiles %}
 {% load plaintext_comments %}
+{% load probe_version %}
 
 {% block usertools %}
   <div id="user-tools">
@@ -90,7 +91,7 @@
                                     {% endif %}
                                 </td>
                                 {% endif %}
-                                <th scope="row"><a href="{{ action.url }}">{{ action.revision.extrevision.version }}</a></th>
+                                <th scope="row"><a href="{{ action.url }}">{{ action.version.object_repr|get_version }}</a></th>
                                 <th scope="row">{{action.revision.date_created|date:_("DATETIME_FORMAT")}}</th>
                                 <td>
                                     {% if action.revision.user %}
