@@ -86,6 +86,7 @@ AUTHENTICATION_BACKENDS = (
 
 AUTH_USER_MODEL = 'users.CustUser'
 ROOT_URLCONF = 'Poem.urls'
+PUBLIC_SCHEMA_URLCONF = 'Poem.urls_public'
 
 APPEND_SLASH = True
 
