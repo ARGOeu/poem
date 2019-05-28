@@ -99,7 +99,7 @@ class GroupOfProfilesInlineForms(ModelForm):
         sh = SharedInfo()
         self.user = sh.getuser()
         if self.user.is_authenticated:
-            self.usergroups = self.user.groupsofprofiles.all()
+            self.usergroups = self.user.userprofile.groupsofprofiles.all()
         super(GroupOfProfilesInlineForms, self).__init__(*args, **kwargs)
         self.fields['groupofprofiles'].widget.can_add_related = False
         self.fields['groupofprofiles'].widget.can_change_related = False
@@ -154,7 +154,7 @@ class GroupOfProfilesInline(admin.TabularInline):
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if request.user.is_authenticated and not request.user.is_superuser:
-            lgi = request.user.groupsofprofiles.all().values_list('id', flat=True)
+            lgi = request.user.userprofile.groupsofprofiles.all().values_list('id', flat=True)
             kwargs["queryset"] = GroupOfProfiles.objects.filter(pk__in=lgi)
         return super(GroupOfProfilesInline, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
@@ -261,7 +261,7 @@ class ProfileAdmin(modelclone.ClonableModelAdmin):
             self.form = ProfileCloneForm
         if obj:
             if request.user.is_authenticated:
-                ug = request.user.groupsofprofiles.all().values_list('name', flat=True)
+                ug = request.user.userprofile.groupsofprofiles.all().values_list('name', flat=True)
                 if obj.groupname in ug:
                     self._groupown_turn(request.user, 'add')
                 else:
@@ -337,7 +337,7 @@ class ProfileAdmin(modelclone.ClonableModelAdmin):
     def has_add_permission(self, request):
         if request.user.is_superuser:
             return True
-        if request.user.is_authenticated and request.user.groupsofprofiles.count():
+        if request.user.is_authenticated and request.user.userprofile.groupsofprofiles.count():
             return True
         else:
             return False

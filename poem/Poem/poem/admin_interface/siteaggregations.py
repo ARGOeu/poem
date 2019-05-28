@@ -77,7 +77,7 @@ class AggregationAdmin(admin.ModelAdmin):
     def get_form(self, request, obj=None, **kwargs):
         if obj:
             if request.user.is_authenticated:
-                ug = request.user.groupsofaggregations.all().values_list('name', flat=True)
+                ug = request.user.userprofile.groupsofaggregations.all().values_list('name', flat=True)
                 if obj.groupname in ug:
                     self._groupown_turn(request.user, 'add')
                 else:
@@ -92,7 +92,7 @@ class AggregationAdmin(admin.ModelAdmin):
     def has_add_permission(self, request, obj=None):
         if request.user.is_superuser and GroupOfAggregations.objects.count():
             return True
-        if request.user.is_authenticated and request.user.groupsofaggregations.count():
+        if request.user.is_authenticated and request.user.userprofile.groupsofaggregations.count():
             return True
         else:
             return False

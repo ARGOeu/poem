@@ -68,6 +68,10 @@ class LogEntryAdmin(admin.ModelAdmin):
                 obj.object_id,
                 get_version_id(obj)
             )
+        elif obj.content_type.model == 'custuser':
+            url = '/poem/admin/users/custuser/{}/change/'.format(
+                obj.object_id
+            )
         else:
             url = '/poem/admin/poem/{}/{}/change/'.format(
                 obj.content_type.model,

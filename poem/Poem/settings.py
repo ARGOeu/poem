@@ -84,7 +84,7 @@ AUTHENTICATION_BACKENDS = (
     'Poem.auth_backend.saml2.backends.SAML2Backend',
 )
 
-AUTH_USER_MODEL = 'poem.CustUser'
+AUTH_USER_MODEL = 'users.CustUser'
 ROOT_URLCONF = 'Poem.urls'
 
 APPEND_SLASH = True
@@ -92,7 +92,14 @@ APPEND_SLASH = True
 SHARED_APPS = (
     'tenant_schemas',
     'Poem.tenants',
+    'django.contrib.admin',
+    'django.contrib.auth',
     'django.contrib.contenttypes',
+    'django.contrib.staticfiles',
+    'django.contrib.messages',
+    'django.contrib.sessions',
+    'Poem.users',
+    'Poem.poem_super_admin',
 )
 
 TENANT_APPS = (
@@ -112,28 +119,11 @@ TENANT_APPS = (
     'webpack_loader',
     'Poem.api',
     'Poem.poem',
+    'Poem.users',
 )
 
-INSTALLED_APPS = (
-    'tenant_schemas',
-    'Poem.tenants',
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.staticfiles',
-    'django.contrib.messages',
-    'django.contrib.sessions',
-    'ajax_select',
-    'djangosaml2',
-    'modelclone',
-    'reversion',
-    'reversion_compare',
-    'rest_framework',
-    'rest_framework_api_key',
-    'webpack_loader',
-    'Poem.api',
-    'Poem.poem',
-)
+INSTALLED_APPS = list(SHARED_APPS) + \
+    [app for app in TENANT_APPS if app not in SHARED_APPS]
 
 TENANT_MODEL = 'tenants.Tenant'
 

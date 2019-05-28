@@ -1,10 +1,25 @@
-{% extends "admin/index.html" %}
-{% load i18n %}
+{% extends "admin/change_form.html" %}
+{% load i18n admin_urls admin_static admin_list %}
 
 {% if not is_popup %}
-{% block breadcrumbs %}
+  {% block breadcrumbs %}
   <div class="breadcrumbs">
-    {% blocktrans %}Admin{% endblocktrans %}&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
+    {% if request.user.is_superuser %}
+        <a href="{% url 'admin:app_list' app_label=opts.app_label %}">Admin</a>
+    {% endif %}
+    &rsaquo;
+    {% if has_change_permission %}
+      <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+    {% else %}
+      {{ opts.verbose_name_plural|capfirst }}
+    {% endif %}
+    &rsaquo;
+    {% if add %}
+      {% trans 'Add' %} {{ opts.verbose_name }}
+    {% else %}
+      {{ original|truncatewords:"18" }}
+    {% endif %}
+    &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
     {% if request.tenant.schema_name == "public" %}
       <a href="{% url 'admin:tenants_tenant_changelist' %}">Tenants</a>
     {% else %}
@@ -15,8 +30,5 @@
       <a href="{% url 'admin:poem_aggregation_changelist' %}">Aggregations</a>
     {% endif %}
   </div>
-{% endblock %}
+  {% endblock %}
 {% endif %}
-
-{% block bodyclass %}{{ block.super }} app-{{ app_label }}{% endblock %}
-

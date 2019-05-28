@@ -1,0 +1,13 @@
+{% extends "admin/change_list.html" %}
+{% load i18n admin_urls admin_static admin_modify %}
+
+{% if not is_popup %}
+  {% block breadcrumbs %}
+    <div class="breadcrumbs">
+      {% if request.user.is_superuser %}
+        <a href="{% url 'admin:app_list' app_label=opts.app_label %}">Admin</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
+      {% endif %}
+      {{ cl.opts.verbose_name_plural|capfirst }}&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
+    </div>
+  {% endblock %}
+{% endif %}

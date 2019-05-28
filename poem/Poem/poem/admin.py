@@ -20,8 +20,9 @@ from Poem.poem.admin_interface.siteprofile import *
 from Poem.poem.admin_interface.userprofile import *
 from Poem.poem.admin_interface.siteactions import *
 from Poem.poem.admin_interface.siteservices import *
-from Poem.poem.models import GroupOfMetrics, GroupOfProfiles, GroupOfAggregations, GroupOfProfiles
-from Poem.poem.models import MetricInstance, Metric, Probe, Profile, UserProfile, VO, ServiceFlavour, CustUser, Service, Aggregation
+from Poem.poem.models import GroupOfMetrics, GroupOfProfiles, GroupOfAggregations, GroupOfProbes
+from Poem.poem.models import MetricInstance, Metric, Probe, Profile, UserProfile, VO, ServiceFlavour, Service, Aggregation
+from Poem.users.models import CustUser
 
 from Poem.api.admin import MyAPIKeyAdmin
 from rest_framework_api_key.models import APIKey
@@ -162,12 +163,18 @@ class MyAdminSite(PublicViews, AdminSite):
         if request.user.is_authenticated:
             if request.user.is_superuser:
                 poem_app_name, apikey_app = 'poem', 'rest_framework_api_key'
+                users_app_name = 'users'
 
                 if request.path.endswith('admin/%s/' % apikey_app):
                     return HttpResponseRedirect('/%s/admin/%s/' % (poem_app_name, poem_app_name))
 
                 if request.path.endswith('admin/admin/'):
                     return HttpResponseRedirect('/%s/admin/%s/' % (poem_app_name, poem_app_name))
+
+                if request.path.endswith('admin/%s/' % users_app_name):
+                    return HttpResponseRedirect(
+                        '/%s/admin/%s/' % (poem_app_name, poem_app_name)
+                    )
 
                 # Reorganize administration page by grouping type of data that
                 # want to be administered:
@@ -192,9 +199,14 @@ class MyAdminSite(PublicViews, AdminSite):
                                 authnz['models'].append(m)
                         a['models'] = list(filter(lambda x: x['object_name']
                                                   not in extract, a['models']))
+                    if a['app_label'] == users_app_name:
+                        for m in a['models']:
+                            if m['object_name'] in extract:
+                                authnz['models'].append(m)
                     if a['app_label'] == 'admin':
                         a['name'] = 'Logs'
                 app_list.append(authnz)
+                app_list = [d for d in app_list if d.get('app_label') != users_app_name]
 
                 order = [poem_app_name, 'admin', 'authnz', apikey_app]
                 app_list = sorted(app_list, key=lambda a: order.index(a['app_label']))
