@@ -3,8 +3,8 @@ import argparse
 import json
 
 
-def extract_data(data):
-    data = data.copy()
+def extract_data(d):
+    data = d.copy()
     extracted_data = []
     reversion_data = []
     pks = []
@@ -70,6 +70,7 @@ def create_public_data(d1, d2, d3):
 
     version_pk = 0
     versionpks = {}
+    namevers = {}
     # update reversion.version table
     for item in data1:
         if item['model'] == 'reversion.version':
@@ -77,6 +78,12 @@ def create_public_data(d1, d2, d3):
                 ser_data = json.loads(item['fields']['serialized_data'])
                 for d in ser_data:
                     d['pk'] = probepks[int(item['fields']['object_id'])]
+                    if d['fields']['name'] in namevers:
+                        namevers[d['fields']['name']].append(
+                            d['fields']['version']
+                        )
+                    else:
+                        namevers[d['fields']['name']] = [d['fields']['version']]
                 item['fields']['serialized_data'] = json.dumps(ser_data)
                 item['fields']['object_id'] = \
                     str(probepks[int(item['fields']['object_id'])])
@@ -103,6 +110,7 @@ def create_public_data(d1, d2, d3):
         versionpks = {}
         revisionpks = {}
         new_names = set()
+        new_vers = {}
 
         for item in dat:
             if item['model'] == 'poem_super_admin.probe' and \
@@ -113,13 +121,28 @@ def create_public_data(d1, d2, d3):
                 new_names.add(item['fields']['name'])
                 data.append(item)
 
+            if item['model'] == 'poem_super_admin.probe' and \
+                item['fields']['name'] in names and \
+                item['fields']['version'] not in \
+                    namevers[item['fields']['name']]:
+                for i in data:
+                    if i['model'] == 'poem_super_admin.probe' and \
+                        i['fields']['name'] == item['fields']['name']:
+                        i['fields'].update(item['fields'])
+                        probepks.update({item['pk']: i['pk']})
+
         used_revisions = []
         for item in dat:
-            if item['model'] == 'reversion.version' and \
-                json.loads(
-                    item['fields']['serialized_data']
-                )[0]['fields']['name'] not in names:
-                used_revisions.append(item['fields']['revision'])
+            if item['model'] == 'reversion.version':
+                dd = json.loads(item['fields']['serialized_data'])[0]['fields']
+                if dd['name'] not in names or \
+                        (dd['name'] in names and
+                         dd['version'] not in namevers[dd['name']]):
+                    used_revisions.append(item['fields']['revision'])
+                    if dd['name'] in new_vers:
+                        new_vers[dd['name']].append(dd['version'])
+                    else:
+                        new_vers[dd['name']] = [dd['version']]
 
         for item in dat:
             if item['model'] == 'reversion.revision' and \
@@ -130,25 +153,26 @@ def create_public_data(d1, d2, d3):
                 data.append(item)
 
         for item in dat:
-            if item['model'] == 'reversion.version' and \
-                json.loads(
-                    item['fields']['serialized_data'])[0]['fields']['name'] \
-                    not in names:
-                if item['fields']['content_type'] == \
-                        ['poem_super_admin', 'probe']:
-                    ser_data = json.loads(item['fields']['serialized_data'])
-                    for d in ser_data:
-                        d['pk'] = probepks[int(item['fields']['object_id'])]
-                    item['fields']['serialized_data'] = json.dumps(ser_data)
-                    item['fields']['object_id'] = \
-                        str(probepks[int(item['fields']['object_id'])])
+            if item['model'] == 'reversion.version':
+                dd = json.loads(item['fields']['serialized_data'])[0]['fields']
+                if dd['name'] not in names or \
+                        (dd['name'] in names and
+                        dd['version'] not in namevers[dd['name']]):
+                    if item['fields']['content_type'] == \
+                            ['poem_super_admin', 'probe']:
+                        ser_data = json.loads(item['fields']['serialized_data'])
+                        for d in ser_data:
+                            d['pk'] = probepks[int(item['fields']['object_id'])]
+                        item['fields']['serialized_data'] = json.dumps(ser_data)
+                        item['fields']['object_id'] = \
+                            str(probepks[int(item['fields']['object_id'])])
 
-                version_pk += 1
-                versionpks.update({item['pk']: version_pk})
-                item['pk'] = version_pk
-                item['fields']['revision'] = \
-                    revisionpks[item['fields']['revision']]
-                data.append(item)
+                    version_pk += 1
+                    versionpks.update({item['pk']: version_pk})
+                    item['pk'] = version_pk
+                    item['fields']['revision'] = \
+                        revisionpks[item['fields']['revision']]
+                    data.append(item)
 
         for item in dat:
             if item['model'] == 'poem_super_admin.extrevision' and \
@@ -162,8 +186,15 @@ def create_public_data(d1, d2, d3):
                 data.append(item)
 
         names = names.union(new_names)
+        for k, v in new_vers.items():
+            if k in namevers:
+                namevers[k].append(v)
+            else:
+                namevers[k] = [v]
 
-    return data
+
+    # order revisions by date and return resulting data
+    return order_revisions(data)
 
 
 def users_data(inputdata):
@@ -242,71 +273,136 @@ def create_tenant_data(tenant_data, public_data):
     data = adapt_tenant_data(tenant_data.copy())
     new_data = []
 
+    revision_ids = []
     probe_dict = {}
     for item in pub_data:
-        if item['model'] == 'poem_super_admin.probe':
-            probe_dict.update({item['fields']['name']: item['pk']})
-
-    for item in data:
         if item['model'] == 'reversion.version' and \
                 item['fields']['content_type'] == ['poem_super_admin', 'probe']:
-            ser_data = json.loads(item['fields']['serialized_data'])
-            for d in ser_data:
-                d['pk'] = probe_dict[d['fields']['name']]
-                item['fields']['object_id'] = \
-                    str(probe_dict[d['fields']['name']])
-            item['fields']['serialized_data'] = json.dumps(ser_data)
-        new_data.append(item)
+            revision_ids.append(item['fields']['revision'])
+            probe_dict.update({item['fields']['object_repr']: item['pk']})
+
+    for item in data:
+        if item['model'] == 'poem.metric':
+            if item['fields']['probeversion'] != '':
+                item['fields']['probekey'] = \
+                    probe_dict[item['fields']['probeversion']]
+            new_data.append(item)
+        elif item['model'] != 'reversion.version' and \
+                item['model'] != 'reversion.revision':
+            new_data.append(item)
+
+    revs = []
+    for item in pub_data:
+        if item['model'] == 'reversion.revision':
+            if item['pk'] in revision_ids:
+                new_data.append(item)
+                revs.append(item['pk'])
+        elif item['model'] == 'reversion.version':
+            if item['fields']['revision'] in revision_ids:
+                new_data.append(item)
+
+    old_revs = []
+    for item in data:
+        if item['model'] == 'reversion.version':
+            if item['fields']['content_type'] == ['poem_super_admin', 'probe']:
+                old_revs.append(item['fields']['revision'])
+            else:
+                item['fields']['revision'] = max(revs) + item['pk']
+                item['pk'] = max(revs) + item['pk']
+                new_data.append(item)
+
+    for item in data:
+        if item['model'] == 'reversion.revision':
+            if item['pk'] in old_revs:
+                pass
+            else:
+                item['pk'] = max(revs) + item['pk']
+                new_data.append(item)
 
     return new_data
 
 
-def append_missing_revisions_to_tenant(tenant_data, public_data):
-    data = tenant_data.copy()
-    reversion_data = public_data.copy()
+def order_revisions(d):
+    data = d.copy()
+    new_data = []
 
-    probe_dict = {}
-    for item in reversion_data:
-        if item['model'] == 'poem_super_admin.probe':
-            probe_dict.update({item['fields']['name']: item['pk']})
+    dates = []
+    for item in data:
+        if item['model'] == 'reversion.revision':
+            dates.append(item['fields']['date_created'])
 
-    object_ids = []
-    versions = []
-    revisions = []
+    sorted_dates = sorted(dates)
+
+    multiple_pks = {}
+    for dat in sorted_dates:
+        for item in data:
+            if item['model'] == 'reversion.revision':
+                if item['fields']['date_created'] == dat:
+                    if dat in multiple_pks:
+                        multiple_pks[dat].append(item['pk'])
+                    else:
+                        multiple_pks[dat] = [item['pk']]
+
+    new_rev_pk = 0
+    new_revpks = {}
+    for dt in sorted_dates:
+        for item in data:
+            if item['model'] == 'reversion.revision':
+                if item['fields']['date_created'] == dt:
+                    for i in multiple_pks[dt]:
+                        if item['pk'] == i:
+                            new_rev_pk += 1
+                            new_revpks.update({item['pk']: new_rev_pk})
+                            item['pk'] = new_rev_pk
+                            new_data.append(item)
+
+    # sort versions, too
     for item in data:
         if item['model'] == 'reversion.version':
-            if item['fields']['content_type'] == ['poem_super_admin', 'probe']:
-                object_ids.append(item['fields']['object_id'])
-            versions.append(item['pk'])
-        if item['model'] == 'reversion.revision':
-            revisions.append(item['pk'])
-    version_pk = max(versions)
-    revision_pk = max(revisions)
+            item['fields']['revision'] = new_revpks[item['pk']]
+            item['pk'] = new_revpks[item['pk']]
+            new_data.append(item)
+        elif item['model'] != 'reversion.version' and \
+            item['model'] != 'reversion.revision':
+            new_data.append(item)
 
-    rev_ids = {}
-    for item in reversion_data:
-        if item['model'] == 'reversion.version' and \
-            item['fields']['object_id'] not in object_ids:
-            version_pk += 1
-            revision_pk += 1
-            rev_ids.update({item['fields']['revision']: revision_pk})
-            item['pk'] = version_pk
-            ser_data = json.loads(item['fields']['serialized_data'])
-            for d in ser_data:
-                item['fields']['object_id'] = \
-                    str(probe_dict[d['fields']['name']])
-                d['pk'] = probe_dict[d['fields']['name']]
-            item['fields']['serialized_data'] = json.dumps(ser_data)
-            item['fields']['revision'] = revision_pk
-            data.append(item)
+    return new_data
 
-    for item in reversion_data:
-        if item['model'] == 'reversion.revision':
-            if item['pk'] in rev_ids:
-                item['pk'] = rev_ids[item['pk']]
-                data.append(item)
 
-    return data
+def create_public_data_file(f1, f2, f3):
+    # load data
+    with open(f1, 'r') as f:
+        d1 = json.load(f)
+
+    with open(f2, 'r') as f:
+        d2 = json.load(f)
+
+    with open(f3, 'r') as f:
+        d3 = json.load(f)
+
+    data1 = users_data(d1)
+    data2 = users_data(d2)
+    data3 = users_data(d3)
+
+    data = create_public_data(data1, data2, data3)
+
+    with open('new-datadump-public.json', 'w') as f:
+        json.dump(data, f, indent=2)
+
+
+def create_tenant_data_file(ft):
+    with open(ft, 'r') as f:
+        dat = json.load(f)
+
+    with open('new-datadump-public.json', 'r') as f:
+        public_data = json.load(f)
+
+    dat = users_data(dat)
+
+    tenant_data = create_tenant_data(dat, public_data)
+
+    with open('new-' + ft, 'w') as f:
+        json.dump(tenant_data, f, indent=2)
 
 
 def main():
@@ -321,63 +417,14 @@ def main():
                         type=str, required=True)
     args = parser.parse_args()
 
-    # load data
-    with open(args.eudat, 'r') as f:
-        data1 = json.load(f)
+    file1 = args.egi
+    file2 = args.eudat
+    file3 = args.sdc
 
-    with open(args.egi, 'r') as f:
-        data2 = json.load(f)
+    create_public_data_file(file1, file2, file3)
 
-    with open(args.sdc, 'r') as f:
-        data3 = json.load(f)
-
-    # fix poem.custuser to users.custuser and remove groupsofprobes
-    data1 = users_data(data1)
-    data2 = users_data(data2)
-    data3 = users_data(data3)
-
-    data = create_public_data(data1, data2, data3)
-
-    with open('new-datadump-public.json', 'w') as f:
-        json.dump(data, f, indent=2)
-
-    # reload tenant data:
-    with open(args.eudat, 'r') as f:
-        data1 = json.load(f)
-
-    with open(args.egi, 'r') as f:
-        data2 = json.load(f)
-
-    with open(args.sdc, 'r') as f:
-        data3 = json.load(f)
-
-    data1 = users_data(data1)
-    data2 = users_data(data2)
-    data3 = users_data(data3)
-
-    tenant_data_initial1 = create_tenant_data(data1, data)
-    tenant_data_initial2 = create_tenant_data(data2, data)
-    tenant_data_initial3 = create_tenant_data(data3, data)
-
-    # reload public schema data:
-    with open('new-datadump-public.json', 'r') as f:
-        data = json.load(f)
-
-    tenant_data1 = append_missing_revisions_to_tenant(tenant_data_initial1,
-                                                      data)
-    tenant_data2 = append_missing_revisions_to_tenant(tenant_data_initial2,
-                                                      data)
-    tenant_data3 = append_missing_revisions_to_tenant(tenant_data_initial3,
-                                                      data)
-
-    with open('new-' + args.eudat, 'w') as f:
-        json.dump(tenant_data1, f, indent=2)
-
-    with open('new-' + args.egi, 'w') as f:
-        json.dump(tenant_data2, f, indent=2)
-
-    with open('new-' + args.sdc, 'w') as f:
-        json.dump(tenant_data3, f, indent=2)
-
+    create_tenant_data_file(file1)
+    create_tenant_data_file(file2)
+    create_tenant_data_file(file3)
 
 main()
