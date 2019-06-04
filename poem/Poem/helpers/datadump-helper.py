@@ -1,4 +1,4 @@
-#!/usr/bin/python3.6
+#!/usr/bin/env python
 import argparse
 import json
 
@@ -426,5 +426,6 @@ def main():
     create_tenant_data_file(file1)
     create_tenant_data_file(file2)
     create_tenant_data_file(file3)
+
 
 main()
