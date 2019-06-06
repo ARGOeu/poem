@@ -106,10 +106,15 @@
 
 {% block after_related_objects %}{% endblock %}
 
-{% if user.is_superuser or perms.poem.groupown_probe %}
-  {% submit_row %}
+{% if request.tenant.schema_name == "public" %}
+  {% if user.is_superuser or perms.poem.groupown_probe %}
+    {% submit_row %}
+  {% else %}
+    <div class="submit-row"><center> This is a read-only instance, please request the corresponding permissions to perform any changes in this form. </center></div>
+  {% endif %}
 {% else %}
-  <div class="submit-row"><center> This is a read-only instance, please request the corresponding permissions to perform any changes in this form. </center></div>
+  {% block submit_buttons_bottom %}
+  {% endblock %}
 {% endif %}
 
 {% if adminform and add %}
