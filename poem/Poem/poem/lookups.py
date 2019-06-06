@@ -1,4 +1,5 @@
-from Poem.poem.models import VO, ServiceFlavour, Metrics, MetricInstance, Tags, Probe
+from Poem.poem.models import VO, ServiceFlavour, Metrics, MetricInstance, Tags
+from Poem.poem_super_admin.models import Probe
 from ajax_select import LookupChannel
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache

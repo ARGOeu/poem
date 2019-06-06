@@ -1,27 +1,24 @@
 from django.http import HttpResponseRedirect
 from django.urls import reverse
-from django.contrib import admin
-from django.contrib.auth.models import Group
 from django.contrib.admin.models import LogEntry
 from django.contrib.admin.sites import AdminSite
 from django.views.decorators.cache import never_cache
-from django.template.response import TemplateResponse
 from django.db import connection
 from django.conf import settings
 
 from Poem.poem.admin_interface.grmetrics import GroupOfMetricsAdmin
-from Poem.poem.admin_interface.grprobes import GroupOfProbesAdmin
 from Poem.poem.admin_interface.grprofiles import GroupOfProfilesAdmin
 from Poem.poem.admin_interface.graggregations import GroupOfAggregationsAdmin
 from Poem.poem.admin_interface.siteaggregations import *
 from Poem.poem.admin_interface.sitemetrics import *
-from Poem.poem.admin_interface.siteprobes import *
+from Poem.poem.admin_interface.siteprobes import ProbeAdmin
 from Poem.poem.admin_interface.siteprofile import *
 from Poem.poem.admin_interface.userprofile import *
 from Poem.poem.admin_interface.siteactions import *
 from Poem.poem.admin_interface.siteservices import *
-from Poem.poem.models import GroupOfMetrics, GroupOfProfiles, GroupOfAggregations, GroupOfProbes
-from Poem.poem.models import MetricInstance, Metric, Probe, Profile, UserProfile, VO, ServiceFlavour, Service, Aggregation
+from Poem.poem.models import GroupOfMetrics, GroupOfProfiles, GroupOfAggregations
+from Poem.poem.models import MetricInstance, Metric, Profile, UserProfile, VO, ServiceFlavour, Service, Aggregation
+from Poem.poem_super_admin.models import Probe
 from Poem.users.models import CustUser
 
 from Poem.api.admin import MyAPIKeyAdmin
@@ -99,7 +96,7 @@ class PublicViews(object):
             if r and rp:
                 revid = rp.group(2)
                 objid = rp.group(1)
-                url = reverse('admin:poem_probe_revision', args=(objid, revid,))
+                url = reverse('admin:poem_super_admin_probe_revision', args=(objid, revid,))
                 url = url.replace('probe', 'public_probe')
 
                 return HttpResponseRedirect(url)
@@ -176,6 +173,11 @@ class MyAdminSite(PublicViews, AdminSite):
                         '/%s/admin/%s/' % (poem_app_name, poem_app_name)
                     )
 
+                if request.path.endswith('admin/poem_super_admin/'):
+                    return HttpResponseRedirect(
+                        '/%s/admin/%s/' % (poem_app_name, poem_app_name)
+                    )
+
                 # Reorganize administration page by grouping type of data that
                 # want to be administered:
                 #   Poem = Metrics, Probes, Profiles
@@ -189,7 +191,7 @@ class MyAdminSite(PublicViews, AdminSite):
                     has_module_perms=True,
                     models=list()
                 )
-                extract = set(['GroupOfAggregations', 'GroupOfProbes', 'GroupOfMetrics',
+                extract = set(['GroupOfAggregations', 'GroupOfMetrics',
                                'GroupOfProfiles', 'CustUser'])
 
                 for a in app_list:
@@ -205,10 +207,13 @@ class MyAdminSite(PublicViews, AdminSite):
                                 authnz['models'].append(m)
                     if a['app_label'] == 'admin':
                         a['name'] = 'Logs'
+                    if a['app_label'] == 'poem_super_admin':
+                        a['name'] = 'Shared data'
                 app_list.append(authnz)
                 app_list = [d for d in app_list if d.get('app_label') != users_app_name]
 
-                order = [poem_app_name, 'admin', 'authnz', apikey_app]
+                order = [poem_app_name, 'poem_super_admin', 'admin',
+                         'authnz', apikey_app]
                 app_list = sorted(app_list, key=lambda a: order.index(a['app_label']))
 
                 extra_context = dict(
@@ -244,7 +249,6 @@ myadmin.register(Probe, ProbeAdmin)
 myadmin.register(Metric, MetricAdmin)
 myadmin.register(GroupOfProfiles, GroupOfProfilesAdmin)
 myadmin.register(GroupOfMetrics, GroupOfMetricsAdmin)
-myadmin.register(GroupOfProbes, GroupOfProbesAdmin)
 myadmin.register(GroupOfAggregations, GroupOfAggregationsAdmin)
 myadmin.register(CustUser, UserProfileAdmin)
 myadmin.register(APIKey, MyAPIKeyAdmin)

@@ -1,6 +1,7 @@
 from django.contrib import admin
 
-from Poem.poem.models import Service, MetricInstance, Metric, Probe
+from Poem.poem.models import Service, MetricInstance, Metric
+from Poem.poem_super_admin.models import Probe
 
 
 class ServiceAdmin(admin.ModelAdmin):

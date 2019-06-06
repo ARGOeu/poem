@@ -86,6 +86,7 @@ AUTHENTICATION_BACKENDS = (
 
 AUTH_USER_MODEL = 'users.CustUser'
 ROOT_URLCONF = 'Poem.urls'
+PUBLIC_SCHEMA_URLCONF = 'Poem.urls_public'
 
 APPEND_SLASH = True
 
@@ -98,6 +99,8 @@ SHARED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.messages',
     'django.contrib.sessions',
+    'reversion',
+    'reversion_compare',
     'Poem.users',
     'Poem.poem_super_admin',
 )

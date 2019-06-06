@@ -25,7 +25,7 @@
     {% endif %}
     <a href="{% url 'admin:poem_profile_changelist' %}">Profiles</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
       <a href="{% url 'admin:poem_service_changelist' %}">Services</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
-    <a href="{% url 'admin:poem_probe_changelist' %}">Probes</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
+    <a href="{% url 'admin:poem_super_admin_probe_changelist' %}">Probes</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
     {% if has_change_permission %}
       <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
     {% else %}
@@ -163,7 +163,7 @@
     $.getJSON(json_probe_info).done(function(json) {
         var items = [];
         items.push("<ul class=probeinfo> ");
-        items.push("<li><a href='/poem/admin/poem/probe/"+json.id+"/change/'>"+json.name+"</a></li>");
+        items.push("<li><a href='/poem/admin/poem_super_admin/probe/"+json.id+"/change/'>"+json.name+"</a></li>");
         items.push(" <li> "+json.description+" </li>");
         items.push(" <li> "+json.comment+" </li>");
         items.push(" </ul>");

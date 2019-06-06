@@ -3,9 +3,11 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.views.decorators.cache import never_cache
 
+from Poem.poem_super_admin.admin_interface.siteprobes import ProbeAdmin
 from Poem.poem_super_admin.admin_interface.sitetenant import TenantAdmin
 from Poem.poem_super_admin.admin_interface.userprofile import \
     SuperUserProfileAdmin
+from Poem.poem_super_admin.models import Probe
 from Poem.tenants.models import Tenant
 from Poem.users.models import CustUser
 
@@ -15,14 +17,29 @@ class SuperAdminSite(AdminSite):
     def index(self, request, extra_context=None):
         if request.user.is_authenticated:
             if request.user.is_superuser:
-                return HttpResponseRedirect(request.path + 'tenants')
+                return HttpResponseRedirect(request.path + 'poem_super_admin')
 
     def app_index(self, request, app_label, extra_context=None):
         if request.user.is_authenticated:
             if request.user.is_superuser:
+
+                if request.path.endswith('superadmin/tenants/'):
+                    return HttpResponseRedirect(
+                        '/poem/superadmin/poem_super_admin/'
+                    )
+
+                if request.path.endswith('superadmin/users/'):
+                    return HttpResponseRedirect(
+                        '/poem/superadmin/poem_super_admin/'
+                    )
+
                 app_list = self.get_app_list(request)
 
-                order = ['tenants', 'users']
+                for a in app_list:
+                    if a['app_label'] == 'poem_super_admin':
+                        a['name'] = 'Shared data'
+
+                order = ['poem_super_admin', 'tenants', 'users']
                 app_list = sorted(
                     app_list, key=lambda a: order.index(a['app_label'])
                 )
@@ -46,3 +63,4 @@ class SuperAdminSite(AdminSite):
 mysuperadmin = SuperAdminSite(name='superadmin')
 mysuperadmin.register(Tenant, TenantAdmin)
 mysuperadmin.register(CustUser, SuperUserProfileAdmin)
+mysuperadmin.register(Probe, ProbeAdmin)

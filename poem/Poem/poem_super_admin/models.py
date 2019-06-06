@@ -1,3 +1,2 @@
-from django.db import models
-
-# Create your models here.
+from Poem.poem_super_admin.dbmodels.probes import *
+from Poem.poem_super_admin.dbmodels.rever import *

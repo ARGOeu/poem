@@ -23,23 +23,38 @@
     {% if request.user.is_superuser %}
       <a href="{% url 'admin:app_list' app_label=opts.app_label %}">Admin</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
     {% endif %}
-    <a href="{% url 'admin:poem_profile_changelist' %}">Profiles</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
-    <a href="{% url 'admin:poem_service_changelist' %}">Services</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
-    {% if has_change_permission %}
-      <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+    {% if request.tenant.schema_name == "public" %}
+      <a href="{% url 'admin:tenants_tenant_changelist' %}">Tenants</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
+      {% if has_change_permission %}
+        <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+      {% else %}
+        {{ opts.verbose_name_plural|capfirst }}
+      {% endif %}
+      &rsaquo;
+      {% if add %}
+        {% trans 'Add' %} {{ opts.verbose_name }}
+      {% else %}
+        {{ original|truncatewords:"18" }}
+      {% endif %}
     {% else %}
-      {{ opts.verbose_name_plural|capfirst }}
+      <a href="{% url 'admin:poem_profile_changelist' %}">Profiles</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
+      <a href="{% url 'admin:poem_service_changelist' %}">Services</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
+      {% if has_change_permission %}
+        <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+      {% else %}
+        {{ opts.verbose_name_plural|capfirst }}
+      {% endif %}
+      &rsaquo;
+      {% if add %}
+        {% trans 'Add' %} {{ opts.verbose_name }}
+      {% else %}
+        {{ original|truncatewords:"18" }}
+      {% endif %}
+      &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
+      <a href="{% url 'admin:poem_metric_changelist' %}">Metrics</a>
+      &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
+      <a href="{% url 'admin:poem_aggregation_changelist' %}">Aggregations</a>
     {% endif %}
-    &rsaquo;
-    {% if add %}
-      {% trans 'Add' %} {{ opts.verbose_name }}
-    {% else %}
-      {{ original|truncatewords:"18" }}
-    {% endif %}
-    &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
-    <a href="{% url 'admin:poem_metric_changelist' %}">Metrics</a>
-    &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
-    <a href="{% url 'admin:poem_aggregation_changelist' %}">Aggregations</a>
   </div>
   {% endblock %}
 {% endif %}
@@ -91,10 +106,15 @@
 
 {% block after_related_objects %}{% endblock %}
 
-{% if user.is_superuser or perms.poem.groupown_probe %}
-  {% submit_row %}
+{% if request.tenant.schema_name == "public" %}
+  {% if user.is_superuser or perms.poem.groupown_probe %}
+    {% submit_row %}
+  {% else %}
+    <div class="submit-row"><center> This is a read-only instance, please request the corresponding permissions to perform any changes in this form. </center></div>
+  {% endif %}
 {% else %}
-  <div class="submit-row"><center> This is a read-only instance, please request the corresponding permissions to perform any changes in this form. </center></div>
+  {% block submit_buttons_bottom %}
+  {% endblock %}
 {% endif %}
 
 {% if adminform and add %}

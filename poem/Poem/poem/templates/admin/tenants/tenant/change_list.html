@@ -8,6 +8,7 @@
         <a href="{% url 'admin:app_list' app_label=opts.app_label %}">Admin</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
       {% endif %}
       {{ cl.opts.verbose_name_plural|capfirst }}&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
+      <a href="{% url 'admin:poem_super_admin_probe_changelist' %}">Probes</a>
     </div>
   {% endblock %}
 {% endif %}

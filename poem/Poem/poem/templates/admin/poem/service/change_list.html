@@ -10,7 +10,7 @@
       <a href="{% url 'admin:poem_profile_changelist' %}">Profiles</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
       {{ cl.opts.verbose_name_plural|capfirst }}
       &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
-      <a href="{% url 'admin:poem_probe_changelist' %}">Probes</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
+      <a href="{% url 'admin:poem_super_admin_probe_changelist' %}">Probes</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
       <a href="{% url 'admin:poem_metric_changelist' %}">Metrics</a>
       &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
       <a href="{% url 'admin:poem_aggregation_changelist' %}">Aggregations</a>
@@ -48,7 +48,7 @@
                       <td rowspan="{{ data2.list|length }}">{{ data2.grouper }}</td>
                     {% endif %}
                     <td><a href="{% url 'admin:poem_metric_change' object_id=data.metric_id %}">{{ data.metric }}</a></td>
-                    <td><a href="{% url 'admin:poem_probe_change' object_id=data.probe_id %}">{{ data.probe }}</a></td>
+                    <td><a href="{% url 'admin:poem_super_admin_probe_change' object_id=data.probe_id %}">{{ data.probe }}</a></td>
                   </tr>
                 {% endfor %}
               {% endfor %}

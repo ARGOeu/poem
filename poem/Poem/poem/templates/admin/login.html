@@ -50,9 +50,11 @@
     <center><input type="submit" value="{% trans 'Log in using username/password' %}" /></center>
   </div>
   </br>
-  <div class="form-row">
-    <center><a class="certlog" href="{% url 'saml2:saml2_login' %}">{{ samlloginstring }}</a></center>
-  </div>
+  {% ifnotequal request.tenant.schema_name "public" %}
+    <div class="form-row">
+      <center><a class="certlog" href="{% url 'saml2:saml2_login' %}">{{ samlloginstring }}</a></center>
+    </div>
+  {% endifnotequal %}
 </form>
 
 <script type="text/javascript">

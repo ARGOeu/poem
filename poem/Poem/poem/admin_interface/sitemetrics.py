@@ -11,7 +11,7 @@ from django.forms.widgets import TextInput, Select
 from django.http import HttpResponse
 from django.utils.html import format_html
 from django.utils.translation import ugettext as _
-from Poem.poem.models import Metric, Probe, UserProfile, VO, ServiceFlavour,GroupOfProbes,\
+from Poem.poem.models import Metric, UserProfile, VO, ServiceFlavour, \
                              Tags, Metrics, GroupOfMetrics, MetricAttribute, MetricConfig, MetricParameter,\
                              MetricFlags, MetricDependancy, MetricProbeExecutable, MetricFiles, MetricParent, MetricFileParameter,\
                              MetricType
@@ -594,7 +594,7 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
     def probeversion_url(self, obj):
         if obj and obj.probeversion and obj.probekey:
             return format_html('<a href="{0}">{1}</a>',
-                               reverse('admin:poem_probe_revision',
+                               reverse('admin:poem_super_admin_probe_revision',
                                        args=(obj.probekey.object_id,
                                              obj.probekey.pk)),
                                obj.probeversion)
