@@ -663,7 +663,7 @@ class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
         verbose_name = {'probeexecutable': 'Probe executable',
                         'attribute': 'Attributes',
                         'config': 'Config',
-                        'dependancy': 'Dependency',
+                        'dependency': 'Dependency',
                         'parameter': 'Parameter',
                         'flags': 'Flags',
                         'files': 'File attributes',
