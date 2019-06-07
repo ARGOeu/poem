@@ -514,7 +514,7 @@ class MetricProbeExecutableInline(admin.TabularInline):
 
 class MetricAdmin(CompareVersionAdmin, modelclone.ClonableModelAdmin):
     class Media:
-        css = {"all": ("/poem_media/css/sitemetrics.css",)}
+        css = {"all": ("/poem_media/css/sitemetrictemplates.css",)}
 
     def probeversion_url(self, obj):
         if obj and obj.probeversion and obj.probekey:
