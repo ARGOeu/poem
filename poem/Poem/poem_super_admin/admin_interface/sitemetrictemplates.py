@@ -66,8 +66,6 @@ class RevisionTemplateMetricForm(Form):
     """
     def __init__(self, *args, **kwargs):
         super(RevisionTemplateMetricForm, self).__init__(*args, **kwargs)
-        self.fields['group'].empty_label = None
-        self.fields['tag'].empty_label = None
         self.fields['mtype'].empty_label = None
 
     name = CharField(max_length=255, label='Name', help_text='Metric name')
