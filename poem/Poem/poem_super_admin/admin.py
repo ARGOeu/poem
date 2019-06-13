@@ -38,12 +38,6 @@ class PublicViews(object):
                 % self._regex, self.public_views
             )
         )
-        public_urls.append(
-            re_path(
-                '^poem_super_admin/public_(?P<model>%s)/(?P<object_id>[0-9]+)/history/(?P<rev_id>[0-9]+)/'
-                % self._regex, self.public_views
-            )
-        )
 
         return public_urls
 
@@ -55,9 +49,6 @@ class PublicViews(object):
         if objid and not revid:
             return self._registry[model].change_view(request, objid,
                                                      extra_context=context)
-        elif objid and revid:
-            return self._registry[model].revision_view(request, objid, revid,
-                                                       extra_context=context)
         else:
             return self._registry[model].changelist_view(request,
                                                          extra_context=context)
