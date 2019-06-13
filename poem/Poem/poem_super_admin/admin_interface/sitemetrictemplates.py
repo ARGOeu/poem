@@ -1,4 +1,3 @@
-
 from ajax_select import make_ajax_field
 from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
@@ -24,11 +23,9 @@ from reversion_compare.admin import CompareVersionAdmin
 
 
 class SharedInfo:
-    def __init__(self, requser=None, grname=None, metrictype=None):
+    def __init__(self, requser=None, metrictype=None):
         if requser:
             self.__class__.user = requser
-        if grname:
-            self.__class__.group = grname
         if metrictype:
             self.__class__.metrictype = metrictype
 
