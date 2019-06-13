@@ -63,7 +63,7 @@ class PublicViews(object):
             )
 
             r = re.search('public_(\w+)/', prev)
-            if r:
+            if r and rn:
                 objid = re.search('([0-9]+)/change/', next_url)
                 if objid:
                     # changelist_view -> change_view
@@ -89,7 +89,7 @@ class PublicViews(object):
 
             # change_view -> changelist_view
             r = re.search('public_(\w+)/([0-9]+)/change/$', prev)
-            if r:
+            if r and rn:
                 url = reverse(
                     'admin:poem_super_admin_%s_changelist' % rn.group('model')
                 )
