@@ -3,11 +3,17 @@ from django.forms import ModelChoiceField, ModelForm, CharField
 from django.forms.widgets import Select, TextInput
 from django.utils.html import format_html
 from django.urls import reverse
+import json
+from Poem.poem.models import GroupOfMetrics, Metric, MetricAttribute, \
+    MetricConfig, MetricDependancy, MetricFiles, MetricFileParameter, \
+    MetricFlags, MetricParameter, MetricParent, MetricProbeExecutable, \
+    MetricType, Tags
 from Poem.poem_super_admin.models import MetricTemplate, \
     MetricTemplateAttribute, MetricTemplateConfig, MetricTemplateDependency, \
     MetricTemplateFiles, MetricTemplateFileParameter, MetricTemplateFlags, \
     MetricTemplateParameter, MetricTemplateParent, \
     MetricTemplateProbeExecutable, MetricTemplateType
+from reversion.models import Version
 
 
 class MetricTemplateForm(ModelForm):
@@ -244,6 +250,18 @@ class MetricProbeExecutableInline(admin.TabularInline):
         return False
 
 
+def create_inlines(model, data, metric):
+    data = json.loads(data)
+    if model == MetricProbeExecutable or model == MetricParent:
+        model.objects.create(value=data[0],
+                             metric=metric)
+    else:
+        for d in data:
+            model.objects.create(key=d.split(' ')[0],
+                                 value=d.split(' ')[1],
+                                 metric=metric)
+
+
 class MetricTemplateAdmin(admin.ModelAdmin):
     class Media:
         css = {'all': ('/poem_media/css/sitemetrictemplates.css',)}
@@ -260,6 +278,54 @@ class MetricTemplateAdmin(admin.ModelAdmin):
             return None
     probeversion_url.short_description = 'Probeversion'
 
+    def import_metric_templates(self, request, queryset):
+        for query in queryset:
+            mt = MetricType.objects.get(name=query.mtype)
+            t = Tags.objects.get(name='Test')
+            group = GroupOfMetrics.objects.get(name=request.tenant.name.upper())
+            if query.probeversion:
+                ver = Version.objects.get(object_repr=query.probeversion)
+                m = Metric.objects.create(
+                    name=query.name, mtype=mt, probeversion=query.probeversion,
+                    probekey=ver, parent=query.parent, tag=t, group=group,
+                    probeexecutable=query.probeexecutable, config=query.config,
+                    attribute=query.attribute, dependancy=query.dependency,
+                    flags=query.flags, files=query.files, parameter=query.parameter,
+                    fileparameter=query.fileparameter
+                )
+                if query.config:
+                    create_inlines(MetricConfig, query.config, m)
+                if query.dependency:
+                    create_inlines(MetricDependancy, query.dependency, m)
+                if query.files:
+                    create_inlines(MetricFiles, query.files, m)
+                if query.parameter:
+                    create_inlines(MetricParameter, query.parameter, m)
+                if query.fileparameter:
+                    create_inlines(MetricFileParameter, query.fileparameter, m)
+                if query.attribute:
+                    create_inlines(MetricAttribute, query.attribute, m)
+                if query.probeexecutable:
+                    create_inlines(MetricProbeExecutable, query.probeexecutable,
+                                   m)
+            else:
+                m = Metric.objects.create(
+                    name=query.name, mtype=mt, parent=query.parent,
+                    flags=query.flags, tag=t, group=group
+                )
+            if query.parent:
+                create_inlines(MetricParent, query.parent, m)
+            if query.flags:
+                create_inlines(MetricFlags, query.flags, m)
+        if len(queryset) == 1:
+            message_bit = '1 metric template has'
+        else:
+            message_bit = '%s metric templates have' % len(queryset)
+        self.message_user(request, '%s been successfully imported.'
+                          % message_bit)
+    import_metric_templates.short_description = \
+        'Import selected metric templates as metrics'
+
     list_display = ('name', 'probeversion_url',)
     form = MetricTemplateForm
     fieldsets = ((None, {'classes': ['tagging'],
@@ -269,7 +335,7 @@ class MetricTemplateAdmin(admin.ModelAdmin):
                MetricParameterInline, MetricFlagsInline, MetricFilesInline,
                MetricFileParameterInline, MetricParentInline,)
     search_fields = ('name',)
-    actions = None
+    actions = ['import_metric_templates']
     ordering = ('name',)
     list_per_page = 30
 
@@ -287,3 +353,9 @@ class MetricTemplateAdmin(admin.ModelAdmin):
         extra_context['show_save'] = False
         return super().change_view(request, object_id, form_url,
                                    extra_context=extra_context)
+
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        if 'delete_selected' in actions:
+            del actions['delete_selected']
+        return actions
