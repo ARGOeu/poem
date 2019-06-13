@@ -5,6 +5,7 @@ from django.contrib.admin.sites import AdminSite
 from django.views.decorators.cache import never_cache
 from django.db import connection
 from django.conf import settings
+from django.shortcuts import redirect
 
 from Poem.poem.admin_interface.grmetrics import GroupOfMetricsAdmin
 from Poem.poem.admin_interface.grprofiles import GroupOfProfilesAdmin
@@ -37,6 +38,13 @@ def tenant_samlloginstring():
     return config.get('GENERAL_' + tenant.upper(), 'samlloginstring')
 
 
+def super_admin_page_url():
+    config = ConfigParser()
+    config.read(settings.CONFIG_FILE)
+
+    return config.get('GENERAL_ALL', 'publicpage')
+
+
 class PublicViews(object):
     def load_settings(self):
         self.public_models = (Probe, Metric, Profile, Service)
@@ -58,7 +66,7 @@ class PublicViews(object):
                                    self._regex, self.public_views))
         public_urls.append(re_path('^poem/public_(?P<model>%s)/(?P<object_id>[0-9]+)/change/'
                                    % self._regex, self.public_views))
-        public_urls.append(re_path('^poem/public_(?P<model>%s)/(?P<object_id>[0-9]+)/history/(?P<rev_id>[0-9]+)/'
+        public_urls.append(re_path('^poem_super_admin/public_(?P<model>%s)/(?P<object_id>[0-9]+)/history/(?P<rev_id>[0-9]+)/'
                                    % self._regex, self.public_views))
 
         return public_urls
@@ -88,7 +96,7 @@ class PublicViews(object):
         if prev:
             context = dict(self.each_context(request))
             next_url = request.GET.get('next')
-            rn = re.search('poem/(?P<model>%s)/' % self._regex, next_url)
+            rn = re.search('(poem|poem_super_admin)/(?P<model>%s)/' % self._regex, next_url)
 
             # metric changelist_view -> probe revision_view
             r = re.search('public_metric/$', prev)
@@ -102,27 +110,40 @@ class PublicViews(object):
                 return HttpResponseRedirect(url)
 
             r = re.search('public_(\w+)/', prev)
-            if r:
+            if r and rn:
                 objid = re.search('([0-9]+)/change/', next_url)
                 if objid:
-                    # changelist_view -> change_view
                     objid = objid.group(1)
-                    url = reverse('admin:poem_%s_change' % rn.group('model'), args=(objid,))
-                    url = url.replace(rn.group('model') + '/',
-                                      'public_%s/' % rn.group('model'))
+                    # changelist_view -> change_view
+                    if rn.group('model') == 'probe':
+                        return redirect(
+                            'https://' + super_admin_page_url() +
+                            '/poem/superadmin/poem_super_admin/public_probe/%s/change'
+                            % objid
+                        )
+                    else:
+                        url = reverse('admin:poem_%s_change' % rn.group('model'), args=(objid,))
+                        url = url.replace(rn.group('model') + '/',
+                                          'public_%s/' % rn.group('model'))
 
-                    return HttpResponseRedirect(url)
+                        return HttpResponseRedirect(url)
                 else:
                     # changelist_view -> changelist_view
-                    url = reverse('admin:poem_%s_changelist' % rn.group('model'))
-                    url = url.replace(rn.group('model') + '/',
-                                      'public_%s/' % rn.group('model'))
+                    if rn.group('model') == 'probe':
+                        return redirect(
+                            'https://' + super_admin_page_url() +
+                            '/poem/superadmin/poem_super_admin/public_probe'
+                        )
+                    else:
+                        url = reverse('admin:poem_%s_changelist' % rn.group('model'))
+                        url = url.replace(rn.group('model') + '/',
+                                          'public_%s/' % rn.group('model'))
 
-                    return HttpResponseRedirect(url)
+                        return HttpResponseRedirect(url)
 
             # change_view -> changelist_view
             r = re.search('public_(\w+)/([0-9]+)/change/$', prev)
-            if r:
+            if r and rn:
                 url = reverse('admin:poem_%s_changelist' % rn.group('model'))
                 url = url.replace(rn.group('model') + '/',
                                   'public_%s/' % rn.group('model'))
