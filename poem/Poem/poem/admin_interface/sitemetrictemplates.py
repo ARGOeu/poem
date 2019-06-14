@@ -1,6 +1,8 @@
 from django.contrib import admin
 from django.contrib.admin.models import ADDITION, LogEntry
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.messages import constants as messages
+from django.db import IntegrityError
 from django.forms import ModelChoiceField, ModelForm, CharField
 from django.forms.widgets import Select, TextInput
 from django.utils.html import format_html
@@ -283,71 +285,99 @@ class MetricTemplateAdmin(admin.ModelAdmin):
 
     def import_metric_templates(self, request, queryset):
         imported = []
+        err = []
         for query in queryset:
             mt = MetricType.objects.get(name=query.mtype)
             t = Tags.objects.get(name='Test')
             group = GroupOfMetrics.objects.get(name=request.tenant.name.upper())
-            if query.probeversion:
-                ver = Version.objects.get(object_repr=query.probeversion)
-                with reversion.create_revision():
-                    m = Metric(
-                        name=query.name, mtype=mt,
-                        probeversion=query.probeversion, probekey=ver,
-                        parent=query.parent, tag=t, group=group,
-                        probeexecutable=query.probeexecutable,
-                        config=query.config, attribute=query.attribute,
-                        dependancy=query.dependency, flags=query.flags,
-                        files=query.files, parameter=query.parameter,
-                        fileparameter=query.fileparameter
-                    )
-                    m.save()
-                    reversion.set_user(request.user)
-                    reversion.set_comment(
-                        'Added metric {0} ({1}).'.format(query.name, t)
-                    )
-                if query.config:
-                    create_inlines(MetricConfig, query.config, m)
-                if query.dependency:
-                    create_inlines(MetricDependancy, query.dependency, m)
-                if query.files:
-                    create_inlines(MetricFiles, query.files, m)
-                if query.parameter:
-                    create_inlines(MetricParameter, query.parameter, m)
-                if query.fileparameter:
-                    create_inlines(MetricFileParameter, query.fileparameter, m)
-                if query.attribute:
-                    create_inlines(MetricAttribute, query.attribute, m)
-                if query.probeexecutable:
-                    create_inlines(MetricProbeExecutable, query.probeexecutable,
-                                   m)
+            try:
+                if query.probeversion:
+                    ver = Version.objects.get(object_repr=query.probeversion)
+                    with reversion.create_revision():
+                        m = Metric(
+                            name=query.name, mtype=mt,
+                            probeversion=query.probeversion, probekey=ver,
+                            parent=query.parent, tag=t, group=group,
+                            probeexecutable=query.probeexecutable,
+                            config=query.config, attribute=query.attribute,
+                            dependancy=query.dependency, flags=query.flags,
+                            files=query.files, parameter=query.parameter,
+                            fileparameter=query.fileparameter
+                        )
+                        m.save()
+                        reversion.set_user(request.user)
+                        reversion.set_comment(
+                            'Added metric {0} ({1}).'.format(query.name, t)
+                        )
+                    if query.config:
+                        create_inlines(MetricConfig, query.config, m)
+                    if query.dependency:
+                        create_inlines(MetricDependancy, query.dependency, m)
+                    if query.files:
+                        create_inlines(MetricFiles, query.files, m)
+                    if query.parameter:
+                        create_inlines(MetricParameter, query.parameter, m)
+                    if query.fileparameter:
+                        create_inlines(MetricFileParameter, query.fileparameter,
+                                       m)
+                    if query.attribute:
+                        create_inlines(MetricAttribute, query.attribute, m)
+                    if query.probeexecutable:
+                        create_inlines(MetricProbeExecutable,
+                                       query.probeexecutable, m)
+                else:
+                    with reversion.create_revision():
+                        m = Metric.objects.create(
+                            name=query.name, mtype=mt, parent=query.parent,
+                            flags=query.flags, tag=t, group=group
+                        )
+                if query.parent:
+                    create_inlines(MetricParent, query.parent, m)
+                if query.flags:
+                    create_inlines(MetricFlags, query.flags, m)
+
+                # create LogEntry
+                LogEntry.objects.log_action(
+                    user_id=request.user.id,
+                    content_type_id=ContentType.objects.get_for_model(m).pk,
+                    object_id=m.id,
+                    object_repr=m.__str__(),
+                    change_message='Added metric {0} ({1}).'.format(query.name,
+                                                                    t),
+                    action_flag=ADDITION
+                )
+                imported.append(m.name)
+
+            except IntegrityError:
+                err.append(query.name)
+                continue
+
+        if imported:
+            if len(imported) == 1:
+                message_bit = '{} has'.format(imported[0])
             else:
-                with reversion.create_revision():
-                    m = Metric.objects.create(
-                        name=query.name, mtype=mt, parent=query.parent,
-                        flags=query.flags, tag=t, group=group
-                    )
-            if query.parent:
-                create_inlines(MetricParent, query.parent, m)
-            if query.flags:
-                create_inlines(MetricFlags, query.flags, m)
+                message_bit = ', '.join(msg for msg in imported) + ' have'
 
-            # create LogEntry
-            LogEntry.objects.log_action(
-                user_id=request.user.id,
-                content_type_id=ContentType.objects.get_for_model(m).pk,
-                object_id=m.id,
-                object_repr=m.__str__(),
-                change_message='Added metric {0} ({1}).'.format(query.name, t),
-                action_flag=ADDITION
+        if err:
+            if len(err) == 1:
+                error_bit = '{} has'.format(err[0])
+            else:
+                error_bit = ', '.join(msg for msg in err) + ' have'
+
+        if imported:
+            self.message_user(
+                request,
+                '{} been successfully imported.'.format(message_bit)
             )
-            imported.append(m.name)
 
-        if len(imported) == 1:
-            message_bit = '{} has'.format(imported[0])
-        else:
-            message_bit = ', '.join(msg for msg in imported) + ' have'
-        self.message_user(request, '%s been successfully imported.'
-                          % message_bit)
+        if err:
+            self.message_user(
+                request,
+                '{} not been imported, since those metrics already exist in '
+                'the database.'.format(error_bit),
+                level=messages.WARNING
+            )
+
     import_metric_templates.short_description = \
         'Import selected metric templates as metrics'
 
