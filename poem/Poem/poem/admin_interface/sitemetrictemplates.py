@@ -327,9 +327,14 @@ class MetricTemplateAdmin(admin.ModelAdmin):
                                        query.probeexecutable, m)
                 else:
                     with reversion.create_revision():
-                        m = Metric.objects.create(
+                        m = Metric(
                             name=query.name, mtype=mt, parent=query.parent,
                             flags=query.flags, tag=t, group=group
+                        )
+                        m.save()
+                        reversion.set_user(request.user)
+                        reversion.set_comment(
+                            'Added metric {0} ({1}).'.format(query.name, t)
                         )
                 if query.parent:
                     create_inlines(MetricParent, query.parent, m)
