@@ -336,6 +336,7 @@ class MetricTemplateAdmin(admin.ModelAdmin):
                 content_type_id=ContentType.objects.get_for_model(m).pk,
                 object_id=m.id,
                 object_repr=m.__str__(),
+                change_message='Added metric {0} ({1}).'.format(query.name, t),
                 action_flag=ADDITION
             )
 
