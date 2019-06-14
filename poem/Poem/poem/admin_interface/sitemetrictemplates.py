@@ -219,17 +219,18 @@ class MetricParentInline(admin.TabularInline):
     verbose_name = 'Parent metric'
     verbose_name_plural = 'Parent metric'
     form = MetricParentForm
-    template = 'admin/edit_inline/tabular-attrs.html'
-    extra = 0
+    template = 'admin/edit_inline/tabular-attrs-exec.html'
+    max_num = 1
+    can_delete = False
 
     def has_add_permission(self, request):
-        return False
+        return True
 
     def has_delete_permission(self, request, obj=None):
         return False
 
     def has_change_permission(self, request, obj=None):
-        return False
+        return True
 
 
 class MetricProbeExecutableForm(ModelForm):
@@ -242,17 +243,18 @@ class MetricProbeExecutableInline(admin.TabularInline):
     verbose_name = 'Probe executable'
     verbose_name_plural = 'Probe executable'
     form = MetricProbeExecutableForm
-    template = 'admin/edit_inline/tabular-attrs.html'
-    extra = 0
+    template = 'admin/edit_inline/tabular-attrs-exec.html'
+    max_num = 1
+    can_delete = False
 
     def has_add_permission(self, request):
-        return False
+        return True
 
     def has_delete_permission(self, request, obj=None):
         return False
 
     def has_change_permission(self, request, obj=None):
-        return False
+        return True
 
 
 def create_inlines(model, data, metric):
