@@ -282,6 +282,7 @@ class MetricTemplateAdmin(admin.ModelAdmin):
     probeversion_url.short_description = 'Probeversion'
 
     def import_metric_templates(self, request, queryset):
+        imported = []
         for query in queryset:
             mt = MetricType.objects.get(name=query.mtype)
             t = Tags.objects.get(name='Test')
@@ -339,11 +340,12 @@ class MetricTemplateAdmin(admin.ModelAdmin):
                 change_message='Added metric {0} ({1}).'.format(query.name, t),
                 action_flag=ADDITION
             )
+            imported.append(m.name)
 
-        if len(queryset) == 1:
-            message_bit = '1 metric template has'
+        if len(imported) == 1:
+            message_bit = '{} has'.format(imported[0])
         else:
-            message_bit = '%s metric templates have' % len(queryset)
+            message_bit = ', '.join(msg for msg in imported) + ' have'
         self.message_user(request, '%s been successfully imported.'
                           % message_bit)
     import_metric_templates.short_description = \
