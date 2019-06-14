@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.contrib.admin.models import ADDITION, LogEntry
+from django.contrib.contenttypes.models import ContentType
 from django.forms import ModelChoiceField, ModelForm, CharField
 from django.forms.widgets import Select, TextInput
 from django.utils.html import format_html
@@ -327,6 +329,15 @@ class MetricTemplateAdmin(admin.ModelAdmin):
                 create_inlines(MetricParent, query.parent, m)
             if query.flags:
                 create_inlines(MetricFlags, query.flags, m)
+
+            # create LogEntry
+            LogEntry.objects.log_action(
+                user_id=request.user.id,
+                content_type_id=ContentType.objects.get_for_model(m).pk,
+                object_id=m.id,
+                object_repr=m.__str__(),
+                action_flag=ADDITION
+            )
 
         if len(queryset) == 1:
             message_bit = '1 metric template has'
