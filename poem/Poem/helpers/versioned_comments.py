@@ -82,10 +82,6 @@ def new_comment(comment, obj_id=None, version_id=None, ctt_id=None):
         except json.JSONDecodeError:
             return new_comment
 
-    if 'Derived' in new_comment:
-        pass
-
-    else:
         messages = []
         for sub_message in new_comment:
             if 'added' in sub_message:
@@ -212,7 +208,8 @@ def new_comment(comment, obj_id=None, version_id=None, ctt_id=None):
 
         new_comment = ' '.join(msg[0].upper() + msg[1:] if msg != '' else
                                '' for msg in messages)
-        if new_comment == ' ':
-            new_comment = 'No fields changed.'
 
-    return new_comment or gettext('No fields changed.')
+        return new_comment or gettext('No fields changed.')
+
+    else:
+        return new_comment
