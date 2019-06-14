@@ -13,6 +13,7 @@ from Poem.poem_super_admin.models import MetricTemplate, \
     MetricTemplateFiles, MetricTemplateFileParameter, MetricTemplateFlags, \
     MetricTemplateParameter, MetricTemplateParent, \
     MetricTemplateProbeExecutable, MetricTemplateType
+import reversion
 from reversion.models import Version
 
 
@@ -285,14 +286,22 @@ class MetricTemplateAdmin(admin.ModelAdmin):
             group = GroupOfMetrics.objects.get(name=request.tenant.name.upper())
             if query.probeversion:
                 ver = Version.objects.get(object_repr=query.probeversion)
-                m = Metric.objects.create(
-                    name=query.name, mtype=mt, probeversion=query.probeversion,
-                    probekey=ver, parent=query.parent, tag=t, group=group,
-                    probeexecutable=query.probeexecutable, config=query.config,
-                    attribute=query.attribute, dependancy=query.dependency,
-                    flags=query.flags, files=query.files, parameter=query.parameter,
-                    fileparameter=query.fileparameter
-                )
+                with reversion.create_revision():
+                    m = Metric(
+                        name=query.name, mtype=mt,
+                        probeversion=query.probeversion, probekey=ver,
+                        parent=query.parent, tag=t, group=group,
+                        probeexecutable=query.probeexecutable,
+                        config=query.config, attribute=query.attribute,
+                        dependancy=query.dependency, flags=query.flags,
+                        files=query.files, parameter=query.parameter,
+                        fileparameter=query.fileparameter
+                    )
+                    m.save()
+                    reversion.set_user(request.user)
+                    reversion.set_comment(
+                        'Added metric {0} ({1}).'.format(query.name, t)
+                    )
                 if query.config:
                     create_inlines(MetricConfig, query.config, m)
                 if query.dependency:
@@ -309,14 +318,16 @@ class MetricTemplateAdmin(admin.ModelAdmin):
                     create_inlines(MetricProbeExecutable, query.probeexecutable,
                                    m)
             else:
-                m = Metric.objects.create(
-                    name=query.name, mtype=mt, parent=query.parent,
-                    flags=query.flags, tag=t, group=group
-                )
+                with reversion.create_revision():
+                    m = Metric.objects.create(
+                        name=query.name, mtype=mt, parent=query.parent,
+                        flags=query.flags, tag=t, group=group
+                    )
             if query.parent:
                 create_inlines(MetricParent, query.parent, m)
             if query.flags:
                 create_inlines(MetricFlags, query.flags, m)
+
         if len(queryset) == 1:
             message_bit = '1 metric template has'
         else:
