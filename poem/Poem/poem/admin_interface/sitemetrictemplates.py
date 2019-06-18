@@ -360,7 +360,12 @@ def custom_save_metric(name, mtype, probeversion, parent, tag, group,
         return False
 
 
-class MetricTemplateAdmin(admin.ModelAdmin):
+class DontLog:
+    def log_change(self, *args):
+        return
+
+
+class MetricTemplateAdmin(DontLog, admin.ModelAdmin):
     class Media:
         css = {'all': ('/poem_media/css/sitemetrictemplates.css',)}
 
