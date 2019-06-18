@@ -269,6 +269,79 @@ def create_inlines(model, data, metric):
                                  metric=metric)
 
 
+def custom_save_metric(name, mtype, probeversion, parent, tag, group,
+                       probeexecutable, config, attribute, dependancy, flags,
+                       files, parameter, fileparameter, user):
+    mt = MetricType.objects.get(name=mtype)
+    t = Tags.objects.get(name=tag)
+    gr = GroupOfMetrics.objects.get(name=group)
+
+    try:
+        if probeversion:
+            ver = Version.objects.get(object_repr=probeversion)
+            with reversion.create_revision():
+                m = Metric(
+                    name=name, mtype=mt, probeversion=probeversion,
+                    probekey=ver, parent=parent, tag=t, group=gr,
+                    probeexecutable=probeexecutable, config=config,
+                    attribute=attribute, dependancy=dependancy, flags=flags,
+                    files=files, parameter=parameter,
+                    fileparameter=fileparameter
+                )
+                m.save()
+                reversion.set_user(user)
+                reversion.set_comment(
+                    'Derived from metric template {}.'.format(name)
+                )
+
+            if config:
+                create_inlines(MetricConfig, config, m)
+            if dependancy:
+                create_inlines(MetricDependancy, dependancy, m)
+            if files:
+                create_inlines(MetricFiles, files, m)
+            if parameter:
+                create_inlines(MetricParameter, parameter, m)
+            if fileparameter:
+                create_inlines(MetricFileParameter, fileparameter, m)
+            if attribute:
+                create_inlines(MetricAttribute, attribute, m)
+            if probeexecutable:
+                create_inlines(MetricProbeExecutable, probeexecutable, m)
+
+        else:
+            with reversion.create_revision():
+                m = Metric(
+                    name=name, mtype=mt, parent=parent, flags=flags, tag=t,
+                    group=gr
+                )
+                m.save()
+                reversion.set_user(user)
+                reversion.set_comment(
+                    'Derived from metric template {}.'.format(name)
+                )
+
+        if parent:
+            create_inlines(MetricParent, parent, m)
+        if flags:
+            create_inlines(MetricFlags, flags, m)
+
+        # create LogEntry
+        LogEntry.objects.log_action(
+            user_id=user.id,
+            content_type_id=ContentType.objects.get_for_model(m).pk,
+            object_id=m.id,
+            object_repr=m.__str__(),
+            change_message='Derived from metric template {}.'.format(name),
+            action_flag=ADDITION
+        )
+
+        return True
+
+    except IntegrityError:
+        return False
+
+
 class MetricTemplateAdmin(admin.ModelAdmin):
     class Media:
         css = {'all': ('/poem_media/css/sitemetrictemplates.css',)}
@@ -289,73 +362,20 @@ class MetricTemplateAdmin(admin.ModelAdmin):
         imported = []
         err = []
         for query in queryset:
-            mt = MetricType.objects.get(name=query.mtype)
-            t = Tags.objects.get(name='Test')
-            group = GroupOfMetrics.objects.get(name=request.tenant.name.upper())
-            try:
-                if query.probeversion:
-                    ver = Version.objects.get(object_repr=query.probeversion)
-                    with reversion.create_revision():
-                        m = Metric(
-                            name=query.name, mtype=mt,
-                            probeversion=query.probeversion, probekey=ver,
-                            parent=query.parent, tag=t, group=group,
-                            probeexecutable=query.probeexecutable,
-                            config=query.config, attribute=query.attribute,
-                            dependancy=query.dependency, flags=query.flags,
-                            files=query.files, parameter=query.parameter,
-                            fileparameter=query.fileparameter
-                        )
-                        m.save()
-                        reversion.set_user(request.user)
-                        reversion.set_comment(
-                            'Added metric {0} ({1}).'.format(query.name, t)
-                        )
-                    if query.config:
-                        create_inlines(MetricConfig, query.config, m)
-                    if query.dependency:
-                        create_inlines(MetricDependancy, query.dependency, m)
-                    if query.files:
-                        create_inlines(MetricFiles, query.files, m)
-                    if query.parameter:
-                        create_inlines(MetricParameter, query.parameter, m)
-                    if query.fileparameter:
-                        create_inlines(MetricFileParameter, query.fileparameter,
-                                       m)
-                    if query.attribute:
-                        create_inlines(MetricAttribute, query.attribute, m)
-                    if query.probeexecutable:
-                        create_inlines(MetricProbeExecutable,
-                                       query.probeexecutable, m)
-                else:
-                    with reversion.create_revision():
-                        m = Metric(
-                            name=query.name, mtype=mt, parent=query.parent,
-                            flags=query.flags, tag=t, group=group
-                        )
-                        m.save()
-                        reversion.set_user(request.user)
-                        reversion.set_comment(
-                            'Added metric {0} ({1}).'.format(query.name, t)
-                        )
-                if query.parent:
-                    create_inlines(MetricParent, query.parent, m)
-                if query.flags:
-                    create_inlines(MetricFlags, query.flags, m)
 
-                # create LogEntry
-                LogEntry.objects.log_action(
-                    user_id=request.user.id,
-                    content_type_id=ContentType.objects.get_for_model(m).pk,
-                    object_id=m.id,
-                    object_repr=m.__str__(),
-                    change_message='Added metric {0} ({1}).'.format(query.name,
-                                                                    t),
-                    action_flag=ADDITION
-                )
-                imported.append(m.name)
+            if custom_save_metric(
+                    name=query.name, mtype=query.mtype,
+                    probeversion=query.probeversion, parent=query.parent,
+                    tag='Test', group=request.tenant.name.upper(),
+                    probeexecutable=query.probeexecutable, config=query.config,
+                    attribute=query.attribute, dependancy=query.dependency,
+                    flags=query.flags, files=query.files,
+                    parameter=query.parameter,
+                    fileparameter=query.fileparameter, user=request.user
+            ):
+                imported.append(query.name)
 
-            except IntegrityError:
+            else:
                 err.append(query.name)
                 continue
 
@@ -384,7 +404,6 @@ class MetricTemplateAdmin(admin.ModelAdmin):
                 'the database.'.format(error_bit),
                 level=messages.WARNING
             )
-
     import_metric_templates.short_description = \
         'Import selected metric templates as metrics'
 
