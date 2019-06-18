@@ -1,7 +1,7 @@
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.contrib.admin.models import ADDITION, LogEntry
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.messages import constants as messages
+from django.contrib.messages import constants as msgs
 from django.db import IntegrityError
 from django.forms import ModelChoiceField, ModelForm, CharField
 from django.forms.widgets import TextInput
@@ -420,7 +420,7 @@ class MetricTemplateAdmin(admin.ModelAdmin):
                 request,
                 '{} not been imported, since those metrics already exist in '
                 'the database.'.format(error_bit),
-                level=messages.WARNING
+                level=msgs.WARNING
             )
     import_metric_templates.short_description = \
         'Import selected metric templates as metrics'
@@ -472,30 +472,37 @@ class MetricTemplateAdmin(admin.ModelAdmin):
                 )
             )
         if '_import-metric' in request.POST:
-            custom_save_metric(
-                name=obj.name,
-                mtype=obj.mtype,
-                probeversion=obj.probeversion,
-                parent=obj.parent,
-                tag=tag,
-                group=group,
-                probeexecutable=obj.probeexecutable,
-                config=json.dumps(conf),
-                attribute=obj.attribute,
-                dependancy=obj.dependency,
-                flags=obj.flags,
-                files=obj.files,
-                parameter=obj.parameter,
-                fileparameter=obj.fileparameter,
-                user=request.user
-            )
-            self.message_user(
-                request,
-                "Metric {0} ({1}) has been successfully imported.".format(
-                    obj.name,
-                    tag.name
+            if custom_save_metric(
+                    name=obj.name,
+                    mtype=obj.mtype,
+                    probeversion=obj.probeversion,
+                    parent=obj.parent,
+                    tag=tag,
+                    group=group,
+                    probeexecutable=obj.probeexecutable,
+                    config=json.dumps(conf),
+                    attribute=obj.attribute,
+                    dependancy=obj.dependency,
+                    flags=obj.flags,
+                    files=obj.files,
+                    parameter=obj.parameter,
+                    fileparameter=obj.fileparameter,
+                    user=request.user
+            ):
+                self.message_user(
+                    request,
+                    "Metric {0} ({1}) has been successfully imported.".format(
+                        obj.name,
+                        tag.name
+                    )
                 )
-            )
+            else:
+                self.message_user(
+                    request,
+                    "Metric {} is not imported since it already exist in the"
+                    " db.".format(obj.name),
+                    level=messages.WARNING
+                )
             return HttpResponseRedirect(
                 reverse('admin:poem_super_admin_metrictemplate_changelist')
             )
