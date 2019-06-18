@@ -4,7 +4,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages import constants as messages
 from django.db import IntegrityError
 from django.forms import ModelChoiceField, ModelForm, CharField
-from django.forms.widgets import Select, TextInput
+from django.forms.widgets import TextInput
 from django.utils.html import format_html
 from django.urls import reverse
 import json
@@ -29,9 +29,16 @@ class MetricTemplateForm(ModelForm):
                              widget=TextInput(attrs={'readonly': 'readonly'}))
 
     qs = MetricTemplateType.objects.all()
-    mtype = ModelChoiceField(queryset=qs, label='Type',
+    mtype = ModelChoiceField(queryset=qs, label='Type', empty_label=None,
                              help_text='Metric is of given type',
-                             widget=Select(attrs={'disabled': 'disabled'}))
+                             disabled=True)
+    qs = GroupOfMetrics.objects.all()
+    group = ModelChoiceField(queryset=qs, label='Group', empty_label=None,
+                             help_text='Metric is member of selected group.')
+
+    qs = Tags.objects.all()
+    tag = ModelChoiceField(queryset=qs, label='Tag', empty_label=None,
+                           help_text='Select one of the tags available.')
 
 
 class MetricAttributeForm(ModelForm):
@@ -410,7 +417,8 @@ class MetricTemplateAdmin(admin.ModelAdmin):
     list_display = ('name', 'probeversion_url',)
     form = MetricTemplateForm
     fieldsets = ((None, {'classes': ['tagging'],
-                         'fields': (('name', 'probeversion', 'mtype'),)}),)
+                         'fields': (('name', 'probeversion', 'tag'),
+                                    ('mtype', 'group'))}),)
     inlines = (MetricProbeExecutableInline, MetricConfigInline,
                MetricAttributeInline, MetricDependencyInline,
                MetricParameterInline, MetricFlagsInline, MetricFilesInline,
