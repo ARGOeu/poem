@@ -11,7 +11,7 @@ import json
 from Poem.poem.models import GroupOfMetrics, Metric, MetricAttribute, \
     MetricConfig, MetricDependancy, MetricFiles, MetricFileParameter, \
     MetricFlags, MetricParameter, MetricParent, MetricProbeExecutable, \
-    MetricType, Tags
+    MetricType, Tags, Metrics
 from Poem.poem_super_admin.models import MetricTemplate, \
     MetricTemplateAttribute, MetricTemplateConfig, MetricTemplateDependency, \
     MetricTemplateFiles, MetricTemplateFileParameter, MetricTemplateFlags, \
@@ -332,6 +332,14 @@ def custom_save_metric(name, mtype, probeversion, parent, tag, group,
             create_inlines(MetricParent, parent, m)
         if flags:
             create_inlines(MetricFlags, flags, m)
+
+        # create Metrics associated with the given group:
+        try:
+            new = Metrics.objects.get(name=m.name)
+        except Metrics.DoesNotExist:
+            new = Metrics.objects.create(name=m.name)
+        else:
+            GroupOfMetrics.objects.get(name=gr).metrics.add(new)
 
         # create LogEntry
         LogEntry.objects.log_action(
