@@ -5,6 +5,7 @@ from django.contrib.messages import constants as messages
 from django.db import IntegrityError
 from django.forms import ModelChoiceField, ModelForm, CharField
 from django.forms.widgets import TextInput
+from django.http import HttpResponseRedirect
 from django.utils.html import format_html
 from django.urls import reverse
 import json
@@ -169,8 +170,10 @@ class MetricDependencyInline(admin.TabularInline):
 class MetricConfigForm(ModelForm):
     key = CharField(label='key',
                     widget=TextInput(attrs={'readonly': 'readonly'}))
-    value = CharField(label='value', required=False,
-                      widget=TextInput(attrs={'readonly': 'readonly'}))
+    value = CharField(label='value', required=False)
+    
+    def save(self, commit=True):
+        super(MetricConfigForm, self).save(commit=False)
 
 
 class MetricConfigInline(admin.TabularInline):
@@ -456,3 +459,44 @@ class MetricTemplateAdmin(admin.ModelAdmin):
         if 'delete_selected' in actions:
             del actions['delete_selected']
         return actions
+   
+    def response_change(self, request, obj):
+        group = GroupOfMetrics.objects.get(id=request.POST['group'])
+        tag = Tags.objects.get(id=request.POST['tag'])
+        conf = []
+        for i in range(5):
+            conf.append(
+                '{0} {1}'.format(
+                    request.POST['metrictemplateconfig_set-{}-key'.format(i)],
+                    request.POST['metrictemplateconfig_set-{}-value'.format(i)]
+                )
+            )
+        if '_import-metric' in request.POST:
+            custom_save_metric(
+                name=obj.name,
+                mtype=obj.mtype,
+                probeversion=obj.probeversion,
+                parent=obj.parent,
+                tag=tag,
+                group=group,
+                probeexecutable=obj.probeexecutable,
+                config=json.dumps(conf),
+                attribute=obj.attribute,
+                dependancy=obj.dependency,
+                flags=obj.flags,
+                files=obj.files,
+                parameter=obj.parameter,
+                fileparameter=obj.fileparameter,
+                user=request.user
+            )
+            self.message_user(
+                request,
+                "Metric {0} ({1}) has been successfully imported.".format(
+                    obj.name,
+                    tag.name
+                )
+            )
+            return HttpResponseRedirect(
+                reverse('admin:poem_super_admin_metrictemplate_changelist')
+            )
+        return super().response_change(request, obj)
