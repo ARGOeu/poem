@@ -1,3 +1,4 @@
+from ajax_select import make_ajax_field
 from django.contrib import admin, messages
 from django.contrib.admin.models import ADDITION, LogEntry
 from django.contrib.contenttypes.models import ContentType
@@ -23,11 +24,15 @@ from reversion.models import Version
 
 
 class MetricTemplateForm(ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(MetricTemplateForm, self).__init__(*args, **kwargs)
+        self.fields['probeversion'].disabled = True
+
     name = CharField(max_length=255, label='Name', help_text='Metric name',
                      widget=TextInput(attrs={'readonly': 'readonly'}))
-    probeversion = CharField(label='Probe', help_text='Probe name and version',
-                             required=False,
-                             widget=TextInput(attrs={'readonly': 'readonly'}))
+    probeversion = make_ajax_field(Metric, 'probeversion', 'hintsprobes',
+                                   label='Probe', required=False,
+                                   help_text='Probe name and version.')
 
     qs = MetricTemplateType.objects.all()
     mtype = ModelChoiceField(queryset=qs, label='Type', empty_label=None,
