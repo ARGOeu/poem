@@ -131,6 +131,19 @@
   {% endblock %}
 {% endif %}
 
+{% if not request.tenant.schema_name == "public" %}
+  <script type="text/javascript">
+    var el = new Array(0, 1, 2, 3, 4);
+    el.forEach(function(item) {
+      key = '#id_metrictemplateconfig_set-' + item + '-key';
+      value = '#id_metrictemplateconfig_set-' + item + '-value';
+      if ($(key).val() === 'path'){
+        $(value).prop('readonly', true);
+      }
+    });
+</script>
+{% endif %}
+
 {% if adminform and add %}
    <script type="text/javascript">document.getElementById("{{ adminform.first_field.id_for_label }}").focus();</script>
 {% endif %}
