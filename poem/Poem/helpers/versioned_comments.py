@@ -22,7 +22,8 @@ def get_obj_from_db(objname, all_changes, action, object_id, version_id,
     nr = 0
     for x in all_changes:
         if action in x:
-            if x[action]['object'].split(' ')[0] == objname[0]:
+            if 'object' in x[action] and \
+                    x[action]['object'].split(' ')[0] == objname[0]:
                 nr += 1
         else:
             continue
