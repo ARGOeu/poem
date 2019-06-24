@@ -23,6 +23,42 @@ def extract_data(d):
             item['model'] = 'poem_super_admin.metrictemplate'
             extracted_data.append(item)
 
+        elif item['model'] == 'poem.metricdependancy':
+            item['model'] = 'poem_super_admin.metrictemplatedependency'
+            extracted_data.append(item)
+
+        elif item['model'] == 'poem.metricflags':
+            item['model'] = 'poem_super_admin.metrictemplateflags'
+            extracted_data.append(item)
+
+        elif item['model'] == 'poem.metricfiles':
+            item['model'] = 'poem_super_admin.metrictemplatefiles'
+            extracted_data.append(item)
+
+        elif item['model'] == 'poem.metricparameter':
+            item['model'] = 'poem_super_admin.metrictemplateparameter'
+            extracted_data.append(item)
+
+        elif item['model'] == 'poem.metricfileparameter':
+            item['model'] = 'poem_super_admin.metrictemplatefileparameter'
+            extracted_data.append(item)
+
+        elif item['model'] == 'poem.metricattribute':
+            item['model'] = 'poem_super_admin.metrictemplateattribute'
+            extracted_data.append(item)
+
+        elif item['model'] == 'poem.metricconfig':
+            item['model'] = 'poem_super_admin.metrictemplateconfig'
+            extracted_data.append(item)
+
+        elif item['model'] == 'poem.metricparent':
+            item['model'] = 'poem_super_admin.metrictemplateparent'
+            extracted_data.append(item)
+
+        elif item['model'] == 'poem.metricprobeexecutable':
+            item['model'] = 'poem_super_admin.metrictemplateprobeexecutable'
+            extracted_data.append(item)
+
         elif item['model'] == 'reversion.version':
             if item['fields']['content_type'] == ['poem', 'probe']:
                 item['fields']['content_type'] = ['poem_super_admin', 'probe']
@@ -62,6 +98,16 @@ def create_public_data(d1, d2, d3):
     data2 = extract_data(d2.copy())
     data3 = extract_data(d3.copy())
 
+    inline_models = ['poem_super_admin.metrictemplatedependency',
+                     'poem_super_admin.metrictemplateflags',
+                     'poem_super_admin.metrictemplatefiles',
+                     'poem_super_admin.metrictemplateparameter',
+                     'poem_super_admin.metrictemplatefileparameter',
+                     'poem_super_admin.metrictemplateattribute',
+                     'poem_super_admin.metrictemplateconfig',
+                     'poem_super_admin.metrictemplateparent',
+                     'poem_super_admin.metrictemplateprobeexecutable']
+
     names = set()
     mnames = set()
     probe_pk = 0
@@ -94,6 +140,11 @@ def create_public_data(d1, d2, d3):
             if item['fields']['cloned']:
                 item['fields']['cloned'] = \
                     str(metricpks[int(item['fields']['cloned'])])
+
+        if item['model'] in inline_models:
+            item['fields']['metrictemplate'] = \
+            metricpks[int(item['fields']['metric'])]
+            del item['fields']['metric']
 
     version_pk = 0
     versionpks = {}
@@ -210,6 +261,7 @@ def create_public_data(d1, d2, d3):
         new_names = set()
         new_mnames = set()
         new_vers = {}
+        inlinepks = set()
 
         for item in dat:
             if item['model'] == 'poem_super_admin.probe' and \
@@ -224,6 +276,7 @@ def create_public_data(d1, d2, d3):
                 if item['fields']['name'] not in mnames:
                     metric_pk += 1
                     metricpks.update({item['pk']: metric_pk})
+                    inlinepks.add(item['pk'])
                     item['pk'] = metric_pk
                     new_mnames.add(item['fields']['name'])
                 else:
@@ -241,6 +294,21 @@ def create_public_data(d1, d2, d3):
                         i['fields']['name'] == item['fields']['name']:
                         i['fields'].update(item['fields'])
                         probepks.update({item['pk']: i['pk']})
+
+        for item in dat:
+            if item['model'] == 'poem_super_admin.metrictemplate':
+                if item['fields']['cloned']:
+                    item['fields']['cloned'] = \
+                    str(metricpks[int(item['fields']['cloned'])])
+                data.append(item)
+
+            if item['model'] in inline_models:
+                if item['fields']['metric'] in inlinepks:
+                    item['fields']['metrictemplate'] = \
+                    metricpks[int(item['fields']['metric'])]
+                    del item['fields']['metric']
+                    data.append(item)
+
 
         used_revisions = []
         for item in dat:
