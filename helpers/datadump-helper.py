@@ -547,6 +547,14 @@ def create_tenant_data(tenant_data, public_data):
                 item['fields']['probekey'] = \
                     probe_dict[item['fields']['probeversion']]
             new_data.append(item)
+
+        elif item['model'] == 'admin.logentry':
+            if item['fields']['content_type'] == ['poem', 'probe'] or \
+                item['fields']['content_type'] == ['poem', 'metric']:
+                pass
+            else:
+                new_data.append(item)
+                
         elif item['model'] != 'reversion.version' and \
                 item['model'] != 'reversion.revision':
             new_data.append(item)
