@@ -135,6 +135,7 @@ def create_public_data(d1, d2, d3):
             item['pk'] = metric_pk
             mnames.add(item['fields']['name'])
 
+    inlinepkmax = [0] * len(inline_models)
     for item in data1:
         if item['model'] == 'poem_super_admin.metrictemplate':
             if item['fields']['cloned']:
@@ -145,6 +146,10 @@ def create_public_data(d1, d2, d3):
             item['fields']['metrictemplate'] = \
             metricpks[int(item['fields']['metric'])]
             del item['fields']['metric']
+
+            for i in range(len(inline_models)):
+                if item['model'] == inline_models[i]:
+                    inlinepkmax[i] = item['pk']
 
     version_pk = 0
     versionpks = {}
@@ -309,6 +314,8 @@ def create_public_data(d1, d2, d3):
                     item['fields']['metrictemplate'] = \
                     metricpks[int(item['fields']['metric'])]
                     del item['fields']['metric']
+                    inlinepkmax[inline_models.index(item['model'])] += 1
+                    item['pk'] = inlinepkmax[inline_models.index(item['model'])]
                     data.append(item)
 
 
