@@ -300,7 +300,9 @@ def create_public_data(d1, d2, d3):
                 if item['fields']['cloned']:
                     item['fields']['cloned'] = \
                     str(metricpks[int(item['fields']['cloned'])])
-                data.append(item)
+
+                if item['fields']['name'] not in mnames:
+                    data.append(item)
 
             if item['model'] in inline_models:
                 if item['fields']['metric'] in inlinepks:
