@@ -375,7 +375,8 @@ def create_public_data(d1, d2, d3):
 
         revlist = []
         for item in data:
-            if item['model'] == 'poem_super_admin.metrictemplate':
+            if item['model'] == 'poem_super_admin.metrictemplate' and \
+                    item['fields']['name'] not in mnames:
                 version_pk += 1
                 revision_pk += 1
                 ser_data = json.dumps(
