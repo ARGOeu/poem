@@ -573,15 +573,6 @@ class MetricAdmin(CompareVersionAdmin, admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         if obj.probeversion:
             obj.probekey = Version.objects.get(object_repr__exact=obj.probeversion)
-        if request.path.endswith('/clone/'):
-            import re
-            cloned_metric = re.search('([0-9]*)/change/clone', request.path).group(1)
-            from_metric = Metric.objects.get(pk=cloned_metric)
-            reversion.set_user(request.user)
-            reversion.set_comment('Derived from %s' % from_metric)
-            obj.cloned = cloned_metric
-        else:
-            obj.cloned = ''
         if request.user.has_perm('poem.groupown_metric') \
                 or request.user.is_superuser:
             obj.save()
