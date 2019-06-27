@@ -47,7 +47,9 @@ def get_obj_from_db(objname, all_changes, action, object_id, version_id,
                         olderversionid.id)
     fieldname = eval("json.loads(Version.objects.get("
                      "id=%s).serialized_data)[0]['fields']" % version_id)
-    if objname[0].startswith('Metric'):
+    if objname[0].startswith('MetricTemplate'):
+        objname[0] = objname[0][14:]
+    elif objname[0].startswith('Metric'):
         objname[0] = objname[0][6:]
 
     if fieldname[objname[0].lower()]:
