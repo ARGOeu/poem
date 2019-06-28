@@ -133,9 +133,9 @@ def delete_template_entryfield(*args, **kwargs):
         fielddata = json.loads(eval('i.metrictemplate.%s' % field))
         if deletedentry in fielddata:
             fielddata.remove(deletedentry)
-            codestr = """i.metrictemplate.%s = json.dumps(fielddata)""" % field
-            exec(codestr)
-            i.metrictemplate.save()
+        codestr = """i.metrictemplate.%s = json.dumps(fielddata)""" % field
+        exec(codestr)
+        i.metrictemplate.save()
     except MetricTemplate.DoesNotExist as e:
         pass
 
