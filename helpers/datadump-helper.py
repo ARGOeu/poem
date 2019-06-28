@@ -288,6 +288,15 @@ def create_public_data(d1, d2, d3):
                         i['fields'].update(item['fields'])
                         probepks.update({item['pk']: i['pk']})
 
+        for item in dat:
+            if item['model'] == 'poem_super_admin.metrictemplate':
+                if item['fields']['cloned']:
+                    item['fields']['cloned'] = \
+                        str(metricpks[int(item['fields']['cloned'])])
+
+                if item['fields']['name'] not in mnames:
+                    data.append(item)
+
             if item['model'] in inline_models:
                 if item['fields']['metric'] in inlinepks:
                     item['fields']['metrictemplate'] = \
