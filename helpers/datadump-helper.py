@@ -177,18 +177,6 @@ def create_public_data(d1, d2, d3):
             item['fields']['revision'] = \
                 revisionpks[item['fields']['revision']]
 
-    probe_dict = {}
-    for item in data1:
-        if item['model'] == 'reversion.version' and \
-            item['fields']['content_type'] == ['poem_super_admin', 'probe']:
-            probe_dict.update({item['fields']['object_repr']: item['pk']})
-
-    for item in data1:
-        if item['model'] == 'poem_super_admin.metrictemplate':
-            if item['fields']['probeversion'] != '':
-                item['fields']['probekey'] = \
-                probe_dict[item['fields']['probeversion']]
-
     # create versions and reversions for metric templates
     revlist = []
     for item in data1:
@@ -300,15 +288,6 @@ def create_public_data(d1, d2, d3):
                         i['fields'].update(item['fields'])
                         probepks.update({item['pk']: i['pk']})
 
-        for item in dat:
-            if item['model'] == 'poem_super_admin.metrictemplate':
-                if item['fields']['cloned']:
-                    item['fields']['cloned'] = \
-                    str(metricpks[int(item['fields']['cloned'])])
-
-                if item['fields']['name'] not in mnames:
-                    data.append(item)
-
             if item['model'] in inline_models:
                 if item['fields']['metric'] in inlinepks:
                     item['fields']['metrictemplate'] = \
@@ -317,7 +296,6 @@ def create_public_data(d1, d2, d3):
                     inlinepkmax[inline_models.index(item['model'])] += 1
                     item['pk'] = inlinepkmax[inline_models.index(item['model'])]
                     data.append(item)
-
 
         used_revisions = []
         for item in dat:
@@ -438,6 +416,18 @@ def create_public_data(d1, d2, d3):
                 namevers[k].append(v)
             else:
                 namevers[k] = [v]
+
+    probe_dict = {}
+    for item in data:
+        if item['model'] == 'reversion.version' and \
+            item['fields']['content_type'] == ['poem_super_admin', 'probe']:
+            probe_dict.update({item['fields']['object_repr']: item['pk']})
+
+    for item in data:
+        if item['model'] == 'poem_super_admin.metrictemplate':
+            if item['fields']['probeversion'] != '':
+                item['fields']['probekey'] = \
+                    probe_dict[item['fields']['probeversion']]
 
     # order revisions by date and return resulting data
     return order_revisions(data)
