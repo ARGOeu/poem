@@ -1,7 +1,6 @@
 {% extends "admin/object_history.html" %}
 {% load i18n admin_urls staticfiles %}
 {% load plaintext_comments %}
-{% load probe_version %}
 
 {% block usertools %}
   <div id="user-tools">
@@ -26,37 +25,22 @@
     {% if request.user.is_superuser %}
         <a href="{% url 'admin:app_list' app_label=opts.app_label %}">Admin</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
     {% endif %}
-    {% if request.tenant.schema_name == "public" %}
-      <a href="{% url 'admin:tenants_tenant_changelist' %}">Tenants</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
-      <a href="{% url 'admin:poem_super_admin_probe_changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
-      &rsaquo;
-      <a href="{% url opts|admin_urlname:'change' object.pk|admin_urlquote %}">{{ object|truncatewords:"18" }}</a>
-      &rsaquo;
-      History&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
-      <a href="{% url 'admin:poem_super_admin_metrictemplate_changelist' %}">Metric templates</a>
-    {% else %}
-      <a href="{% url 'admin:poem_profile_changelist' %}">Profiles</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
-        <a href="{% url 'admin:poem_service_changelist' %}">Services</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
-      <a href="{% url 'admin:poem_super_admin_probe_changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
-      &rsaquo;
-      <a href="{% url opts|admin_urlname:'change' object.pk|admin_urlquote %}">{{ object|truncatewords:"18" }}</a>
-      &rsaquo;
-      History
-      &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
-      <a href="{% url 'admin:poem_metric_changelist' %}">Metrics</a>
-      &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
-      <a href="{% url 'admin:poem_aggregation_changelist' %}">Aggregations</a>
-    {% endif %}
+    <a href="{% url 'admin:tenants_tenant_changelist' %}">Tenants</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
+      <a href="{% url 'admin:poem_super_admin_probe_changelist' %}">Probes</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
+    <a href="{% url 'admin:poem_super_admin_metrictemplate_changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+    &rsaquo;
+    <a href="{% url opts|admin_urlname:'change' object.pk|admin_urlquote %}">{{ object|truncatewords:"18" }}</a>
+    &rsaquo;
+    History
   </div>
   {% endblock %}
 {% endif %}
 
 
 {% block content %}
-    <link rel="stylesheet" type="text/css" href="/poem_media/css/siteprobes.css">
+    <link rel="stylesheet" type="text/css" href="/poem_media/css/sitemetrics.css">
     <div id="content-main">
-    
-        <p>{% blocktrans %}Choose a version from the list below to see a previous version of this probe.{% endblocktrans %}</p>
+        <p>{% blocktrans %}Choose a date from the list below to revert to a previous version of this object.{% endblocktrans %}</p>
     
         <div class="module">
             {% if action_list %}
@@ -73,7 +57,6 @@
                                     {% endif %}
                                 </th>
                             {% endif %}
-                            <th scope="col">{% trans 'Version' %}</th>
                             <th scope="col">{% trans 'Date/time' %}</th>
                             <th scope="col">{% trans 'User' %}</th>
                             <th scope="col">{% trans 'Comment' %}</th>
@@ -92,14 +75,13 @@
                                     {% endif %}
                                 </td>
                                 {% endif %}
-                                <th scope="row"><a href="{{ action.url }}">{{ action.version.object_repr|get_version }}</a></th>
-                                <th scope="row">{{action.revision.date_created|date:_("DATETIME_FORMAT")}}</th>
+                                <th scope="row"><a href="{{action.url}}">{{action.revision.date_created|date:_("DATETIME_FORMAT")}}</a></th>
                                 <td>
                                     {% if action.revision.user %}
                                         {{action.revision.user.username}}
                                     {% endif %}
                                 </td>
-                                <td>{% get_new_comment action.revision.comment action.version.object_id action.version.id %}</td>
+                                <td>{% get_new_comment action.revision.comment action.version.object_id action.version.id action.version.content_type_id %}</td>
                             </tr>
                         {% endfor %}
                     </tbody>
@@ -109,6 +91,7 @@
                 <p>{% trans "This object doesn't have a change history. It probably wasn't added via this admin site." %}</p>
             {% endif %}
         </div>
+
     </div>
 {% endblock %}
 

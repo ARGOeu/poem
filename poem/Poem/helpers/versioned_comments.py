@@ -22,7 +22,8 @@ def get_obj_from_db(objname, all_changes, action, object_id, version_id,
     nr = 0
     for x in all_changes:
         if action in x:
-            if x[action]['object'].split(' ')[0] == objname[0]:
+            if 'object' in x[action] and \
+                    x[action]['object'].split(' ')[0] == objname[0]:
                 nr += 1
         else:
             continue
@@ -46,7 +47,9 @@ def get_obj_from_db(objname, all_changes, action, object_id, version_id,
                         olderversionid.id)
     fieldname = eval("json.loads(Version.objects.get("
                      "id=%s).serialized_data)[0]['fields']" % version_id)
-    if objname[0].startswith('Metric'):
+    if objname[0].startswith('MetricTemplate'):
+        objname[0] = objname[0][14:]
+    elif objname[0].startswith('Metric'):
         objname[0] = objname[0][6:]
 
     if fieldname[objname[0].lower()]:
@@ -82,10 +85,6 @@ def new_comment(comment, obj_id=None, version_id=None, ctt_id=None):
         except json.JSONDecodeError:
             return new_comment
 
-    if 'Derived' in new_comment:
-        pass
-
-    else:
         messages = []
         for sub_message in new_comment:
             if 'added' in sub_message:
@@ -212,7 +211,8 @@ def new_comment(comment, obj_id=None, version_id=None, ctt_id=None):
 
         new_comment = ' '.join(msg[0].upper() + msg[1:] if msg != '' else
                                '' for msg in messages)
-        if new_comment == ' ':
-            new_comment = 'No fields changed.'
 
-    return new_comment or gettext('No fields changed.')
+        return new_comment or gettext('No fields changed.')
+
+    else:
+        return new_comment

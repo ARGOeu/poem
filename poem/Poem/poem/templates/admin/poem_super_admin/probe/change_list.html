@@ -25,7 +25,8 @@
       {% endif %}
       {% if request.tenant.schema_name == "public" %}
         <a href="{% url 'admin:tenants_tenant_changelist' %}">Tenants</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
-        {{ cl.opts.verbose_name_plural|capfirst }}
+        {{ cl.opts.verbose_name_plural|capfirst }}&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
+      <a href="{% url 'admin:poem_super_admin_metrictemplate_changelist' %}">Metric templates</a>
       {% else %}
         <a href="{% url 'admin:poem_profile_changelist' %}">Profiles</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
         <a href="{% url 'admin:poem_service_changelist' %}">Services</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;

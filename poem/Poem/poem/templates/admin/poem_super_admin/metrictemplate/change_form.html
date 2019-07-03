@@ -19,33 +19,48 @@
 
 {% if not is_popup %}
   {% block breadcrumbs %}
-  <div class="breadcrumbs">
-    {% if request.user.is_superuser %}
-        <a href="{% url 'admin:app_list' app_label=opts.app_label %}">Admin</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
-    {% endif %}
-    <a href="{% url 'admin:poem_profile_changelist' %}">Profiles</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
-      <a href="{% url 'admin:poem_service_changelist' %}">Services</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
-    <a href="{% url 'admin:poem_super_admin_probe_changelist' %}">Probes</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
-    {% if has_change_permission %}
-      <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
-    {% else %}
-      {{ opts.verbose_name_plural|capfirst }}
-    {% endif %}
-    {% if clone_view %}
-      &rsaquo;
-      <a href="{% url 'admin:poem_metric_change' metric_id %}">{{ metric_name }}</a>
-      &rsaquo;
-    {% else %}
-      &rsaquo;
-    {% endif %}
-    {% if add %}
-      {% trans 'Add' %} {{ opts.verbose_name }}
-    {% else %}
-      {{ original|truncatewords:"18" }}
-    {% endif %}
-    &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
-    <a href="{% url 'admin:poem_aggregation_changelist' %}">Aggregations</a>
-  </div>
+    <div class="breadcrumbs">
+      {% if request.tenant.schema_name == "public" %}
+        {% if request.user.is_superuser %}
+          <a href="{% url 'admin:app_list' app_label=opts.app_label %}">Admin</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
+        {% endif %}
+        <a href="{% url 'admin:tenants_tenant_changelist' %}">Tenants</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
+        <a href="{% url 'admin:poem_super_admin_probe_changelist' %}">Probes</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
+        {% if has_change_permission %}
+        <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+        {% else %}
+          {{ opts.verbose_name_plural|capfirst }}
+        {% endif %}
+        &rsaquo;
+        {% if add %}
+          {% trans 'Add' %} {{ opts.verbose_name }}
+        {% else %}
+          {{ original|truncatewords:"18" }}
+        {% endif %}
+      {% else %}
+        {% if request.user.is_superuser %}
+          <a href="{% url 'admin:app_list' app_label=opts.app_label %}">Admin</a>
+        {% endif %}
+        &rsaquo;
+        {% if has_change_permission %}
+          <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+        {% else %}
+          {{ opts.verbose_name_plural|capfirst }}
+        {% endif %}
+        &rsaquo;
+        {% if add %}
+          {% trans 'Add' %} {{ opts.verbose_name }}
+        {% else %}
+          {{ original|truncatewords:"18" }}
+        {% endif %}
+        &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
+        <a href="{% url 'admin:poem_profile_changelist' %}">Profiles</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
+        <a href="{% url 'admin:poem_service_changelist' %}">Services</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
+        <a href="{% url 'admin:poem_super_admin_probe_changelist' %}">Probes</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
+        <a href="{% url 'admin:poem_metric_changelist' %}">Metrics</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;
+        <a href="{% url 'admin:poem_aggregation_changelist' %}">Aggregations</a>
+      {% endif %}
+    </div>
   {% endblock %}
 {% endif %}
 
@@ -60,10 +75,12 @@
       {% endif %}
     {% endif %}
     {% if user.is_authenticated %}
-      <li>
-        {% url opts|admin_urlname:'history' original.pk|admin_urlquote as history_url %}
-        <a href="{% add_preserved_filters history_url %}" class="historylink">{% trans "History" %}</a>
-      </li>
+      {% if request.tenant.schema_name == "public" %}
+        <li>
+          {% url opts|admin_urlname:'history' original.pk|admin_urlquote as history_url %}
+          <a href="{% add_preserved_filters history_url %}" class="historylink">{% trans "History" %}</a>
+        </li>
+      {% endif %}
     {% endif %}
     {% if has_absolute_url %}<li><a href="{% url 'admin:view_on_site' content_type_id original.pk %}" class="viewsitelink">{% trans "View on site" %}</a></li>{% endif%}
     {% endblock %}
@@ -100,10 +117,31 @@
 
 {% block after_related_objects %}{% endblock %}
 
-{% if user.is_superuser or perms.poem.groupown_metric %}
-  {% submit_row %}
+{% if request.tenant.schema_name == "public" %}
+  {% if user.is_superuser %}
+    {% submit_row %}
+  {% else %}
+    <div class="submit-row"><center> This is a read-only instance, please request the corresponding permissions to perform any changes in this form. </center></div>
+  {% endif %}
 {% else %}
-  <div class="submit-row"><center> This is a read-only instance, please request the corresponding permissions to perform any changes in this form. </center></div>
+  {% block submit_buttons_bottom %}
+    <div class="submit-row">
+            <input type="submit" value="Import metric" class="default" name="_import-metric">
+    </div>
+  {% endblock %}
+{% endif %}
+
+{% if not request.tenant.schema_name == "public" %}
+  <script type="text/javascript">
+    var el = new Array(0, 1, 2, 3, 4);
+    el.forEach(function(item) {
+      key = '#id_metrictemplateconfig_set-' + item + '-key';
+      value = '#id_metrictemplateconfig_set-' + item + '-value';
+      if ($(key).val() === 'path'){
+        $(value).prop('readonly', true);
+      }
+    });
+</script>
 {% endif %}
 
 {% if adminform and add %}
@@ -112,20 +150,10 @@
 
 <script type="text/javascript">
   $(document).ready(function() {
-    $('.metricautocomplete').on('click', function() {
-      var gr = $('#id_group :selected').text();
-      var json_metrics_group = '/poem/api/v2/internal/metrics/' + gr;
-      $.getJSON(json_metrics_group).done(function(json) {
-        $('.metricautocomplete').autocomplete();
-        $('.metricautocomplete').autocomplete({minLength: 0, source: json['result']});
-        $('.metricautocomplete').autocomplete("search", "");
-      });
-    });
-
-    function hideIt() {
-      var undisplay = new Array('metricprobeexecutable', 'metricattribute', 'metricdependancy', 
-                                'metricconfig', 'metricparameter', 'metricfiles', 
-                                'metricfileparameter');
+   function hideIt() {
+      var undisplay = new Array('metrictemplateprobeexecutable', 'metrictemplateattribute', 'metrictemplatedependency',
+                                'metrictemplateconfig', 'metrictemplateparameter', 'metrictemplatefiles',
+                                'metrictemplatefileparameter');
       undisplay.forEach(function hideIt(element) {
         target = element + '_set-group';
         $('#' + target).css({'display': 'none'});
@@ -152,43 +180,6 @@
       }
     })
 
-  });
-</script>
-
-<script type="text/javascript">
-  $(document).ready(function() {
-    var field = $('#id_probeversion');
-    var name = $('#id_probeversion').val();
-    var json_probe_info = '/poem/api/v2/internal/probes/' + name.split(" ")[0];
-    $.getJSON(json_probe_info).done(function(json) {
-        var items = [];
-        items.push("<ul class=probeinfo> ");
-        items.push("<li><a href='/poem/admin/poem_super_admin/probe/"+json.id+"/change/'>"+json.name+"</a></li>");
-        items.push(" <li> "+json.description+" </li>");
-        items.push(" <li> "+json.comment+" </li>");
-        items.push(" </ul>");
-        html = items.join("");
-        $('.field-box.field-probeversion').append(html);
-      });
-    field.hover(
-      function() {
-        $('ul.probeinfo').slideDown('medium').delay(1500);
-      },
-      function() {
-        $('ul.probeinfo').slideUp('medium');
-      }
-    );
-   });
-</script>
-
-<script type="text/javascript">
-  var el = new Array(0, 1, 2, 3, 4);
-  el.forEach(function(item) {
-    key = '#id_metricconfig_set-' + item + '-key';
-    value = '#id_metricconfig_set-' + item + '-value';
-    if ($(key).val() === 'path'){
-      $(value).prop('readonly', true);
-    }
   });
 </script>
 

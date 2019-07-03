@@ -12,6 +12,7 @@ from Poem.poem.admin_interface.grprofiles import GroupOfProfilesAdmin
 from Poem.poem.admin_interface.graggregations import GroupOfAggregationsAdmin
 from Poem.poem.admin_interface.siteaggregations import *
 from Poem.poem.admin_interface.sitemetrics import *
+from Poem.poem.admin_interface.sitemetrictemplates import MetricTemplateAdmin
 from Poem.poem.admin_interface.siteprobes import ProbeAdmin
 from Poem.poem.admin_interface.siteprofile import *
 from Poem.poem.admin_interface.userprofile import *
@@ -19,7 +20,7 @@ from Poem.poem.admin_interface.siteactions import *
 from Poem.poem.admin_interface.siteservices import *
 from Poem.poem.models import GroupOfMetrics, GroupOfProfiles, GroupOfAggregations
 from Poem.poem.models import MetricInstance, Metric, Profile, UserProfile, VO, ServiceFlavour, Service, Aggregation
-from Poem.poem_super_admin.models import Probe
+from Poem.poem_super_admin.models import MetricTemplate, Probe
 from Poem.users.models import CustUser
 
 from Poem.api.admin import MyAPIKeyAdmin
@@ -276,3 +277,4 @@ myadmin.register(APIKey, MyAPIKeyAdmin)
 myadmin.register(LogEntry, LogEntryAdmin)
 myadmin.register(Service, ServiceAdmin)
 myadmin.register(Aggregation, AggregationAdmin)
+myadmin.register(MetricTemplate, MetricTemplateAdmin)

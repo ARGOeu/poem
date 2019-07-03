@@ -1,5 +1,5 @@
 from Poem.poem.models import VO, ServiceFlavour, Metrics, MetricInstance, Tags
-from Poem.poem_super_admin.models import Probe
+from Poem.poem_super_admin.models import MetricTemplate, Probe
 from ajax_select import LookupChannel
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
@@ -78,3 +78,11 @@ class TagsLookup(LookupChannel):
     def get_query(self, q, request):
         values = check_cache(request, self.model, 'name')
         return sorted(filter(lambda x: q.lower() in x.lower(), values))
+
+
+class MetricTemplateLookup(LookupChannel):
+    model = MetricTemplate
+
+    def get_query(self, q, request):
+        mt = self.model.objects.all().values_list('name', flat=True)
+        return sorted(filter(lambda x: q.lower() in x.lower(), mt))

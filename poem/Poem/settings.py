@@ -167,6 +167,7 @@ AJAX_LOOKUP_CHANNELS = {
     'hintsmetricsall' : ('Poem.poem.lookups', 'MetricsAllLookup'),
     'hintsmetricinstances' : ('Poem.poem.lookups', 'MetricsInstancesLookup'),
     'hintsserviceflavours' : ('Poem.poem.lookups', 'ServiceFlavoursLookup'),
+    'hintsmetrictemplates': ('Poem.poem.lookups', 'MetricTemplateLookup'),
 }
 
 AUTH_PASSWORD_VALIDATORS = [
