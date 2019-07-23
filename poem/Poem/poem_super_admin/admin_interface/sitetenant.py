@@ -1,5 +1,7 @@
 from django import forms
 from django.contrib import admin
+from Poem.poem.models import GroupOfMetrics
+from tenant_schemas.utils import schema_context
 
 
 class TenantForm(forms.ModelForm):
@@ -30,3 +32,16 @@ class TenantAdmin(admin.ModelAdmin):
             self.fields = ('name', 'domain_url',)
 
         return super().get_form(request, obj=None, **kwargs)
+
+    def save_model(self, request, obj, form, change):
+        """
+        Creating new tenant. After the tenant and tenant's schema are created,
+        GroupOfMetrics with the same name (upper case) is created in the
+        tenant schema.
+        """
+        obj.schema_name = obj.name.lower()
+        if request.user.is_superuser:
+            obj.save()
+
+            with schema_context(obj.schema_name):
+                GroupOfMetrics.objects.create(name=obj.schema_name.upper())
