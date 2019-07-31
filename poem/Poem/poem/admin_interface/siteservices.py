@@ -16,7 +16,7 @@ class ServiceAdmin(admin.ModelAdmin):
 
     def changelist_view(self, request, extra_context=None):
         qs = Service.objects.all()
-        service_area = [p.service_area for p in qs]
+        service_category = [p.service_category for p in qs]
         service_name = [p.service_name for p in qs]
         service_type = [p.service_type for p in qs]
         data = list()
@@ -35,7 +35,7 @@ class ServiceAdmin(admin.ModelAdmin):
                     else:
                         metric_id = met.id
                         probe_id = Probe.objects.get(nameversion=probe).id
-                        data.append({'service_area': service_area[i],
+                        data.append({'service_category': service_category[i],
                                      'service_name': service_name[i],
                                      'service_type': service_type[i],
                                      'metric': metric[j],
