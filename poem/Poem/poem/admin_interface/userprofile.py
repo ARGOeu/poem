@@ -75,3 +75,10 @@ class UserProfileAdmin(UserAdmin):
     list_display = ('username', 'first_name', 'last_name',
                     'email', 'is_staff', 'is_superuser')
     filter_horizontal = ()
+
+    def save_related(self, request, form, formsets, change):
+        if formsets[0].cleaned_data == [{}] and \
+                formsets[1].cleaned_data == [{}]:
+            UserProfile.objects.create(user=form.instance)
+
+        return super().save_related(request, form, formsets, change)
