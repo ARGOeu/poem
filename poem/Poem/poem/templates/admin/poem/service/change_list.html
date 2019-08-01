@@ -24,7 +24,7 @@
 
 {% block content %}
   {% if servicedata %}
-    {% regroup servicedata|dictsort:"service_area" by service_area as data_by_servicearea %}
+    {% regroup servicedata|dictsort:"service_category" by service_category as data_by_servicearea %}
     <table>
       <thead>
         <tr><th>Service area</th><th>Service name</th><th>Service types</th><th>Metrics</th><th>Probes</th></tr>
